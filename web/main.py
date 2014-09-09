@@ -1,14 +1,14 @@
 from flask import Flask, render_template
 import h5py
-from collections import namedtuple
+from recordtype import recordtype
 from itertools import starmap
 
 
 app = Flask(__name__)
 
-WordTuple = namedtuple('WordTuple', ['w', 'word', 'n', 'topics', 'documents'])
-TopicTuple = namedtuple('TopicTuple', ['t', 'p'])
-DocumentTuple = namedtuple('DocumentTuple', ['d', 'n'])
+WordTuple = recordtype('WordTuple', ['w', 'n', 'word', 'topics', 'documents'], default=None)
+TopicTuple = recordtype('TopicTuple', ['t', 'p'], default=None)
+DocumentTuple = recordtype('DocumentTuple', ['d', 'n', 'name', 'topics', 'words'], default=None)
 
 
 @app.route('/')
@@ -51,7 +51,7 @@ def get_word_info(w, h5f, ntop):
         docs = docs[:ntop]
     docs = list( starmap(DocumentTuple, zip(docs, nds[docs])) )
 
-    return WordTuple(w, word, nw, topics, docs)
+    return WordTuple(w, nw, word, topics, docs)
 
 
 @app.route('/topic/<int:t>')
@@ -60,8 +60,32 @@ def topic(t):
 
 
 @app.route('/document/<int:d>')
-def document(t):
-    pass
+def document(d):
+    with h5py.File('../data.hdf', mode='r') as h5f:
+        doc = get_doc_info(d, h5f, ntop=0)
+
+    return render_template('document.html', doc=doc)
+
+
+def get_doc_info(d, h5f, ntop):
+    nd = h5f['n_wd'][...].sum(0)[d]
+
+    pts = h5f['p_td'][...][:,d]
+    topics = pts.argsort()[::-1]
+    if ntop > 0:
+        topics = topics[:ntop]
+    topics = list( starmap(TopicTuple, zip(topics, pts[topics])) )
+    topics = filter(lambda t: t.p > 0, topics)
+
+    nws = h5f['n_wd'][...][:,d]
+    ws = nws.argsort()[::-1]
+    if ntop > 0:
+        ws = ws[:ntop]
+    words = h5f['dictionary'][...][ws]
+    words = list( starmap(WordTuple, zip(ws, nws[ws], words)) )
+    words = filter(lambda w: w.n > 0, words)
+
+    return DocumentTuple(d, nd, 'Doc #%d' % d, topics, words)
 
 
 if __name__ == '__main__':
