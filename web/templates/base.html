@@ -7,14 +7,23 @@
 
     <body>
 
-        <div class="container">
-          <div>
-            <h1>{{ self.title() }} - TM Vis</h1>
-            <p class="lead">SubHeader</p>
-          </div>
-        </div>
+        <header>
+            <div class="container">
+                <h1>{{ self.title() }} - TM Vis</h1>
+                <p class="lead">SubHeader</p>
+            </div>
+        </header>
+        <hr>
 
         {% block body %}{% endblock %}
+
+
+        <hr>
+        <footer>
+            <div class="container">
+                <p>&copy; 2014</p>
+            </div>
+        </footer>
 
     </body>
 </html>
