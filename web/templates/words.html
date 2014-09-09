@@ -11,6 +11,7 @@
                     <th>Word</th>
                     <th># of Occurences</th>
                     <th>Topics</th>
+                    <th>Documents</th>
                 </tr>
             </thead>
             <tbody>
@@ -25,7 +26,16 @@
                             {% set comma_j = joiner(',') %}
                             {% for t in w.topics %}
                                 {{ comma_j() }}
-                                <a href="{{ url_for('topic', t=t.t) }}">{{ t.t }}</a>
+                                <a href="{{ url_for('topic', t=t.t) }}" title="P(w | t) = {{ t.p }}">{{ t.t }}</a>
+                            {% endfor %}
+                            {{ comma_j() }}
+                            ...
+                        </td>
+                        <td>
+                            {% set comma_j = joiner(',') %}
+                            {% for d in w.documents[:5] %}
+                                {{ comma_j() }}
+                                <a href="{{ url_for('document', d=d.d) }}" title="N_wd = {{ d.n }}">{{ d.d }}</a>
                             {% endfor %}
                             {{ comma_j() }}
                             ...
