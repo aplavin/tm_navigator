@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Word{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <table class="table table-striped table-hover ">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Word</th>
+                    <th># of Occurences</th>
+                    <th>Topics</th>
+                    <th>Documents</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>
+                        <a href="{{ url_for('word', w=word.w) }}">{{ word.word }}</a>
+                    </td>
+                    <td>{{ word.n }}</td>
+                    <td>
+                        {% set comma_j = joiner(',') %}
+                        {% for t in word.topics[:5] %}
+                            {{ comma_j() }}
+                            <a href="{{ url_for('topic', t=t.t) }}" title="P(w | t) = {{ t.p }}">{{ t.t }}</a>
+                        {% endfor %}
+                        {{ comma_j() }}
+                        ...
+                    </td>
+                    <td>
+                        {% set comma_j = joiner(',') %}
+                        {% for d in word.documents[:5] %}
+                            {{ comma_j() }}
+                            <a href="{{ url_for('document', d=d.d) }}" title="N_wd = {{ d.n }}">{{ d.d }}</a>
+                        {% endfor %}
+                        {{ comma_j() }}
+                        ...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="container">
+        <div id="plot-topics" style="width:100%; height:400px;"></div>
+        <script type="text/javascript">
+            $(function () {
+                $('#plot-topics').highcharts({
+                    chart: {
+                        type: 'line'
+                    },
+                    credits: {
+                        enabled: false
+                    },
+                    title: {
+                        text: 'Usage in topics'
+                    },
+                    xAxis: {
+                        title: {
+                            text: 'Topic'
+                        },
+                        labels: {
+                            enabled: false
+                        },
+                        tickLength: 0,
+                        categories: [
+                            {% for t in word.topics | sort(attribute='p', reverse=True)  %}
+                                {{ t.t }},
+                            {% endfor %}
+                        ]
+                    },
+                    yAxis: {
+                        title: {
+                            text: 'P(w | t)'
+                        },
+                        floor: 0
+                    },
+                    tooltip: {
+                        headerFormat: '<b>t: {point.x}</b><br/><b>P: {point.y}</b>',
+                        pointFormat: '',
+                        shared: true,
+                        crosshairs: [true, true]
+                    },
+                    series: [
+                        {
+                            showInLegend: false,
+                            data: [
+                                {% for t in word.topics | sort(attribute='p', reverse=True)  %}
+                                    [{{ loop.index0 }}, {{ t.p }}],
+                                {% endfor %}
+                            ]
+                        }
+                    ]
+                });
+            });
+        </script>
+    </div>
+
+    <div class="container">
+        <div id="plot-documents" style="width:100%; height:400px;"></div>
+        <script type="text/javascript">
+            $(function () {
+                $('#plot-documents').highcharts({
+                    chart: {
+                        type: 'line'
+                    },
+                    credits: {
+                        enabled: false
+                    },
+                    title: {
+                        text: 'Usage in documents'
+                    },
+                    xAxis: {
+                        title: {
+                            text: 'Document'
+                        },
+                        labels: {
+                            enabled: false
+                        },
+                        tickLength: 0,
+                        categories: [
+                            {% for d in word.documents | sort(attribute='n', reverse=True)  %}
+                                {{ d.d }},
+                            {% endfor %}
+                        ]
+                    },
+                    yAxis: {
+                        title: {
+                            text: 'N_wd'
+                        },
+                        floor: 0
+                    },
+                    tooltip: {
+                        headerFormat: '<b>d: {point.x}</b><br/><b>N: {point.y}</b>',
+                        pointFormat: '',
+                        shared: true,
+                        crosshairs: [true, true]
+                    },
+                    series: [
+                        {
+                            showInLegend: false,
+                            data: [
+                                {% for d in word.documents | sort(attribute='n', reverse=True)  %}
+                                    [{{ loop.index0 }}, {{ d.n }}],
+                                {% endfor %}
+                            ]
+                        }
+                    ]
+                });
+            });
+        </script>
+    </div>
+{% endblock %}

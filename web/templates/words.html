@@ -9,7 +9,7 @@
                 <tr>
                     <th>#</th>
                     <th>Word</th>
-                    <th># of occurences</th>
+                    <th># of Occurences</th>
                     <th>Topics</th>
                 </tr>
             </thead>
@@ -17,9 +17,19 @@
                 {% for w in words %}
                     <tr>
                         <td>{{ loop.index }}</td>
-                        <td>{{ w.word }}</td>
+                        <td>
+                            <a href="{{ url_for('word', w=w.w) }}">{{ w.word }}</a>
+                        </td>
                         <td>{{ w.n }}</td>
-                        <td>{{ w.topics | join(', ') }}</td>
+                        <td>
+                            {% set comma_j = joiner(',') %}
+                            {% for t in w.topics %}
+                                {{ comma_j() }}
+                                <a href="{{ url_for('topic', t=t.t) }}">{{ t.t }}</a>
+                            {% endfor %}
+                            {{ comma_j() }}
+                            ...
+                        </td>
                     </tr>
                 {% endfor %}
             </tbody>
