@@ -39,6 +39,22 @@ function createPlot(container, title, ttipNames, cnt, threshold, data) {
                 data: data
             }
         ],
+        plotOptions: {
+            pie: {
+                allowPointSelect: true,
+                cursor: 'pointer',
+                dataLabels: {
+                    formatter: function() {
+                        var point = this.point;
+                        if (!isNaN(point.name)) {
+                            return sprintf('<b>%s = %s</b>: %.2f %%', ttipNames[0], point.name, point.percentage);
+                        } else {
+                            return sprintf('<b>%s</b>: %.2f %%', point.name, point.percentage);
+                        }
+                    }
+                }
+            }
+        },
         drilldown: {
             series: [{
                 id: 'smaller',
