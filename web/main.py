@@ -44,12 +44,14 @@ def get_word_info(w, h5f, ntop):
     if ntop > 0:
         topics = topics[:ntop]
     topics = list( starmap(TopicTuple, zip(topics, pts[topics])) )
+    topics = filter(lambda t: t.p > 0, topics)
 
     nds = h5f['n_wd'][...][w,:]
     docs = nds.argsort()[::-1]
     if ntop > 0:
         docs = docs[:ntop]
     docs = list( starmap(DocumentTuple, zip(docs, nds[docs])) )
+    docs = filter(lambda d: d.n > 0, docs)
 
     return WordTuple(w, nw, word, topics, docs)
 
