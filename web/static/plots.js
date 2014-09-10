@@ -4,15 +4,15 @@ function createPlot(container, title, ttipNames, cnt, threshold, data) {
     ).length;
     cnt = Math.min(cnt, cntThresh);
 
-    var drilldown = data.slice(cnt);
-    var ddown_item = {
-        name: 'Other',
-        drilldown: 'smaller',
-        y: drilldown.reduce(function(total, cur) { return total + cur.y; }, 0)
-    };
-    data = data.slice(0, cnt).concat([ddown_item]);
-    console.log(data);
-    console.log(drilldown);
+    if (cnt < data.length) {
+        var drilldown = data.slice(cnt);
+        var ddown_item = {
+            name: 'Other',
+            drilldown: 'smaller',
+            y: drilldown.reduce(function(total, cur) { return total + cur.y; }, 0)
+        };
+        data = data.slice(0, cnt).concat([ddown_item]);
+    }
 
     container.highcharts({
         chart: {
