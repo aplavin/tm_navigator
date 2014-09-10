@@ -30,12 +30,26 @@ def words():
 
 @app.route('/documents')
 def documents():
-    pass
+    with h5py.File('../data.hdf', mode='r') as h5f:
+        nw = h5f['n_wd'][...].sum(0)
+        indices = nw.argsort()[:-21:-1]
+
+        docs = [get_doc_info(d, h5f, 5) for d in indices]
+
+    return render_template('documents.html', docs=docs)
 
 
 @app.route('/topics')
 def topics():
-    pass
+    with h5py.File('../data.hdf', mode='r') as h5f:        
+        ptds = h5f['p_td'][...]
+        nds = h5f['n_wd'][...].sum(0)
+        pts = ptds.dot(1.0 * nds / nds.sum())
+        indices = pts.argsort()[:-21:-1]
+
+        topics = [get_topic_info(t, h5f, 5) for t in indices]
+
+    return render_template('topics.html', topics=topics)
 
 
 @app.route('/word/<int:w>')
