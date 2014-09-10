@@ -14,6 +14,12 @@ function createPlot(container, title, ttipNames, cnt, threshold, data) {
         data = data.slice(0, cnt).concat([ddown_item]);
     }
 
+    Highcharts.setOptions({
+        lang: {
+            drillUpText: '<< Back'
+        }
+    });
+
     container.highcharts({
         chart: {
             type: 'pie'
