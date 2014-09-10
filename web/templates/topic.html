@@ -18,12 +18,12 @@
                     <td>
                         <a href="{{ url_for('topic', t=topic.t) }}">{{ topic.t }}</a>
                     </td>
-                    <td>{{ topic.p }}</td>
+                    <td>{{ topic.np }}</td>
                     <td>
                         {% set comma_j = joiner(',') %}
                         {% for d in topic.documents[:5] %}
                             {{ comma_j() }}
-                            <a href="{{ url_for('document', d=d.d) }}" title="P(t | d) = {{ d.p }}">{{ d.d }}</a>
+                            <a href="{{ url_for('document', d=d.d) }}" title="P(t | d) = {{ d.np }}">{{ d.d }}</a>
                         {% endfor %}
                         {{ comma_j() }}
                         ...
@@ -32,7 +32,7 @@
                         {% set comma_j = joiner(',') %}
                         {% for w in topic.words[:5] %}
                             {{ comma_j() }}
-                            <a href="{{ url_for('word', w=w.w) }}" title="P(w | t) = {{ w.n }}">{{ w.word }}</a>
+                            <a href="{{ url_for('word', w=w.w) }}" title="P(w | t) = {{ w.np }}">{{ w.word }}</a>
                         {% endfor %}
                         {{ comma_j() }}
                         ...
@@ -51,15 +51,15 @@
                     'Usage in documents',
                     'Document',
                     [
-                        {% for d in topic.documents | sort(attribute='n', reverse=True)  %}
+                        {% for d in topic.documents | sort(attribute='np', reverse=True)  %}
                             {{ d.d }},
                         {% endfor %}
                     ],
                     'P(t | d)',
                     ['d', 'P'],
                     [
-                        {% for d in topic.documents | sort(attribute='n', reverse=True)  %}
-                            [{{ loop.index0 }}, {{ d.n }}],
+                        {% for d in topic.documents | sort(attribute='np', reverse=True)  %}
+                            [{{ loop.index0 }}, {{ d.np }}],
                         {% endfor %}
                     ]
                 );
@@ -76,15 +76,15 @@
                     'Words distribution',
                     'Word',
                     [
-                        {% for w in topic.words | sort(attribute='n', reverse=True)  %}
+                        {% for w in topic.words | sort(attribute='np', reverse=True)  %}
                             '{{ w.word }}',
                         {% endfor %}
                     ],
                     'P(w | t)',
                     ['w', 'P'],
                     [
-                        {% for w in topic.words | sort(attribute='n', reverse=True)  %}
-                            [{{ loop.index0 }}, {{ w.n }}],
+                        {% for w in topic.words | sort(attribute='np', reverse=True)  %}
+                            [{{ loop.index0 }}, {{ w.np }}],
                         {% endfor %}
                     ]
                 );
