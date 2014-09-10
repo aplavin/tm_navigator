@@ -2,7 +2,7 @@
 
 {% set breadcrumbs = [
     (url_for('documents'), 'Documents'),
-    'Document'
+    'Document "%s"' % doc.name
 ] %}
 
 {% block body %}

@@ -2,7 +2,7 @@
 
 {% set breadcrumbs = [
     (url_for('topics'), 'Topics'),
-    'Topic'
+    'Topic %d' % topic.t
 ] %}
 
 {% block body %}

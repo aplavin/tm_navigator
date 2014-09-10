@@ -2,7 +2,7 @@
 
 {% set breadcrumbs = [
     (url_for('words'), 'Words'),
-    'Word'
+    'Word "%s"' % word.word
 ] %}
 
 {% block body %}
