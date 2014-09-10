@@ -77,7 +77,7 @@
                     'Word',
                     [
                         {% for w in doc.words | sort(attribute='np', reverse=True)  %}
-                            {{ w.w }},
+                            '{{ w.word }}',
                         {% endfor %}
                     ],
                     'N_wd',
