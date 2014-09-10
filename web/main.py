@@ -27,6 +27,16 @@ def words():
     return render_template('words.html', words=words)
 
 
+@app.route('/documents')
+def documents():
+    pass
+
+
+@app.route('/topics')
+def topics():
+    pass
+
+
 @app.route('/word/<int:w>')
 def word(w):
     with h5py.File('../data.hdf', mode='r') as h5f:
