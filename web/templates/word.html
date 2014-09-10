@@ -73,7 +73,7 @@
                     createPlot(
                         $('#plot-documents'),
                         'Usage in documents',
-                        ['w', 'N_wd'],
+                        ['d', 'N_wd'],
                         15, 0,
                         [
                             {% for d in word.documents | sort(attribute='np', reverse=True)  %}
