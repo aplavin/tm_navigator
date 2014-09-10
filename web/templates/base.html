@@ -15,7 +15,16 @@
         <header>
             <div class="container">
                 <h1><a href="{{ url_for('overview') }}">TM Vis</a></h1>
-                <p class="lead">{{ self.title() }}</p>
+
+                <ul class="lead breadcrumb">
+                    <li><a href="{{ url_for('overview') }}">Collection</a></li>
+                    {% if breadcrumbs %}
+                        {% for href, caption in breadcrumbs[:-1] %}
+                            <li><a href="{{ href }}">{{ caption }}</a></li>
+                        {% endfor %}
+                        <li>{{ breadcrumbs[-1] }}</li>
+                    {% endif %}
+                </ul>
             </div>
         </header>
         <hr>

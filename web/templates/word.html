@@ -1,5 +1,10 @@
 {% extends "base.html" %}
 
+{% set breadcrumbs = [
+    (url_for('words'), 'Words'),
+    'Word'
+] %}
+
 {% block title %}Word{% endblock %}
 
 {% block body %}
