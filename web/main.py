@@ -7,7 +7,7 @@ from itertools import starmap
 app = Flask(__name__)
 
 WordTuple = recordtype('WordTuple', ['w', 'n', 'word', 'topics', 'documents'], default=None)
-TopicTuple = recordtype('TopicTuple', ['t', 'p'], default=None)
+TopicTuple = recordtype('TopicTuple', ['t', 'p', 'documents', 'words'], default=None)
 DocumentTuple = recordtype('DocumentTuple', ['d', 'n', 'name', 'topics', 'words'], default=None)
 
 
@@ -56,7 +56,32 @@ def get_word_info(w, h5f, ntop):
 
 @app.route('/topic/<int:t>')
 def topic(t):
-    pass
+    with h5py.File('../data.hdf', mode='r') as h5f:
+        topic = get_topic_info(t, h5f, ntop=0)
+
+    return render_template('topic.html', topic=topic)
+
+
+def get_topic_info(t, h5f, ntop):
+    pds = h5f['p_td'][...][t,:]
+    nds = h5f['n_wd'][...].sum(0)
+    pt = pds.dot(1.0 * nds / nds.sum())
+
+    pws = h5f['p_wt'][...][:,t]
+    ws = pws.argsort()[::-1]
+    if ntop > 0:
+        ws = ws[:ntop]
+    words = h5f['dictionary'][...][ws]
+    words = list( starmap(WordTuple, zip(ws, pws[ws], words)) )
+    words = filter(lambda w: w.n > 0, words)
+
+    docs = pds.argsort()[::-1]
+    if ntop > 0:
+        docs = docs[:ntop]
+    docs = list( starmap(DocumentTuple, zip(docs, pds[docs])) )
+    docs = filter(lambda d: d.n > 0, docs)
+
+    return TopicTuple(t, pt, docs, words)
 
 
 @app.route('/document/<int:d>')

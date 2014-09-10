@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+
+{% block title %}Topic{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <table class="table table-striped table-hover ">
+            <thead>
+                <tr>
+                    <th>Topic</th>
+                    <th>P(t)</th>
+                    <th>Documents</th>
+                    <th>Words</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                        <a href="{{ url_for('topic', t=topic.t) }}">{{ topic.t }}</a>
+                    </td>
+                    <td>{{ topic.p }}</td>
+                    <td>
+                        {% set comma_j = joiner(',') %}
+                        {% for d in topic.documents[:5] %}
+                            {{ comma_j() }}
+                            <a href="{{ url_for('document', d=d.d) }}" title="P(t | d) = {{ d.p }}">{{ d.d }}</a>
+                        {% endfor %}
+                        {{ comma_j() }}
+                        ...
+                    </td>
+                    <td>
+                        {% set comma_j = joiner(',') %}
+                        {% for w in topic.words[:5] %}
+                            {{ comma_j() }}
+                            <a href="{{ url_for('word', w=w.w) }}" title="P(w | t) = {{ w.n }}">{{ w.word }}</a>
+                        {% endfor %}
+                        {{ comma_j() }}
+                        ...
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="container">
+        <div id="plot-documents" style="width:100%; height:400px;"></div>
+        <script type="text/javascript">
+            $(function () {
+                createPlot(
+                    $('#plot-documents'),
+                    'Usage in documents',
+                    'Document',
+                    [
+                        {% for d in topic.documents | sort(attribute='n', reverse=True)  %}
+                            {{ d.d }},
+                        {% endfor %}
+                    ],
+                    'P(t | d)',
+                    ['d', 'P'],
+                    [
+                        {% for d in topic.documents | sort(attribute='n', reverse=True)  %}
+                            [{{ loop.index0 }}, {{ d.n }}],
+                        {% endfor %}
+                    ]
+                );
+            });
+        </script>
+    </div>
+
+    <div class="container">
+        <div id="plot-words" style="width:100%; height:400px;"></div>
+        <script type="text/javascript">
+            $(function () {
+                createPlot(
+                    $('#plot-words'),
+                    'Words distribution',
+                    'Word',
+                    [
+                        {% for w in topic.words | sort(attribute='n', reverse=True)  %}
+                            '{{ w.word }}',
+                        {% endfor %}
+                    ],
+                    'P(w | t)',
+                    ['w', 'P'],
+                    [
+                        {% for w in topic.words | sort(attribute='n', reverse=True)  %}
+                            [{{ loop.index0 }}, {{ w.n }}],
+                        {% endfor %}
+                    ]
+                );
+            });
+        </script>
+    </div>
+{% endblock %}
