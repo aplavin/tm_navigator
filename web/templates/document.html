@@ -90,9 +90,31 @@
     </div>
 
     <div class="container">
+        <h3>Document content</h3>
+
+        <div class="well">
+            <h4>Topics</h4>
+
+            <ul class="nav nav-pills">
+                {% for t, p in topics %}
+                    <li data-color="{{ t }}">
+                        <a href="{{ url_for('topic', t=t) }}">
+                            <span title="{{ p }}">
+                                {{ t }} <!-- <span class="badge">{{ p }}</span> -->
+                            </span>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+
         {% for cw in doc.content %}
             {% if cw.w != -1 %}
-                <a href="{{ url_for('word', w=cw.w) }}" title="Initial form: {{ cw.word_norm }}&#10;# of occurences: {{ cw.np }}">{{ cw.word }}</a>
+                <span data-color="{{ cw.topics.t }}">
+                    <a href="{{ url_for('word', w=cw.w) }}" title="Initial form: {{ cw.word_norm }}&#10;# of occurences: {{ cw.np }}">
+                        {{ cw.word }}
+                    </a>
+                </span>
             {% else %}
                 {{ cw.word }}
             {% endif %}

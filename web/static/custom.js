@@ -63,3 +63,30 @@ function createPlot(container, title, ttipNames, cnt, threshold, data) {
         }
     });
 }
+
+function unique(array){
+    return array.filter(function(el, index, arr) {
+        return index == arr.indexOf(el);
+    });
+}
+
+function process_data_color(alpha) {
+    alpha = (typeof alpha == 'number') ? alpha : 0.3;
+
+    var values = unique($('[data-color]').map(function() { return $(this).data('color'); }).get());
+    var colormap = {};
+    var colors = Highcharts.getOptions().colors.map(tinycolor);
+    values.forEach(function(value, i) {
+        colormap[value] = tinycolor(colors[i % colors.length].toRgb());
+        colormap[value].setAlpha(alpha / Math.pow(i / colors.length, 0.3));
+    });
+    console.log(colors);
+
+    $('[data-color]').each(function() {
+        var background = colormap[$(this).data('color')]
+        $(this).css('background-color', background.toRgbString());
+        $(this).find('*').css('color', tinycolor.mostReadable(background, colors));
+    });
+}
+
+$(process_data_color);

@@ -1,13 +1,15 @@
 from flask import Flask, render_template
 import h5py
 from recordtype import recordtype
-from itertools import starmap
+from itertools import starmap, groupby
+from collections import Counter
+from math import isnan
 
 
 app = Flask(__name__)
 
 WordTuple = recordtype('WordTuple', ['w', 'np', 'word', 'topics', 'documents'], default=None)
-ContentWordTuple = recordtype('ContentWordTuple', ['w', 'np', 'word', 'word_norm', 'topics', 'documents'], default=None)
+ContentWordTuple = recordtype('ContentWordTuple', ['w', 'np', 'word', 'word_norm', 'topics'], default=None)
 TopicTuple = recordtype('TopicTuple', ['t', 'np', 'documents', 'words'], default=None)
 DocumentTuple = recordtype('DocumentTuple', ['d', 'np', 'name', 'topics', 'words', 'content'], default=None)
 
@@ -117,14 +119,28 @@ def document(d):
         doc = get_doc_info(d, h5f)
 
         content = h5f['documents'][str(d)][...]
-        words = [word for word, _ in content]
-        ws = [w for _, w in content]
+
+        ws = content['w']
         words_norm = h5f['dictionary'][...][ws]
         nws = h5f['n_wd'][...][ws, d]
 
-        doc.content = list( starmap(ContentWordTuple, zip(ws, nws, words, words_norm)) )
+        words = content['word']
+        wtopics = [TopicTuple(ts[0], ps[0])
+                   for ts, ps in zip(content['topics'], content['pts'])]
 
-    return render_template('document.html', doc=doc)
+        topics = groupby(sorted((t
+                                 for t in wtopics
+                                 if not isnan(t.np)),
+                                key=lambda t: t.t),
+                         key=lambda t: t.t)
+        topics = [(tt, sum(t.np for t in items))
+                  for tt, items in topics]
+        topics.sort(key=lambda (tt, np): np, reverse=True)
+
+
+        doc.content = list( starmap(ContentWordTuple, zip(ws, nws, words, words_norm, wtopics)) )
+
+    return render_template('document.html', doc=doc, topics=topics)
 
 
 def get_doc_info(d, h5f, ntop=-1):
