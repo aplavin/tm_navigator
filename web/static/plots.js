@@ -1,7 +1,22 @@
-function createPlot(container, title, xTitle, xCats, yTitle, ttipNames, data) {
+function createPlot(container, title, ttipNames, cnt, threshold, data) {
+    var cntThresh = data.filter(
+        function (point) { return point.y > threshold; }
+    ).length;
+    cnt = Math.min(cnt, cntThresh);
+
+    var drilldown = data.slice(cnt);
+    var ddown_item = {
+        name: 'Other',
+        drilldown: 'smaller',
+        y: drilldown.reduce(function(total, cur) { return total + cur.y; }, 0)
+    };
+    data = data.slice(0, cnt).concat([ddown_item]);
+    console.log(data);
+    console.log(drilldown);
+
     container.highcharts({
         chart: {
-            type: 'line'
+            type: 'pie'
         },
         credits: {
             enabled: false
@@ -9,33 +24,20 @@ function createPlot(container, title, xTitle, xCats, yTitle, ttipNames, data) {
         title: {
             text: title
         },
-        xAxis: {
-            title: {
-                text: xTitle
-            },
-            labels: {
-                enabled: false
-            },
-            tickLength: 0,
-            categories: xCats
-        },
-        yAxis: {
-            title: {
-                text: yTitle
-            },
-            floor: 0
-        },
         tooltip: {
-            headerFormat: '<b>' + ttipNames[0] + ':</b> {point.x}<br/><b>' + ttipNames[1] + ':</b> {point.y}',
-            pointFormat: '',
-            shared: true,
-            crosshairs: [true, true]
+            headerFormat: '<b>' + ttipNames[0] + ':</b> {point.key}<br/><b>' + ttipNames[1] + ':</b> {point.y}',
+            pointFormat: ''
         },
         series: [
             {
-                showInLegend: false,
                 data: data
             }
-        ]
+        ],
+        drilldown: {
+            series: [{
+                id: 'smaller',
+                data: drilldown
+            }]
+        }
     });
 }
