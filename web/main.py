@@ -7,8 +7,9 @@ from itertools import starmap
 app = Flask(__name__)
 
 WordTuple = recordtype('WordTuple', ['w', 'np', 'word', 'topics', 'documents'], default=None)
+ContentWordTuple = recordtype('ContentWordTuple', ['w', 'np', 'word', 'word_norm', 'topics', 'documents'], default=None)
 TopicTuple = recordtype('TopicTuple', ['t', 'np', 'documents', 'words'], default=None)
-DocumentTuple = recordtype('DocumentTuple', ['d', 'np', 'name', 'topics', 'words'], default=None)
+DocumentTuple = recordtype('DocumentTuple', ['d', 'np', 'name', 'topics', 'words', 'content'], default=None)
 
 
 @app.route('/')
@@ -100,6 +101,14 @@ def get_topic_info(t, h5f, ntop=-1):
 def document(d):
     with h5py.File('../data.hdf', mode='r') as h5f:
         doc = get_doc_info(d, h5f)
+
+        content = h5f['documents'][str(d)][...]
+        words = [word for word, _ in content]
+        ws = [w for _, w in content]
+        words_norm = h5f['dictionary'][...][ws]
+        nws = h5f['n_wd'][...][ws, d]
+
+        doc.content = list( starmap(ContentWordTuple, zip(ws, nws, words, words_norm)) )
 
     return render_template('document.html', doc=doc)
 
