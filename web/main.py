@@ -114,6 +114,7 @@ def document(d):
 
 
 def get_doc_info(d, h5f, ntop=-1):
+    name = h5f['docinfo'][...][d][1]
     nd = h5f['n_wd'][...].sum(0)[d]
 
     pts = h5f['p_td'][...][:,d]
@@ -131,7 +132,7 @@ def get_doc_info(d, h5f, ntop=-1):
     words = list( starmap(WordTuple, zip(ws, nws[ws], words)) )
     words = filter(lambda w: w.np > 0, words)
 
-    return DocumentTuple(d, nd, 'Doc #%d' % d, topics, words)
+    return DocumentTuple(d, nd, name, topics, words)
 
 
 if __name__ == '__main__':
