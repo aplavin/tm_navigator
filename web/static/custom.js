@@ -70,30 +70,26 @@ function unique(array){
     });
 }
 
-function process_data_color(alpha) {
-    alpha = (typeof alpha == 'number') ? alpha : 0.5;
-
+function process_data_color() {
     var values = unique($('[data-color]').map(function() { return $(this).data('color'); }).get());
     var colormap = {};
     var colors = Highcharts.getOptions().colors.map(tinycolor);
     values.forEach(function(value, i) {
-        colormap[value] = tinycolor(colors[i % colors.length].toRgb());
-        colormap[value].setAlpha(alpha / Math.floor(i / colors.length + 1));
+        colormap[value] = colors[i % colors.length].darken(10);
     });
 
     $('[data-color]').each(function() {
         var background = colormap[$(this).data('color')]
         var el = $(this).find('a')
-        el.css('background-color', background.toRgbString());
-        el.css('color', tinycolor.mostReadable(background, colors));
-        el.css('color', tinycolor.mostReadable(background, ['black', 'white']));
+        el.css('background-color', '#F0F0F0');
+        el.css('color', background.toRgbString());
         el.hover(
             function() {
-                var color = tinycolor(background.toRgb());
-                color.setAlpha(1);
-                $(this).css('background-color', color.toRgbString());
-            }, function() {
                 $(this).css('background-color', background.toRgbString());
+                $(this).css('color', tinycolor.mostReadable(background, colors));
+            }, function() {
+                $(this).css('background-color', '#F0F0F0');
+                $(this).css('color', background.toRgbString());
             }
         );
     });
