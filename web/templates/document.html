@@ -93,12 +93,12 @@
         <h3>Document content</h3>
 
         <div class="well">
-            <h4>Topics</h4>
+            <h4>Topics:</h4>
 
             <ul class="nav nav-pills">
                 {% for t, p in topics %}
                     <li data-color="{{ t }}">
-                        <a href="{{ url_for('topic', t=t) }}">
+                        <a style="border: 1px solid grey" href="{{ url_for('topic', t=t) }}">
                             <span title="{{ p }}">
                                 {{ t }} <!-- <span class="badge">{{ p }}</span> -->
                             </span>
