@@ -90,7 +90,21 @@
     </div>
 
     <div class="container">
-        <h3>Document content</h3>
+        <h3 style="padding-bottom: 10px;">
+            Document content
+
+            <div class="dropdown pull-right">
+                <a class="dropdown-toggle well well-sm" data-toggle="dropdown" href="#">
+                    Topics Highlight
+                    <span class="caret"></span>
+                </a>
+                <ul class="dropdown-menu" role="menu">
+                    <li><a href="#" onclick="process_data_color('active'); return false;">Active</a></li>
+                    <li><a href="#" onclick="process_data_color('passive'); return false;">Passive</a></li>
+                    <li><a href="#" onclick="process_data_color('disabled'); return false;">Disabled</a></li>
+                </ul>
+            </div>
+        </h3>
 
         <div class="well">
             <h4>Topics:</h4>

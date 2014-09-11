@@ -64,7 +64,9 @@ function unique(array){
     });
 }
 
-function process_data_color() {
+function process_data_color(mode) {
+    mode = (typeof mode == 'string') ? mode : 'active';
+
     var backgroundColor = tinycolor('white').darken(5);
 
     var values = unique($('[data-color]').map(function() { return $(this).data('color'); }).get());
@@ -84,23 +86,32 @@ function process_data_color() {
         var color = colormap[value];
         var el = $(this).find('a');
 
-        el.css('background-color', backgroundColor);
-        el.css('color', color);
-        el.hover(
-            function() {
-                others[value].css('background-color', color.brighten(40));
-                others[value].css('color', 'black');
+        if (mode == 'active' || mode == 'passive') {
+            el.css('background-color', backgroundColor);
+            el.css('color', color);
+        } else {
+            el.css('background-color', $("body").css("background-color"));
+            el.css('color', $("body").css("color"));
+        }
+        if (mode == 'active') {
+            el.hover(
+                function() {
+                    others[value].css('background-color', color.brighten(40));
+                    others[value].css('color', 'black');
 
-                el.css('background-color', color.brighten(10));
-                el.css('color', tinycolor.mostReadable(color, colors));
-            }, function() {
-                others[value].css('background-color', backgroundColor);
-                others[value].css('color', color);
+                    el.css('background-color', color.brighten(10));
+                    el.css('color', tinycolor.mostReadable(color, colors));
+                }, function() {
+                    others[value].css('background-color', backgroundColor);
+                    others[value].css('color', color);
 
-                el.css('background-color', backgroundColor);
-                el.css('color', color);
-            }
-        );
+                    el.css('background-color', backgroundColor);
+                    el.css('color', color);
+                }
+            );
+        } else {
+            el.off('mouseenter mouseleave');
+        }
     });
 }
 
