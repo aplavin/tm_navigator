@@ -65,7 +65,7 @@
                     $(function () {
                         createLineChart(
                             $('#plot-words'),
-                            'Number of occurences (top-{{ words | length }})',
+                            'Occurences (top-{{ words | length }})',
                             ['w', 'N'],
                             [
                                 {% for w in words | sort(attribute='np', reverse=True)  %}
