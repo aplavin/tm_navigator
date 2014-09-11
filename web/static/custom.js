@@ -84,6 +84,19 @@ function createLineChart(container, title, ttipNames, data) {
             },
             min: 0
         },
+        tooltip: {
+            crosshairs: [true, true],
+            shared: true,
+            formatter: function() {
+                var x = this.x;
+                var label = data.filter(function(p) { return p.x == x; })[0].label;
+                if (!isNaN(label)) {
+                    return sprintf('<b>%s = %s</b>: #%d<br/><b>%s</b>: %s', ttipNames[0], label, this.x, ttipNames[1], this.y);
+                } else {
+                    return sprintf('<b>%s</b>: #%d<br/><b>%s</b>: %s', label, this.x, ttipNames[1], this.y);
+                }
+            }
+        },
         legend: {
             enabled: false
         },
