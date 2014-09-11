@@ -59,6 +59,12 @@ function createPieChart(container, title, ttipNames, cnt, threshold, data) {
 }
 
 function createLineChart(container, title, ttipNames, data) {
+    if (!data[0].name) {
+        series = [ { data: data }];
+    } else {
+        series = data;
+    }
+
     container.highcharts({
         chart: {
             type: 'line'
@@ -98,13 +104,18 @@ function createLineChart(container, title, ttipNames, data) {
             }
         },
         legend: {
-            enabled: false
+            enabled: !!data[0].name
         },
-        series: [
-            {
-                data: data
+        plotOptions: {
+            series: {
+                states: {
+                    hover: {
+                        lineWidth: 2
+                    }
+                }
             }
-        ]
+        },
+        series: series
     });
 }
 
