@@ -15,7 +15,21 @@ DocumentTuple = recordtype('DocumentTuple', ['d', 'np', 'name', 'topics', 'words
 
 @app.route('/')
 def overview():
-    return render_template('overview.html')
+    with h5py.File('../data.hdf', mode='r') as h5f:
+        nws = h5f['n_wd'][...].sum(1)
+        ws = nws.argsort()[::-1]
+        words = list( starmap(WordTuple, zip(ws, nws[ws])) )
+
+        nds = h5f['n_wd'][...].sum(0)
+        ds = nds.argsort()[::-1]
+        docs = list( starmap(WordTuple, zip(ds, nds[ds])) )
+
+        ptds = h5f['p_td'][...]
+        pts = ptds.dot(1.0 * nds / nds.sum())
+        ts = pts.argsort()[::-1]
+        topics = list( starmap(WordTuple, zip(ts, pts[ts])) )
+
+    return render_template('overview.html', words=words[:100], docs=docs[:100], topics=topics)
 
 
 @app.route('/words')
@@ -42,7 +56,7 @@ def documents():
 
 @app.route('/topics')
 def topics():
-    with h5py.File('../data.hdf', mode='r') as h5f:        
+    with h5py.File('../data.hdf', mode='r') as h5f:
         ptds = h5f['p_td'][...]
         nds = h5f['n_wd'][...].sum(0)
         pts = ptds.dot(1.0 * nds / nds.sum())

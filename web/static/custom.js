@@ -58,6 +58,43 @@ function createPieChart(container, title, ttipNames, cnt, threshold, data) {
     });
 }
 
+function createLineChart(container, title, ttipNames, data) {
+    container.highcharts({
+        chart: {
+            type: 'line'
+        },
+        credits: {
+            enabled: false
+        },
+        title: {
+            text: title
+        },
+        tooltip: {
+            headerFormat: '<b>' + ttipNames[0] + ':</b> {point.key}<br/><b>' + ttipNames[1] + ':</b> {point.y}',
+            pointFormat: ''
+        },
+        xAxis: {
+            title: {
+                text: ttipNames[0]
+            }
+        },
+        yAxis: {
+            title: {
+                text: ttipNames[1]
+            },
+            min: 0
+        },
+        legend: {
+            enabled: false
+        },
+        series: [
+            {
+                data: data
+            }
+        ]
+    });
+}
+
 function unique(array){
     return array.filter(function(el, index, arr) {
         return index == arr.indexOf(el);
