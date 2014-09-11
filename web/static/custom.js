@@ -123,7 +123,10 @@ function process_data_color(mode) {
     var colormap = {};
     var colors = Highcharts.getOptions().colors.map(tinycolor);
     values.forEach(function(value, i) {
-        colormap[value] = colors[i % colors.length].darken(10);
+        if (i >= colors.length - 1) {
+            i = colors.length - 1;
+        }
+        colormap[value] = colors[i].darken(10);
     });
 
     var others = {};
