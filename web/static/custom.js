@@ -1,4 +1,4 @@
-function createPlot(container, title, ttipNames, cnt, threshold, data) {
+function createPieChart(container, title, ttipNames, cnt, threshold, data) {
     var cntThresh = data.filter(
         function (point) { return point.y > threshold; }
     ).length;
