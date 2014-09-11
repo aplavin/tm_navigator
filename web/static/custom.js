@@ -14,12 +14,6 @@ function createPlot(container, title, ttipNames, cnt, threshold, data) {
         data = data.slice(0, cnt).concat([ddown_item]);
     }
 
-    Highcharts.setOptions({
-        lang: {
-            drillUpText: '<< Back'
-        }
-    });
-
     container.highcharts({
         chart: {
             type: 'pie'
@@ -96,3 +90,10 @@ function process_data_color() {
 }
 
 $(process_data_color);
+
+Highcharts.setOptions({
+    lang: {
+        drillUpText: '<< Back'
+    },
+    colors: ["#1F77B4", "#FF7F0E", "#2CA02C", "#D62728", "#9467BD", "#8C564B", "#E377C2", "#7F7F7F", "#BCBD22", "#17BECF"].map(tinycolor).map(function(color) { return color.lighten(10).toRgbString(); })
+});
