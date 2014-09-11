@@ -18,16 +18,17 @@ def overview():
     with h5py.File('../data.hdf', mode='r') as h5f:
         nws = h5f['n_wd'][...].sum(1)
         ws = nws.argsort()[::-1]
-        words = list( starmap(WordTuple, zip(ws, nws[ws])) )
+        words = h5f['dictionary'][...][ws]
+        words = list( starmap(WordTuple, zip(ws, nws[ws], words)) )
 
         nds = h5f['n_wd'][...].sum(0)
         ds = nds.argsort()[::-1]
-        docs = list( starmap(WordTuple, zip(ds, nds[ds])) )
+        docs = list( starmap(DocumentTuple, zip(ds, nds[ds])) )
 
         ptds = h5f['p_td'][...]
         pts = ptds.dot(1.0 * nds / nds.sum())
         ts = pts.argsort()[::-1]
-        topics = list( starmap(WordTuple, zip(ts, pts[ts])) )
+        topics = list( starmap(TopicTuple, zip(ts, pts[ts])) )
 
     return render_template('overview.html', words=words[:100], docs=docs[:100], topics=topics)
 
