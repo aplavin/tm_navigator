@@ -74,24 +74,28 @@ function process_data_color() {
         colormap[value] = colors[i % colors.length].darken(10);
     });
 
+    var others = {};
+    values.forEach(function(value) {
+        others[value] = $(sprintf('[data-color=%s] a', value));
+    });
+
     $('[data-color]').each(function() {
         var value = $(this).data('color')
         var color = colormap[value];
         var el = $(this).find('a');
-        var others = $(sprintf('[data-color=%s] a', value));
 
         el.css('background-color', backgroundColor);
         el.css('color', color);
         el.hover(
             function() {
-                others.css('background-color', color.brighten(40));
-                others.css('color', 'black');
+                others[value].css('background-color', color.brighten(40));
+                others[value].css('color', 'black');
 
                 el.css('background-color', color.brighten(10));
                 el.css('color', tinycolor.mostReadable(color, colors));
             }, function() {
-                others.css('background-color', backgroundColor);
-                others.css('color', color);
+                others[value].css('background-color', backgroundColor);
+                others[value].css('color', color);
 
                 el.css('background-color', backgroundColor);
                 el.css('color', color);
