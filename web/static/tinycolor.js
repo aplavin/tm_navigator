@@ -192,11 +192,7 @@ tinycolor.prototype = {
 
     _applyModification: function(fn, args) {
         var color = fn.apply(null, [this].concat([].slice.call(args)));
-        this._r = color._r;
-        this._g = color._g;
-        this._b = color._b;
-        this.setAlpha(color._a);
-        return this;
+        return color;
     },
     lighten: function() {
         return this._applyModification(lighten, arguments);
