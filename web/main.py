@@ -2,7 +2,6 @@ from flask import Flask, render_template
 import h5py
 from recordtype import recordtype
 from itertools import starmap, groupby
-from collections import Counter
 from math import isnan
 
 
