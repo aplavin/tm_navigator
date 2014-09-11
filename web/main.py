@@ -3,6 +3,8 @@ import h5py
 from recordtype import recordtype
 from itertools import starmap, groupby
 from math import isnan
+import numpy as np
+from scipy.ndimage.filters import convolve1d
 
 
 app = Flask(__name__)
@@ -151,10 +153,20 @@ def document(d):
                   for tt, items in topics]
         topics.sort(key=lambda (tt, np): np, reverse=True)
 
+        # generate smooth topics flow
+        topics_flow = content['topics'][:, 0]
+        top_topics = np.bincount(topics_flow).argsort()[::-1][:5]
+        topics_flow = (top_topics[:, np.newaxis] == topics_flow).T.astype(np.float32)
+
+        wlen = 100
+        window = np.ones(wlen)
+
+        topics_flow = convolve1d(topics_flow, window / window.sum(), axis=0)
+        topics_flow = list( starmap(TopicTuple, zip( top_topics, zip(*map(tuple, topics_flow)) )) )
 
         doc.content = list( starmap(ContentWordTuple, zip(ws, nws, words, words_norm, wtopics)) )
 
-    return render_template('document.html', doc=doc, topics=topics)
+    return render_template('document.html', doc=doc, topics=topics, topics_flow=topics_flow)
 
 
 def get_doc_info(d, h5f, ntop=-1):

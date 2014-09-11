@@ -87,6 +87,35 @@
                 });
             </script>
         </div>
+
+        <div class="row">
+            <div class="col-md-12" id="plot-topics-flow" style="height:400px;"></div>
+
+            <script type="text/javascript">
+                $(function () {
+                    createLineChart(
+                        $('#plot-topics-flow'),
+                        'Topics flow',
+                        ['Word #', 'P'],
+                        [
+                            {% for tf in topics_flow %}
+                                {
+                                    name: "Topic {{ tf.t }}",
+                                    data: [
+                                        {% for p in tf.np %}
+                                            [
+                                                {{ loop.index }},
+                                                {{ p }}
+                                            ],
+                                        {% endfor %}
+                                    ]
+                                },
+                            {% endfor %}
+                        ]
+                    );
+                });
+            </script>
+        </div>
     </div>
 {% endmacro %}
 
