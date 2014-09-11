@@ -65,6 +65,8 @@ function unique(array){
 }
 
 function process_data_color() {
+    var backgroundColor = tinycolor('white').darken(5);
+
     var values = unique($('[data-color]').map(function() { return $(this).data('color'); }).get());
     var colormap = {};
     var colors = Highcharts.getOptions().colors.map(tinycolor);
@@ -73,17 +75,26 @@ function process_data_color() {
     });
 
     $('[data-color]').each(function() {
-        var background = colormap[$(this).data('color')]
-        var el = $(this).find('a')
-        el.css('background-color', '#F0F0F0');
-        el.css('color', background.toRgbString());
+        var value = $(this).data('color')
+        var color = colormap[value];
+        var el = $(this).find('a');
+        var others = $(sprintf('[data-color=%s] a', value));
+
+        el.css('background-color', backgroundColor);
+        el.css('color', color);
         el.hover(
             function() {
-                $(this).css('background-color', background.toRgbString());
-                $(this).css('color', tinycolor.mostReadable(background, colors));
+                others.css('background-color', color.brighten(40));
+                others.css('color', 'black');
+
+                el.css('background-color', color.brighten(10));
+                el.css('color', tinycolor.mostReadable(color, colors));
             }, function() {
-                $(this).css('background-color', '#F0F0F0');
-                $(this).css('color', background.toRgbString());
+                others.css('background-color', backgroundColor);
+                others.css('color', color);
+
+                el.css('background-color', backgroundColor);
+                el.css('color', color);
             }
         );
     });
