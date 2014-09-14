@@ -155,6 +155,11 @@
 {% endmacro %}
 
 
+{% block head %}
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='docsdata/%s.css' % filename) }}">
+{% endblock %}
+
+
 {% block body %}
 <div class="container">
     <div>

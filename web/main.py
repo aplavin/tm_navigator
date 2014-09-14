@@ -140,17 +140,20 @@ def document(d):
 
         filename = h5f['filenames'][d]
         if filename != '0':
-            with codecs.open('../documents/html/%s.html' % filename, encoding='utf-8') as f:
+            with codecs.open('static/docsdata/%s.html' % filename, encoding='utf-8') as f:
                 html = f.read()
             html = re.search(r'<body>.*</body>', html, re.DOTALL).group(0)
+            html = re.sub(r'<h(\d) id="[^"]+">', r'<h\1>', html)
 
             ws_were = set()
             for word, w, topics, _ in content:
                 if w != -1 and w not in ws_were:
                     ws_were.add(w)
                     html = re.sub(ur'(\W)(%s)(\W)' % word, r'\1<span data-word="%d" data-color="%d"><a href="#">\2</a></span>\3' % (w, topics[0]), html, flags=re.I | re.U)
-            html = html.replace(' src="%s' % filename[::-1].split('/')[0][::-1],
-                                ' src="/static/eqn_imgs/%s' % filename)
+
+            html = re.sub(r'<img class="(\w+)" src="\w+/(eqn\d+).png".*?/>',
+                          r'<span class="sprite-\2"></span>',
+                          html, flags=re.DOTALL | re.MULTILINE)
 
         ws = content['w']
         words_norm = h5f['dictionary'][...][ws]
@@ -182,7 +185,7 @@ def document(d):
 
         doc.content = list( starmap(ContentWordTuple, zip(ws, nws, words, words_norm, wtopics)) )
 
-    return render_template('document.html', doc=doc, topics=topics, topics_flow=topics_flow, html_content=html)
+    return render_template('document.html', doc=doc, topics=topics, topics_flow=topics_flow, html_content=html, filename=filename)
 
 
 def get_doc_info(d, h5f, ntop=-1):
