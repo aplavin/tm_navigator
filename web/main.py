@@ -5,6 +5,8 @@ from itertools import starmap, groupby
 from math import isnan
 import numpy as np
 from scipy.ndimage.filters import convolve1d
+import codecs
+import re
 
 
 app = Flask(__name__)
@@ -136,6 +138,20 @@ def document(d):
 
         content = h5f['documents'][str(d)][...]
 
+        filename = h5f['filenames'][d]
+        if filename != '0':
+            with codecs.open('../documents/html/%s.html' % filename, encoding='utf-8') as f:
+                html = f.read()
+            html = re.search(r'<body>.*</body>', html, re.DOTALL).group(0)
+
+            ws_were = set()
+            for word, w, topics, _ in content:
+                if w != -1 and w not in ws_were:
+                    ws_were.add(w)
+                    html = re.sub(ur'(\W)(%s)(\W)' % word, r'\1<span data-word="%d" data-color="%d"><a href="#">\2</a></span>\3' % (w, topics[0]), html, flags=re.I | re.U)
+            html = html.replace(' src="%s' % filename[::-1].split('/')[0][::-1],
+                                ' src="/static/eqn_imgs/%s' % filename)
+
         ws = content['w']
         words_norm = h5f['dictionary'][...][ws]
         nws = h5f['n_wd'][...][ws, d]
@@ -166,7 +182,7 @@ def document(d):
 
         doc.content = list( starmap(ContentWordTuple, zip(ws, nws, words, words_norm, wtopics)) )
 
-    return render_template('document.html', doc=doc, topics=topics, topics_flow=topics_flow)
+    return render_template('document.html', doc=doc, topics=topics, topics_flow=topics_flow, html_content=html)
 
 
 def get_doc_info(d, h5f, ntop=-1):

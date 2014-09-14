@@ -150,17 +150,7 @@
             </ul>
         </div>
 
-        {% for cw in doc.content %}
-            {% if cw.w != -1 %}
-                <span data-color="{{ cw.topics.t }}">
-                    <a href="{{ url_for('word', w=cw.w) }}" title="Initial form: {{ cw.word_norm }}&#10;# of occurences: {{ cw.np }}">
-                        {{ cw.word }}
-                    </a>
-                </span>
-            {% else %}
-                {{ cw.word }}
-            {% endif %}
-        {% endfor %}
+        {{ html_content | safe }}
     </div>
 {% endmacro %}
 
