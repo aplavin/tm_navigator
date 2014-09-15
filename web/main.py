@@ -105,7 +105,7 @@ def topics():
         pts = ptds.dot(1.0 * nds / nds.sum())
         indices = pts.argsort()[::-1]
 
-        topics = get_topics_info(indices, h5f, 5)
+        topics = get_topics_info(indices, h5f, 30)
 
     return render_template('topics.html', topics=topics)
 
