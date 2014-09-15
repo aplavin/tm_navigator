@@ -11,7 +11,6 @@
                 <tr>
                     <th>#</th>
                     <th>Topic</th>
-                    <th><span class="glyphicon glyphicon-sort-by-attributes-alt"></span> P(t)</th>
                     <th>Documents</th>
                     <th>Words</th>
                 </tr>
@@ -21,26 +20,28 @@
                     <tr>
                         <td>{{ loop.index }}</td>
                         <td>
-                            <a href="{{ url_for('topic', t=t.t) }}">{{ t.t }}</a>
+                            <a href="{{ url_for('topic', t=t.t) }}">{{ t.t }}</a><br/>
+                            P(t)&nbsp;=&nbsp;{{ t.np | round(3) }}
                         </td>
-                        <td>{{ t.np }}</td>
                         <td>
-                            {% set comma_j = joiner(',') %}
+                            <ul class="tagcloud">
                             {% for d in t.documents %}
-                                {{ comma_j() }}
-                                <a href="{{ url_for('document', d=d.d) }}" title="P(t | d) = {{ d.np }}">{{ d.d }}</a>
+                                <li>
+                                    <a href="{{ url_for('document', d=d.d) }}" title="P(t | d) = {{ d.np }}" data-size="{{ d.np }}">{{ d.d }}</a>
+                                </li>
                             {% endfor %}
-                            {{ comma_j() }}
-                            ...
+                                <li>...</li>
+                            </ul>
                         </td>
                         <td>
-                            {% set comma_j = joiner(',') %}
+                            <ul class="tagcloud" data-useweight>
                             {% for w in t.words %}
-                                {{ comma_j() }}
-                                <a href="{{ url_for('word', w=w.w) }}" title="P(w | t) = {{ w.np }}">{{ w.word }}</a>
+                                <li>
+                                    <a href="{{ url_for('word', w=w.w) }}" title="P(w | t) = {{ w.np }}" data-size="{{ w.np }}">{{ w.word }}</a>
+                                </li>
                             {% endfor %}
-                            {{ comma_j() }}
-                            ...
+                                <li>...</li>
+                            </ul>
                         </td>
                     </tr>
                 {% endfor %}

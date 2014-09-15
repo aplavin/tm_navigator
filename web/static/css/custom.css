@@ -1,0 +1,16 @@
+.tagcloud li {
+    display: inline;
+    padding: 5px;
+}
+
+.tagcloud {
+    padding: 0;
+}
+
+a {
+    text-decoration: none !important;
+}
+
+a:hover {
+    text-decoration: underline !important;
+}

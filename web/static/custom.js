@@ -187,3 +187,22 @@ Highcharts.setOptions({
     },
     colors: ["#1F77B4", "#FF7F0E", "#2CA02C", "#D62728", "#9467BD", "#8C564B", "#E377C2", "#7F7F7F", "#BCBD22", "#17BECF"].map(tinycolor).map(function(color) { return color.lighten(10).toRgbString(); })
 });
+
+$(function process_tagclouds() {
+    $('.tagcloud').each(function process_tagcloud() {
+        var useweight = typeof $(this).data('useweight') != 'undefined';
+
+        var elems = $(this).find('[data-size]');
+        var sizes = elems.map(function get_datasize() { return $(this).data('size'); }).get();
+        var max = Math.max.apply(null, sizes);
+        elems.each(function setsize() {
+            var val = $(this).data('size');
+            var relval = Math.max(Math.sqrt(val / max), 0.2);
+            $(this).fadeTo(0, relval);
+            if (useweight && relval > 0.8) {
+                $(this).css('font-weight', 'bold');
+            }
+            // $(this).css('font-size', relval + 'em');
+        });
+    });
+});
