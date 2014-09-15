@@ -90,7 +90,7 @@ def topics():
         ptds = h5f['p_td'][...]
         nds = h5f['n_wd'][...].sum(0)
         pts = ptds.dot(1.0 * nds / nds.sum())
-        indices = pts.argsort()[:-21:-1]
+        indices = pts.argsort()[::-1]
 
         topics = get_topics_info(indices, h5f, 5)
 
