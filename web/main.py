@@ -159,14 +159,18 @@ def get_topics_info(ts, h5f, ntop=-1):
     words = h5f['dictionary'][...][ws]
     words = [list( starmap(WordTuple, zip(ws_r, pws_r[ws_r], words_r)) )
              for ws_r, pws_r, words_r in zip(ws, pws, words)]
-    # words = filter(lambda w: w.np > 0, words)
+    words = map(
+        lambda words_r: filter(lambda w: w.np > 0, words_r),
+        words)
 
     docs = pds.argsort(axis=1)[:, ::-1]
     if ntop >= 0:
         docs = docs[:, :ntop]
     docs = [list( starmap(DocumentTuple, zip(docs_r, pds_r[docs_r])) )
             for docs_r, pds_r in zip(docs, pds)]
-    # docs = filter(lambda d: d.np > 0, docs)
+    docs = map(
+        lambda docs_r: filter(lambda d: d.np > 0, docs_r),
+        docs)
 
     return list( starmap(TopicTuple, zip(ts, pt, docs, words)) )
 
