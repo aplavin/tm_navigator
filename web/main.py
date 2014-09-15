@@ -1,4 +1,6 @@
 from flask import Flask, render_template
+from flask_debugtoolbar import DebugToolbarExtension
+from flask_debugtoolbar_lineprofilerpanel.profile import line_profile
 import h5py
 from recordtype import recordtype
 from itertools import starmap, groupby
@@ -7,9 +9,32 @@ import numpy as np
 from scipy.ndimage.filters import convolve1d
 import codecs
 import re
+import inspect
+import sys
 
 
 app = Flask(__name__)
+app.debug = True
+app.config.update({
+    'SECRET_KEY': '\xcby\x01V\xff\x80\xf5\xb0I]\xa5\x84:\xd8\xfd\x87 \xc5\xa49\x05\x92\xa7\xafP\x87\x1b\xfe\xa8\x03\x84\xad',
+    'DEBUG_TB_PANELS': [
+        'flask_debugtoolbar.panels.versions.VersionDebugPanel',
+        'flask_debugtoolbar.panels.timer.TimerDebugPanel',
+        'flask_debugtoolbar.panels.headers.HeaderDebugPanel',
+        'flask_debugtoolbar.panels.request_vars.RequestVarsDebugPanel',
+        'flask_debugtoolbar.panels.template.TemplateDebugPanel',
+        'flask_debugtoolbar.panels.logger.LoggingPanel',
+        'flask_debugtoolbar.panels.profiler.ProfilerDebugPanel',
+
+        'flask_debugtoolbar_lineprofilerpanel.panels.LineProfilerPanel'
+    ],
+    'DEBUG_TB_PROFILER_ENABLED': True,
+    'DEBUG_TB_TEMPLATE_EDITOR_ENABLED': True,
+})
+toolbar = DebugToolbarExtension(app)
+
+def debug():
+    assert app.debug == False, "Don't panic! You're here by request of debug()"
 
 WordTuple = recordtype('WordTuple', ['w', 'np', 'word', 'topics', 'documents'], default=None)
 ContentWordTuple = recordtype('ContentWordTuple', ['w', 'np', 'word', 'word_norm', 'topics'], default=None)
@@ -209,6 +234,9 @@ def get_doc_info(d, h5f, ntop=-1):
 
     return DocumentTuple(d, nd, name, topics, words)
 
+for _, f in inspect.getmembers(sys.modules[__name__], inspect.isfunction):
+    if inspect.getsourcefile(f) == __file__:
+        line_profile(f)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
