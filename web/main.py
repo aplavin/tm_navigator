@@ -11,6 +11,8 @@ import codecs
 import re
 import inspect
 import sys
+import subprocess
+import datetime
 
 
 app = Flask(__name__)
@@ -35,6 +37,15 @@ toolbar = DebugToolbarExtension(app)
 
 def debug():
     assert app.debug == False, "Don't panic! You're here by request of debug()"
+
+out = subprocess.check_output("find .. -type f -print0 | xargs -0 stat --format '%Y :%y %n' | sort -nr | cut -d' ' -f2,3 | cut -d. -f1 | sed 's/://' | head -1", shell=True)
+last_updated = datetime.datetime.strptime(out, '%Y-%m-%d %H:%M:%S\n')
+
+
+@app.context_processor
+def inject_last_updated():
+    return dict(last_updated=last_updated)
+
 
 WordTuple = recordtype('WordTuple', ['w', 'np', 'word', 'topics', 'documents'], default=None)
 ContentWordTuple = recordtype('ContentWordTuple', ['w', 'np', 'word', 'word_norm', 'topics'], default=None)
