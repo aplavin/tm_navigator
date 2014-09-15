@@ -2,15 +2,20 @@
 <html>
     <head>
         <title>{% block title %}{{ breadcrumbs[-1] }}{% endblock %} - TM Vis</title>
-        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.css') }}">
 
-        <script src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
-        <script src="http://code.highcharts.com/highcharts.js"></script>
-        <script src="http://code.highcharts.com/modules/drilldown.js"></script>
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
-        <script src="{{ url_for('static', filename='sprintf.js') }}"></script>
-        <script src="{{ url_for('static', filename='tinycolor.js') }}"></script>
-        <script src="{{ url_for('static', filename='custom.js') }}"></script>
+        {% assets filters='cssmin', output='css/packed.css',
+                  'css/bootstrap.css', 'css/custom.css' %}
+            <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}">
+        {% endassets %}
+
+        {% assets filters='jsmin',
+              output='js/packed.js',
+              'http://code.jquery.com/jquery-2.1.1.min.js',
+              'highcharts.js', 'drilldown.js',
+              'http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js',
+              'sprintf.js', 'tinycolor.js', 'custom.js' %}
+            <script src="{{ ASSET_URL }}"></script>
+        {% endassets %}
 
         {% block head %}{% endblock %}
     </head>

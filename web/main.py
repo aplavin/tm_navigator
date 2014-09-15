@@ -1,4 +1,5 @@
 from flask import Flask, render_template
+from flask.ext.assets import Environment
 from flask_debugtoolbar import DebugToolbarExtension
 from flask_debugtoolbar_lineprofilerpanel.profile import line_profile
 import h5py
@@ -16,6 +17,7 @@ import datetime
 
 
 app = Flask(__name__)
+assets = Environment(app)
 app.debug = True
 app.config.update({
     'SECRET_KEY': '\xcby\x01V\xff\x80\xf5\xb0I]\xa5\x84:\xd8\xfd\x87 \xc5\xa49\x05\x92\xa7\xafP\x87\x1b\xfe\xa8\x03\x84\xad',
