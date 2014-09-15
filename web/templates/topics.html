@@ -26,7 +26,7 @@
                         <td>{{ t.np }}</td>
                         <td>
                             {% set comma_j = joiner(',') %}
-                            {% for d in t.documents[:5] %}
+                            {% for d in t.documents %}
                                 {{ comma_j() }}
                                 <a href="{{ url_for('document', d=d.d) }}" title="P(t | d) = {{ d.np }}">{{ d.d }}</a>
                             {% endfor %}
@@ -35,7 +35,7 @@
                         </td>
                         <td>
                             {% set comma_j = joiner(',') %}
-                            {% for w in t.words[:5] %}
+                            {% for w in t.words %}
                                 {{ comma_j() }}
                                 <a href="{{ url_for('word', w=w.w) }}" title="P(w | t) = {{ w.np }}">{{ w.word }}</a>
                             {% endfor %}
