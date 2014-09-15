@@ -92,7 +92,7 @@ def topics():
         pts = ptds.dot(1.0 * nds / nds.sum())
         indices = pts.argsort()[:-21:-1]
 
-        topics = [get_topic_info(t, h5f, 5) for t in indices]
+        topics = get_topics_info(indices, h5f, 5)
 
     return render_template('topics.html', topics=topics)
 
@@ -129,31 +129,33 @@ def get_word_info(w, h5f, ntop=-1):
 @app.route('/topic/<int:t>')
 def topic(t):
     with h5py.File('../data.hdf', mode='r') as h5f:
-        topic = get_topic_info(t, h5f)
+        topic = get_topics_info([t], h5f)[0]
 
     return render_template('topic.html', topic=topic)
 
 
-def get_topic_info(t, h5f, ntop=-1):
-    pds = h5f['p_td'][...][t,:]
+def get_topics_info(ts, h5f, ntop=-1):
+    pds = h5f['p_td'][...][ts,:]
     nds = h5f['n_wd'][...].sum(0)
     pt = pds.dot(1.0 * nds / nds.sum())
 
-    pws = h5f['p_wt'][...][:,t]
-    ws = pws.argsort()[::-1]
+    pws = h5f['p_wt'][...][:,ts].T
+    ws = pws.argsort(axis=1)[:,::-1]
     if ntop >= 0:
-        ws = ws[:ntop]
+        ws = ws[:,:ntop]
     words = h5f['dictionary'][...][ws]
-    words = list( starmap(WordTuple, zip(ws, pws[ws], words)) )
-    words = filter(lambda w: w.np > 0, words)
+    words = [list( starmap(WordTuple, zip(ws_r, pws_r[ws_r], words_r)) )
+             for ws_r, pws_r, words_r in zip(ws, pws, words)]
+    # words = filter(lambda w: w.np > 0, words)
 
-    docs = pds.argsort()[::-1]
+    docs = pds.argsort(axis=1)[:, ::-1]
     if ntop >= 0:
-        docs = docs[:ntop]
-    docs = list( starmap(DocumentTuple, zip(docs, pds[docs])) )
-    docs = filter(lambda d: d.np > 0, docs)
+        docs = docs[:, :ntop]
+    docs = [list( starmap(DocumentTuple, zip(docs_r, pds_r[docs_r])) )
+            for docs_r, pds_r in zip(docs, pds)]
+    # docs = filter(lambda d: d.np > 0, docs)
 
-    return TopicTuple(t, pt, docs, words)
+    return list( starmap(TopicTuple, zip(ts, pt, docs, words)) )
 
 
 @app.route('/document/<int:d>')
