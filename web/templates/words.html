@@ -17,34 +17,72 @@
                 </tr>
             </thead>
             <tbody>
-                {% for w in words %}
-                    <tr>
-                        <td>{{ loop.index }}</td>
-                        <td>
-                            <a href="{{ url_for('word', w=w.w) }}">{{ w.word }}</a>
-                        </td>
-                        <td>{{ w.np }}</td>
-                        <td>
-                            {% set comma_j = joiner(',') %}
-                            {% for t in w.topics %}
-                                {{ comma_j() }}
-                                <a href="{{ url_for('topic', t=t.t) }}" title="P(w | t) = {{ t.np }}">{{ t.t }}</a>
-                            {% endfor %}
-                            {{ comma_j() }}
-                            ...
-                        </td>
-                        <td>
-                            {% set comma_j = joiner(',') %}
-                            {% for d in w.documents[:5] %}
-                                {{ comma_j() }}
-                                <a href="{{ url_for('document', d=d.d) }}" title="N_wd = {{ d.np }}">{{ d.d }}</a>
-                            {% endfor %}
-                            {{ comma_j() }}
-                            ...
-                        </td>
-                    </tr>
-                {% endfor %}
             </tbody>
         </table>
+
+        <script>
+            dataset = {
+                columns: [
+                    {
+                        type: 'index'
+                    },
+                    {
+                        type: 'link',
+                        href_fmt: '{{ url_for('word', w=999) }}'.replace('999', '%d'),
+                        href_field: 'w',
+                        text_field: 'word'
+                    },
+                    {
+                        type: 'text',
+                        field: 'np'
+                    },
+                    {
+                        type: 'tagcloud',
+                        field: 'topics',
+                        href_fmt: '{{ url_for('topics', t=999) }}'.replace('999', '%d'),
+                        href_field: 't',
+                        text_field: 't',
+                        size_field: 'np',
+                    },
+                    {
+                        type: 'tagcloud',
+                        field: 'documents',
+                        href_fmt: '{{ url_for('document', d=999) }}'.replace('999', '%d'),
+                        href_field: 'd',
+                        text_field: 'd',
+                        size_field: 'np'
+                    },
+                ],
+                data: [
+                {% autoescape false %}
+                {% for w in words %}
+                    {
+                        w: {{ w.w }},
+                        word: '{{ w.word }}',
+                        np: {{ w.np }},
+                        documents: [
+                            {% for d in w.documents %}
+                                {
+                                    d: {{ d.d }},
+                                    np: {{ d.np }}
+                                },
+                            {% endfor %}
+                        ],
+                        topics: [
+                            {% for t in w.topics %}
+                                {
+                                    t: {{ t.t }},
+                                    np: {{ t.np }},
+                                },
+                            {% endfor %}
+                        ]
+                    },
+                {% endfor %}
+                {% endautoescape %}
+                ]
+            }
+            fill_table($('table'), dataset, 15);
+        </script>
+
     </div>
 {% endblock %}
