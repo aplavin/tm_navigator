@@ -211,7 +211,7 @@ $(function process_tables() {
     $('table.searchable').each(function process_table() {
         function hide_many_rows(term, table) {
             var rows = $(table).find('tbody tr:visible');
-            rows.slice(15).hide();
+            rows.slice($(table).data('limit-rows')).hide();
         }
         hide_many_rows('', $(this));
         $(this).filterTable({
