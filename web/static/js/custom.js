@@ -192,7 +192,7 @@ function process_tagclouds() {
     $('.tagcloud:visible').each(function process_tagcloud() {
         var useweight = typeof $(this).data('useweight') != 'undefined';
 
-        var elems = $(this).find('[data-size]');
+        var elems = $(this).find('a');
         var sizes = elems.map(function get_datasize() { return $(this).data('size'); }).get();
         var max = Math.max.apply(null, sizes);
         elems.each(function setsize() {
@@ -209,18 +209,47 @@ function process_tagclouds() {
 
 $(process_tagclouds);
 
-$(function process_tables() {
-    $('table.searchable').each(function process_table() {
-        function hide_many_rows(term, table) {
-            var rows = $(table).find('tbody tr:visible');
-            rows.slice($(table).data('limit-rows')).hide();
-            process_tagclouds();
-        }
-        // hide_many_rows('', $(this));
-        $(this).filterTable({
-            label: 'Search:',
-            placeholder: 'enter search terms...',
-            callback: hide_many_rows
+function fill_table(table, dataset, limit) {
+    var tbody = $(table).find('tbody');
+    tbody.empty();
+
+    dataset['data'].slice(0, limit).forEach(function (row, i) {
+        var trow = $('<tr></tr>');
+        tbody.append(trow);
+        dataset['columns'].forEach(function (col) {
+            var tcell = $('<td></td>');
+            switch (col['type']) {
+                case 'index':
+                    tcell.append(i + 1);
+                    break;
+                case 'text':
+                    tcell.append(row[col['field']]);
+                    break;
+                case 'link':
+                    var a = $('<a></a>');
+                    a.attr('href', sprintf(col['href_fmt'], row[col['href_field']]));
+                    a.text(row[col['text_field']]);
+                    tcell.append(a);
+                    break;
+                case 'tagcloud':
+                    var ul = $('<ul></ul>');
+                    ul.data('useweight', 1);
+                    ul.addClass('tagcloud');
+                    row[col['field']].forEach(function (val) {
+                        var li = $('<li></li>');
+                        var a = $('<a></a>');
+                        a.data('size', val[col['size_field']]);
+                        a.attr('href', sprintf(col['href_fmt'], val[col['href_field']]));
+                        a.text(val[col['text_field']]);
+                        li.append(a);
+                        ul.append(li);
+                        ul.append('\n');
+                    });
+                    tcell.append(ul);
+                    break;
+            }
+            trow.append(tcell);
         });
     });
-});
+    process_tagclouds();
+}

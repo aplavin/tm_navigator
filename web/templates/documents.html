@@ -6,7 +6,7 @@
 
 {% block body %}
     <div class="container">
-        <table class="table table-striped table-hover searchable" data-limit-rows="15">
+        <table class="table table-striped table-hover">
             <thead>
                 <tr>
                     <th>#</th>
@@ -17,35 +17,73 @@
                 </tr>
             </thead>
             <tbody>
-                {% for d in docs %}
-                    <tr {{ 'style="display: none"'|safe if loop.index > 15 else '' }}>
-                        <td>{{ loop.index }}</td>
-                        <td>
-                            <a href="{{ url_for('document', d=d.d) }}">{{ d.name }}</a>
-                        </td>
-                        <td>{{ d.np }}</td>
-                        <td>
-                            <ul class="tagcloud" data-useweight>
-                            {% for t in d.topics %}
-                                <li>
-                                    <a href="{{ url_for('topic', t=t.t) }}" title="P(t | d) = {{ t.np }}" data-size="{{ t.np }}">{{ t.t }}</a>
-                                </li>
-                            {% endfor %}
-                            </ul>
-                        </td>
-                        <td>
-                            <ul class="tagcloud" data-useweight>
-                            {% for w in d.words %}
-                                <li>
-                                    <a href="{{ url_for('word', w=w.w) }}" title="N_wd = {{ w.np }}" data-size="{{ w.np }}">{{ w.word }}</a>
-                                </li>
-                            {% endfor %}
-                                <li>...</li>
-                            </ul>
-                        </td>
-                    </tr>
-                {% endfor %}
             </tbody>
         </table>
+
+        <script>
+            dataset = {
+                columns: [
+                    {
+                        type: 'index'
+                    },
+                    {
+                        type: 'link',
+                        href_fmt: '{{ url_for('document', d=999) }}'.replace('999', '%d'),
+                        href_field: 'd',
+                        text_field: 'name'
+                    },
+                    {
+                        type: 'text',
+                        field: 'np'
+                    },
+                    {
+                        type: 'tagcloud',
+                        field: 'topics',
+                        href_fmt: '{{ url_for('topic', t=999) }}'.replace('999', '%d'),
+                        href_field: 't',
+                        text_field: 't',
+                        size_field: 'np',
+                    },
+                    {
+                        type: 'tagcloud',
+                        field: 'words',
+                        href_fmt: '{{ url_for('word', w=999) }}'.replace('999', '%d'),
+                        href_field: 'w',
+                        text_field: 'word',
+                        size_field: 'np',
+                        use_weight: true
+                    },
+                ],
+                data: [
+                {% autoescape false %}
+                {% for d in docs %}
+                    {
+                        d: {{ d.d }},
+                        name: '{{ d.name }}',
+                        np: {{ d.np }},
+                        topics: [
+                            {% for t in d.topics %}
+                                {
+                                    t: {{ t.t }},
+                                    np: {{ t.np }}
+                                },
+                            {% endfor %}
+                        ],
+                        words: [
+                            {% for w in d.words %}
+                                {
+                                    w: {{ w.w }},
+                                    np: {{ w.np }},
+                                    word: '{{ w.word }}'
+                                },
+                            {% endfor %}
+                        ]
+                    },
+                {% endfor %}
+                {% endautoescape %}
+                ]
+            }
+            fill_table($('table'), dataset, 15);
+        </script>
     </div>
 {% endblock %}
