@@ -213,43 +213,80 @@ function fill_table(table, dataset, limit) {
     var tbody = $(table).find('tbody');
     tbody.empty();
 
-    dataset['data'].slice(0, limit).forEach(function (row, i) {
-        var trow = $('<tr></tr>');
-        tbody.append(trow);
-        dataset['columns'].forEach(function (col) {
-            var tcell = $('<td></td>');
-            switch (col['type']) {
-                case 'index':
-                    tcell.append(i + 1);
-                    break;
-                case 'text':
-                    tcell.append(row[col['field']]);
-                    break;
-                case 'link':
-                    var a = $('<a></a>');
-                    a.attr('href', sprintf(col['href_fmt'], row[col['href_field']]));
-                    a.text(row[col['text_field']]);
-                    tcell.append(a);
-                    break;
-                case 'tagcloud':
-                    var ul = $('<ul></ul>');
-                    ul.data('useweight', 1);
-                    ul.addClass('tagcloud');
-                    row[col['field']].forEach(function (val) {
-                        var li = $('<li></li>');
+    function show_data(data) {
+        data.forEach(function (row, i) {
+            var trow = $('<tr></tr>');
+            tbody.append(trow);
+            dataset['columns'].forEach(function (col) {
+                var tcell = $('<td></td>');
+                switch (col['type']) {
+                    case 'index':
+                        tcell.append(i + 1);
+                        break;
+                    case 'text':
+                        tcell.append(row[col['field']]);
+                        break;
+                    case 'link':
                         var a = $('<a></a>');
-                        a.data('size', val[col['size_field']]);
-                        a.attr('href', sprintf(col['href_fmt'], val[col['href_field']]));
-                        a.text(val[col['text_field']]);
-                        li.append(a);
-                        ul.append(li);
-                        ul.append('\n');
-                    });
-                    tcell.append(ul);
-                    break;
-            }
-            trow.append(tcell);
-        });
-    });
+                        a.attr('href', sprintf(col['href_fmt'], row[col['href_field']]));
+                        a.text(row[col['text_field']]);
+                        tcell.append(a);
+                        break;
+                    case 'tagcloud':
+                        var ul = $('<ul></ul>');
+                        ul.data('useweight', 1);
+                        ul.addClass('tagcloud');
+                        row[col['field']].forEach(function (val) {
+                            var li = $('<li></li>');
+                            var a = $('<a></a>');
+                            a.data('size', val[col['size_field']]);
+                            a.attr('href', sprintf(col['href_fmt'], val[col['href_field']]));
+                            a.text(val[col['text_field']]);
+                            li.append(a);
+                            ul.append(li);
+                            ul.append('\n');
+                        });
+                        tcell.append(ul);
+                        break;
+                }
+                trow.append(tcell);
+            });
+        })
+    }
+
+    show_data(dataset['data'].slice(0, limit));
     process_tagclouds();
+
+    var input_div = $('<div></div>');
+    input_div.addClass('filter-input');
+    var input = $('<input type="text" placeholder="enter search terms..." />');
+    input.attr('id', 'filter-input');
+    input_div.append('<label>Search:</label>');
+    input_div.append(input);
+    $(table).before(input_div);
+
+    $(input).on('input', function() {
+        var search = $(this).val();
+        var regexp = new RegExp(search, 'i');
+        var found = [];
+        dataset['data'].every(function (row, ri) {
+            var cur_matches = [];
+            traverse(row).forEach(function (obj) {
+                if (typeof obj == 'string' && regexp.exec(obj)) {
+                    cur_matches.push([this.path, obj]);
+                }
+            });
+            if (cur_matches.length > 0) {
+                found.push([ri, cur_matches]);
+            }
+            return found.length < limit;
+        });
+        tbody.empty();
+        var data = [];
+        found.forEach(function (fobj) {
+            var ri = fobj[0];
+            data.push(dataset['data'][ri]);
+        });
+        show_data(data);
+    });
 }
