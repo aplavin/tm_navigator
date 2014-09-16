@@ -94,7 +94,7 @@ def documents():
         nw = h5f['n_wd'][...].sum(0)
         indices = nw.argsort()[:-21:-1]
 
-        docs = [get_doc_info(d, h5f, 5) for d in indices]
+        docs = get_docs_info(indices, h5f, 5)
 
     return render_template('documents.html', docs=docs)
 
@@ -121,7 +121,7 @@ def topic(t):
 @app.route('/document/<int:d>')
 def document(d):
     with h5py.File('../data.hdf', mode='r') as h5f:
-        doc = get_doc_info(d, h5f)
+        doc = get_docs_info([d], h5f)[0]
 
         content = h5f['documents'][str(d)][...]
 
@@ -211,26 +211,32 @@ def get_topics_info(ts, h5f, ntop=-1):
     return list( starmap(TopicTuple, zip(ts, pt, docs, words)) )
 
 
-def get_doc_info(d, h5f, ntop=-1):
-    name = h5f['docinfo'][...][d][1]
-    nd = h5f['n_wd'][...].sum(0)[d]
+def get_docs_info(ds, h5f, ntop=-1):
+    name = h5f['docinfo'][...]['name'][ds]
+    nd = h5f['n_wd'][...].sum(0)[ds]
 
-    pts = h5f['p_td'][...][:,d]
-    topics = pts.argsort()[::-1]
+    pts = h5f['p_td'][...][:,ds].T
+    topics = pts.argsort(axis=-1)[:,::-1]
     if ntop >= 0:
-        topics = topics[:ntop]
-    topics = list( starmap(TopicTuple, zip(topics, pts[topics])) )
-    topics = filter(lambda t: t.np > 0, topics)
+        topics = topics[:,:ntop]
+    topics = [list( starmap(TopicTuple, zip(topics_r, pts_r[topics_r])) )
+             for topics_r, pts_r in zip(topics, pts)]
+    topics = map(
+        lambda topics_r: filter(lambda t: t.np > 0, topics_r),
+        topics)
 
-    nws = h5f['n_wd'][...][:,d]
-    ws = nws.argsort()[::-1]
+    nws = h5f['n_wd'][...][:,ds].T
+    ws = nws.argsort()[:, ::-1]
     if ntop >= 0:
-        ws = ws[:ntop]
+        ws = ws[:,:ntop]
     words = h5f['dictionary'][...][ws]
-    words = list( starmap(WordTuple, zip(ws, nws[ws], words)) )
-    words = filter(lambda w: w.np > 0, words)
+    words = [list( starmap(WordTuple, zip(ws_r, nws_r[ws_r], words_r)) )
+             for ws_r, nws_r, words_r in zip(ws, nws, words)]
+    words = map(
+        lambda words_r: filter(lambda w: w.np > 0, words_r),
+        words)
 
-    return DocumentTuple(d, nd, name, topics, words)
+    return list( starmap(DocumentTuple, zip(ds, nd, name, topics, words)) )
 
 
 def get_word_info(w, h5f, ntop=-1):
