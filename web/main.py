@@ -105,7 +105,7 @@ def words():
         nw = h5f['n_wd'][...].sum(1)
         indices = nw.argsort()[:-21:-1]
 
-        words = [get_word_info(w, h5f, 5) for w in indices]
+        words = get_words_info(indices, h5f, 5)
 
     return render_template('words.html', words=words)
 
@@ -178,7 +178,7 @@ def document(d):
 @app.route('/word/<int:w>')
 def word(w):
     with h5py.File('../data.hdf', mode='r') as h5f:
-        word = get_word_info(w, h5f)
+        word = get_words_info([w], h5f)[0]
 
     return render_template('word.html', word=word)
 
@@ -239,25 +239,31 @@ def get_docs_info(ds, h5f, ntop=-1):
     return list( starmap(DocumentTuple, zip(ds, nd, name, topics, words)) )
 
 
-def get_word_info(w, h5f, ntop=-1):
-    nw = h5f['n_wd'][...].sum(1)[w]
-    word = h5f['dictionary'][...][w]
+def get_words_info(ws, h5f, ntop=-1):
+    nw = h5f['n_wd'][...].sum(1)[ws]
+    word = h5f['dictionary'][...][ws]
 
-    pts = h5f['p_wt'][...][w,:]
-    topics = pts.argsort()[::-1]
+    pts = h5f['p_wt'][...][ws,:]
+    topics = pts.argsort(axis=1)[:,::-1]
     if ntop >= 0:
-        topics = topics[:ntop]
-    topics = list( starmap(TopicTuple, zip(topics, pts[topics])) )
-    topics = filter(lambda t: t.np > 0, topics)
+        topics = topics[:,:ntop]
+    topics = [list( starmap(TopicTuple, zipnp(topics_r, pts_r[topics_r])) )
+              for topics_r, pts_r in zip(topics, pts)]
+    topics = map(
+        lambda topics_r: filter(lambda t: t.np > 0, topics_r),
+        topics)
 
-    nds = h5f['n_wd'][...][w,:]
-    docs = nds.argsort()[::-1]
+    nds = h5f['n_wd'][...][ws,:]
+    docs = nds.argsort(axis=1)[:,::-1]
     if ntop >= 0:
-        docs = docs[:ntop]
-    docs = list( starmap(DocumentTuple, zip(docs, nds[docs])) )
-    docs = filter(lambda d: d.np > 0, docs)
+        docs = docs[:,:ntop]
+    docs = [list( starmap(DocumentTuple, zip(docs_r, nds_r[docs_r])) )
+            for docs_r, nds_r in zip(docs, nds)]
+    docs = map(
+        lambda docs_r: filter(lambda d: d.np > 0, docs_r),
+        docs)
 
-    return WordTuple(w, nw, word, topics, docs)
+    return list( starmap(WordTuple, zip(ws, nw, word, topics, docs)) )
 
 
 for _, f in inspect.getmembers(sys.modules[__name__], inspect.isfunction):
