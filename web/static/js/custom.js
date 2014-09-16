@@ -206,3 +206,12 @@ $(function process_tagclouds() {
         });
     });
 });
+
+$(function process_tables() {
+    $('table.searchable').each(function process_table() {
+        $(this).filterTable({
+            label: 'Search:',
+            placeholder: 'enter search terms...'
+        });
+    });
+});
