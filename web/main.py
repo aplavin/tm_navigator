@@ -103,9 +103,9 @@ def documents():
 def words():
     with h5py.File('../data.hdf', mode='r') as h5f:
         nw = h5f['n_wd'][...].sum(1)
-        indices = nw.argsort()[:-21:-1]
+        indices = nw.argsort()[::-1]
 
-        words = get_words_info(indices, h5f, 5)
+        words = get_words_info(indices, h5f, 15)
 
     return render_template('words.html', words=words)
 
