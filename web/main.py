@@ -49,6 +49,22 @@ def inject_last_updated():
     return dict(last_updated=last_updated)
 
 
+def zipnp(*arrs):
+    def castarr(arr):
+        if isinstance(arr, list):
+            return arr
+        elif np.issubdtype(arr.dtype, np.integer):
+            assert arr.ndim == 1
+            return map(int, arr)
+        elif np.issubdtype(arr.dtype, np.float):
+            assert arr.ndim == 1
+            return map(float, arr)
+        else:
+            return arr
+    lsts = map(castarr, arrs)
+    return zip(*lsts)
+
+
 WordTuple = recordtype('WordTuple', ['w', 'np', 'word', 'topics', 'documents'], default=None)
 ContentWordTuple = recordtype('ContentWordTuple', ['w', 'np', 'word', 'word_norm', 'topics'], default=None)
 TopicTuple = recordtype('TopicTuple', ['t', 'np', 'documents', 'words'], default=None)
@@ -193,7 +209,7 @@ def get_topics_info(ts, h5f, ntop=-1):
     if ntop >= 0:
         ws = ws[:,:ntop]
     words = h5f['dictionary'][...][ws]
-    words = [list( starmap(WordTuple, zip(ws_r, pws_r[ws_r], words_r)) )
+    words = [list( starmap(WordTuple, zipnp(ws_r, pws_r[ws_r], words_r)) )
              for ws_r, pws_r, words_r in zip(ws, pws, words)]
     words = map(
         lambda words_r: filter(lambda w: w.np > 0, words_r),
@@ -202,7 +218,7 @@ def get_topics_info(ts, h5f, ntop=-1):
     docs = pds.argsort(axis=1)[:, ::-1]
     if ntop >= 0:
         docs = docs[:, :ntop]
-    docs = [list( starmap(DocumentTuple, zip(docs_r, pds_r[docs_r])) )
+    docs = [list( starmap(DocumentTuple, zipnp(docs_r, pds_r[docs_r])) )
             for docs_r, pds_r in zip(docs, pds)]
     docs = map(
         lambda docs_r: filter(lambda d: d.np > 0, docs_r),
@@ -216,11 +232,11 @@ def get_docs_info(ds, h5f, ntop=-1):
     nd = h5f['n_wd'][...].sum(0)[ds]
 
     pts = h5f['p_td'][...][:,ds].T
-    topics = pts.argsort(axis=-1)[:,::-1]
+    topics = pts.argsort(axis=1)[:,::-1]
     if ntop >= 0:
         topics = topics[:,:ntop]
-    topics = [list( starmap(TopicTuple, zip(topics_r, pts_r[topics_r])) )
-             for topics_r, pts_r in zip(topics, pts)]
+    topics = [list( starmap(TopicTuple, zipnp(topics_r, pts_r[topics_r])) )
+              for topics_r, pts_r in zip(topics, pts)]
     topics = map(
         lambda topics_r: filter(lambda t: t.np > 0, topics_r),
         topics)
@@ -230,13 +246,13 @@ def get_docs_info(ds, h5f, ntop=-1):
     if ntop >= 0:
         ws = ws[:,:ntop]
     words = h5f['dictionary'][...][ws]
-    words = [list( starmap(WordTuple, zip(ws_r, nws_r[ws_r], words_r)) )
+    words = [list( starmap(WordTuple, zipnp(ws_r, nws_r[ws_r], words_r)) )
              for ws_r, nws_r, words_r in zip(ws, nws, words)]
     words = map(
         lambda words_r: filter(lambda w: w.np > 0, words_r),
         words)
 
-    return list( starmap(DocumentTuple, zip(ds, nd, name, topics, words)) )
+    return list( starmap(DocumentTuple, zipnp(ds, nd, name, topics, words)) )
 
 
 def get_words_info(ws, h5f, ntop=-1):
@@ -257,13 +273,13 @@ def get_words_info(ws, h5f, ntop=-1):
     docs = nds.argsort(axis=1)[:,::-1]
     if ntop >= 0:
         docs = docs[:,:ntop]
-    docs = [list( starmap(DocumentTuple, zip(docs_r, nds_r[docs_r])) )
+    docs = [list( starmap(DocumentTuple, zipnp(docs_r, nds_r[docs_r])) )
             for docs_r, nds_r in zip(docs, nds)]
     docs = map(
         lambda docs_r: filter(lambda d: d.np > 0, docs_r),
         docs)
 
-    return list( starmap(WordTuple, zip(ws, nw, word, topics, docs)) )
+    return list( starmap(WordTuple, zipnp(ws, nw, word, topics, docs)) )
 
 
 for _, f in inspect.getmembers(sys.modules[__name__], inspect.isfunction):
