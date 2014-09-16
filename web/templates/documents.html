@@ -25,22 +25,23 @@
                         </td>
                         <td>{{ d.np }}</td>
                         <td>
-                            {% set comma_j = joiner(',') %}
-                            {% for t in d.topics[:5] %}
-                                {{ comma_j() }}
-                                <a href="{{ url_for('topic', t=t.t) }}" title="P(t | d) = {{ t.np }}">{{ t.t }}</a>
+                            <ul class="tagcloud" data-useweight>
+                            {% for t in d.topics %}
+                                <li>
+                                    <a href="{{ url_for('topic', t=t.t) }}" title="P(t | d) = {{ t.np }}" data-size="{{ t.np }}">{{ t.t }}</a>
+                                </li>
                             {% endfor %}
-                            {{ comma_j() }}
-                            ...
+                            </ul>
                         </td>
                         <td>
-                            {% set comma_j = joiner(',') %}
-                            {% for w in d.words[:5] %}
-                                {{ comma_j() }}
-                                <a href="{{ url_for('word', w=w.w) }}" title="N_wd = {{ w.np }}">{{ w.word }}</a>
+                            <ul class="tagcloud" data-useweight>
+                            {% for w in d.words %}
+                                <li>
+                                    <a href="{{ url_for('word', w=w.w) }}" title="N_wd = {{ w.np }}" data-size="{{ w.np }}">{{ w.word }}</a>
+                                </li>
                             {% endfor %}
-                            {{ comma_j() }}
-                            ...
+                                <li>...</li>
+                            </ul>
                         </td>
                     </tr>
                 {% endfor %}
