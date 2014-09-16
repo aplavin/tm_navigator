@@ -92,7 +92,7 @@ def topics():
 def documents():
     with h5py.File('../data.hdf', mode='r') as h5f:
         nw = h5f['n_wd'][...].sum(0)
-        indices = nw.argsort()[:-21:-1]
+        indices = nw.argsort()[::-1]
 
         docs = get_docs_info(indices, h5f, 5)
 

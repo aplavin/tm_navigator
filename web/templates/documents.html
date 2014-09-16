@@ -18,7 +18,7 @@
             </thead>
             <tbody>
                 {% for d in docs %}
-                    <tr>
+                    <tr {{ 'style="display: none"'|safe if loop.index > 15 else '' }}>
                         <td>{{ loop.index }}</td>
                         <td>
                             <a href="{{ url_for('document', d=d.d) }}">{{ d.name }}</a>
