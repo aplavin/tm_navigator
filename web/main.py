@@ -94,7 +94,7 @@ def documents():
         nw = h5f['n_wd'][...].sum(0)
         indices = nw.argsort()[::-1]
 
-        docs = get_docs_info(indices, h5f, 5)
+        docs = get_docs_info(indices, h5f, 15)
 
     return render_template('documents.html', docs=docs)
 
