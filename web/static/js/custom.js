@@ -188,8 +188,8 @@ Highcharts.setOptions({
     colors: ["#1F77B4", "#FF7F0E", "#2CA02C", "#D62728", "#9467BD", "#8C564B", "#E377C2", "#7F7F7F", "#BCBD22", "#17BECF"].map(tinycolor).map(function(color) { return color.lighten(10).toRgbString(); })
 });
 
-$(function process_tagclouds() {
-    $('.tagcloud').each(function process_tagcloud() {
+function process_tagclouds() {
+    $('.tagcloud:visible').each(function process_tagcloud() {
         var useweight = typeof $(this).data('useweight') != 'undefined';
 
         var elems = $(this).find('[data-size]');
@@ -205,15 +205,18 @@ $(function process_tagclouds() {
             // $(this).css('font-size', relval + 'em');
         });
     });
-});
+}
+
+$(process_tagclouds);
 
 $(function process_tables() {
     $('table.searchable').each(function process_table() {
         function hide_many_rows(term, table) {
             var rows = $(table).find('tbody tr:visible');
             rows.slice($(table).data('limit-rows')).hide();
+            process_tagclouds();
         }
-        hide_many_rows('', $(this));
+        // hide_many_rows('', $(this));
         $(this).filterTable({
             label: 'Search:',
             placeholder: 'enter search terms...',
