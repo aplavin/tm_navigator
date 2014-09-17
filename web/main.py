@@ -88,7 +88,7 @@ def overview():
         ts = pts.argsort()[::-1]
         topics = list( starmap(TopicTuple, zip(ts, pts[ts])) )
 
-    return render_template('overview.html', words=words[:100], docs=docs[:100], topics=topics)
+    return render_template('overview.html', words=words, docs=docs, topics=topics)
 
 
 @app.route('/topics')

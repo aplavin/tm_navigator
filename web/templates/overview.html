@@ -40,10 +40,10 @@
                     $(function () {
                         createLineChart(
                             $('#plot-documents'),
-                            'Number of words (top-{{ docs | length }})',
+                            'Number of words (top-100)',
                             ['d', 'N'],
                             [
-                                {% for d in docs | sort(attribute='np', reverse=True)  %}
+                                {% for d in docs[:100] | sort(attribute='np', reverse=True)  %}
                                     {
                                         x: {{ loop.index }},
                                         label: "{{ d.d }}",
@@ -65,10 +65,10 @@
                     $(function () {
                         createLineChart(
                             $('#plot-words'),
-                            'Occurences (top-{{ words | length }})',
+                            'Occurences (top-100)',
                             ['w', 'N'],
                             [
-                                {% for w in words | sort(attribute='np', reverse=True)  %}
+                                {% for w in words[:100] | sort(attribute='np', reverse=True)  %}
                                     {
                                         x: {{ loop.index }},
                                         label: "{{ w.word }}",
