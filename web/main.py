@@ -151,10 +151,10 @@ def document(d):
         topics_used = Counter()
         ws_were = set()
         for word, w, _, _, pts_glob in content:
+            topic = doc.topics[pts_glob.argmax()]
+            topics_used[topic.t] += 1
             if w != -1 and w not in ws_were:
                 ws_were.add(w)
-                topic = doc.topics[pts_glob.argmax()]
-                topics_used[topic.t] += 1
                 html = re.sub(ur'(\W)(%s)(\W)' % word, r'\1<span data-word="%d" data-color="%d"><a href="#">\2</a></span>\3' % (w, topic.t), html, flags=re.I | re.U)
 
         html = re.sub(r'<img class="(\w+)" src="\w+/(eqn\d+).png".*?/>',
