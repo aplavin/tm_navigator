@@ -168,7 +168,8 @@ def document(d):
         # generate smooth topics flow
         topics_flow = content['pts_glob']
         wlen = 100
-        window = np.ones(wlen)
+        # window = np.ones(wlen)
+        window = np.bartlett(wlen)
         topics_flow = convolve1d(topics_flow, window / window.sum(), axis=0)
         topics_flow = list( starmap(TopicTuple, zip( [t.t for t in doc.topics], zip(*map(tuple, topics_flow)) )) )
 
