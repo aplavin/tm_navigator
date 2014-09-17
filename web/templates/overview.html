@@ -8,7 +8,9 @@
     <div class="container">
         <div class="row">
             <div class="col-md-4">
-                <h2>Topics</h2>
+                <h2>
+                    <a href="{{ url_for('topics') }}">Topics</a>
+                </h2>
 
                 <div class="overlay-container">
                     <div id="plot-topics" style="height: 400px; width: 100%"></div>
@@ -32,11 +34,11 @@
                         );
                     });
                 </script>
-
-                <p><a class="btn btn-success" href="{{ url_for('topics') }}" role="button">View details &raquo;</a></p>
             </div>
             <div class="col-md-4">
-                <h2>Documents</h2>
+                <h2>
+                    <a href="{{ url_for('documents') }}">Documents</a>
+                </h2>
 
                 <div class="overlay-container">
                     <div id="plot-documents" style="height: 400px; width: 100%"></div>
@@ -60,11 +62,11 @@
                         );
                     });
                 </script>
-
-                <p><a class="btn btn-success" href="{{ url_for('documents') }}" role="button">View details &raquo;</a></p>
             </div>
             <div class="col-md-4">
-                <h2>Words</h2>
+                <h2>
+                    <a href="{{ url_for('words') }}">Words</a>
+                </h2>
 
                 <div class="overlay-container">
                     <div id="plot-words" style="height: 400px; width: 100%"></div>
@@ -88,8 +90,6 @@
                         );
                     });
                 </script>
-
-                <p><a class="btn btn-success" href="{{ url_for('words') }}" role="button">View details &raquo;</a></p>
             </div>
         </div>
     </div>
