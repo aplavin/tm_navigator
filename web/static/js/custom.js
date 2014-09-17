@@ -306,3 +306,37 @@ $(function () {
         );
     });
 });
+
+$(function(){
+    var header = $('.sticky-header');
+    var replacement = $('<div></div>');
+    header.after(replacement);
+
+    var stickyHeaderTop = null;
+
+    $(window).scroll(function(){
+        if (!header.is(':visible')) {
+            return;
+        }
+        if (stickyHeaderTop === null) {
+            stickyHeaderTop = header.offset().top;
+            return;
+        }
+
+        if ($(window).scrollTop() > stickyHeaderTop) {
+            replacement.css('height', header.css('height'));
+            header.css({
+                position: 'fixed',
+                top: '0px',
+                right: '0px',
+                opacity: '0.9'
+            });
+        } else {
+            replacement.css('height', '0');
+            header.css({
+                position: 'static',
+                opacity: '1'
+            });
+        }
+    });
+  });
