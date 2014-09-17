@@ -143,28 +143,27 @@ def document(d):
         content = h5f['documents'][str(d)][...]
 
         filename = h5f['filenames'][d]
-        if filename != '0':
-            with codecs.open('static/docsdata/%s.html' % filename, encoding='utf-8') as f:
-                html = f.read()
-            html = re.search(r'<body>.*</body>', html, re.DOTALL).group(0)
-            html = re.sub(r'<h(\d) id="[^"]+">', r'<h\1>', html)
+        with codecs.open('static/docsdata/%s.html' % filename, encoding='utf-8') as f:
+            html = f.read()
+        html = re.search(r'<body>.*</body>', html, re.DOTALL).group(0)
+        html = re.sub(r'<h(\d) id="[^"]+">', r'<h\1>', html)
 
-            topics_used = Counter()
-            ws_were = set()
-            for word, w, _, _, pts_glob in content:
-                if w != -1 and w not in ws_were:
-                    ws_were.add(w)
-                    topic = doc.topics[pts_glob.argmax()]
-                    topics_used[topic.t] += 1
-                    html = re.sub(ur'(\W)(%s)(\W)' % word, r'\1<span data-word="%d" data-color="%d"><a href="#">\2</a></span>\3' % (w, topic.t), html, flags=re.I | re.U)
+        topics_used = Counter()
+        ws_were = set()
+        for word, w, _, _, pts_glob in content:
+            if w != -1 and w not in ws_were:
+                ws_were.add(w)
+                topic = doc.topics[pts_glob.argmax()]
+                topics_used[topic.t] += 1
+                html = re.sub(ur'(\W)(%s)(\W)' % word, r'\1<span data-word="%d" data-color="%d"><a href="#">\2</a></span>\3' % (w, topic.t), html, flags=re.I | re.U)
 
-            html = re.sub(r'<img class="(\w+)" src="\w+/(eqn\d+).png".*?/>',
-                          r'<span class="sprite-\2"></span>',
-                          html, flags=re.DOTALL | re.MULTILINE)
+        html = re.sub(r'<img class="(\w+)" src="\w+/(eqn\d+).png".*?/>',
+                      r'<span class="sprite-\2"></span>',
+                      html, flags=re.DOTALL | re.MULTILINE)
 
-            topics_in_content = [TopicTuple(t.t, (t.np, topics_used[t.t]))
-                                 for t in doc.topics
-                                 if t.t in topics_used]
+        topics_in_content = [TopicTuple(t.t, (t.np, topics_used[t.t]))
+                             for t in doc.topics
+                             if t.t in topics_used]
 
         # generate smooth topics flow
         topics_flow = content['pts_glob']
