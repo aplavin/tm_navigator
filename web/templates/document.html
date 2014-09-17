@@ -139,12 +139,10 @@
             </h4>
 
             <ul class="nav nav-pills">
-                {% for t, p in topics %}
-                    <li data-color="{{ t }}">
-                        <a style="border: 1px solid grey" href="{{ url_for('topic', t=t) }}">
-                            <span title="{{ p }}">
-                                {{ t }} <!-- <span class="badge">{{ p }}</span> -->
-                            </span>
+                {% for t in topics_in_content %}
+                    <li data-color="{{ t.t }}">
+                        <a style="border: 1px solid grey" href="{{ url_for('topic', t=t.t) }}" title="P(t | d) = {{ t.np[0] }}&#10;# of words here: {{ t.np[1] }}">
+                            {{ t.t }} <!-- <span class="badge">{{ p }}</span> -->
                         </a>
                     </li>
                 {% endfor %}

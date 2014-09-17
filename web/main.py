@@ -3,6 +3,7 @@ from flask.ext.assets import Environment
 from flask_debugtoolbar import DebugToolbarExtension
 from flask_debugtoolbar_lineprofilerpanel.profile import line_profile
 import h5py
+from collections import Counter
 from recordtype import recordtype
 from itertools import starmap, groupby
 from math import isnan
@@ -148,23 +149,22 @@ def document(d):
             html = re.search(r'<body>.*</body>', html, re.DOTALL).group(0)
             html = re.sub(r'<h(\d) id="[^"]+">', r'<h\1>', html)
 
+            topics_used = Counter()
             ws_were = set()
-            for word, w, topics, _, _ in content:
+            for word, w, _, _, pts_glob in content:
                 if w != -1 and w not in ws_were:
                     ws_were.add(w)
-                    html = re.sub(ur'(\W)(%s)(\W)' % word, r'\1<span data-word="%d" data-color="%d"><a href="#">\2</a></span>\3' % (w, topics[0]), html, flags=re.I | re.U)
+                    topic = doc.topics[pts_glob.argmax()]
+                    topics_used[topic.t] += 1
+                    html = re.sub(ur'(\W)(%s)(\W)' % word, r'\1<span data-word="%d" data-color="%d"><a href="#">\2</a></span>\3' % (w, topic.t), html, flags=re.I | re.U)
 
             html = re.sub(r'<img class="(\w+)" src="\w+/(eqn\d+).png".*?/>',
                           r'<span class="sprite-\2"></span>',
                           html, flags=re.DOTALL | re.MULTILINE)
 
-        ws = content['w']
-        words_norm = h5f['dictionary'][...][ws]
-        nws = h5f['n_wd'][...][ws, d]
-
-        words = content['word']
-        wtopics = [TopicTuple(ts[0], ps[0])
-                   for ts, ps in zip(content['topics'], content['pts'])]
+            topics_in_content = [TopicTuple(t.t, (t.np, topics_used[t.t]))
+                                 for t in doc.topics
+                                 if t.t in topics_used]
 
         # generate smooth topics flow
         topics_flow = content['pts_glob']
@@ -173,9 +173,12 @@ def document(d):
         topics_flow = convolve1d(topics_flow, window / window.sum(), axis=0)
         topics_flow = list( starmap(TopicTuple, zip( [t.t for t in doc.topics], zip(*map(tuple, topics_flow)) )) )
 
-        doc.content = list( starmap(ContentWordTuple, zip(ws, nws, words, words_norm, wtopics)) )
-
-    return render_template('document.html', doc=doc, topics_flow=topics_flow, html_content=html, filename=filename)
+    return render_template('document.html',
+                            doc=doc,
+                            topics_flow=topics_flow,
+                            html_content=html,
+                            topics_in_content=topics_in_content,
+                            filename=filename)
 
 
 @app.route('/word/<int:w>')
