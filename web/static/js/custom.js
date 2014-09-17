@@ -290,3 +290,19 @@ function fill_table(table, dataset, limit) {
         show_data(data);
     });
 }
+
+$(function () {
+    $('.overlay-container').each(function () {
+        var divs = $(this).find('div');
+        var base = divs[0];
+        var overlay = divs[1];
+        $(this).hover(
+            function () {
+                $(overlay).slideUp('slow');
+            },
+            function () {
+                $(overlay).slideDown('slow');
+            }
+        );
+    });
+});

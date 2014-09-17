@@ -21,3 +21,24 @@ a:hover {
 td.alt {
     background-color: rgba(255, 255, 0, 0.2) !important;
 }
+
+.overlay-container {
+    position: relative;
+}
+
+.overlay {
+    text-align: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: white;
+    opacity: 0.8;
+    width: 100%;
+    height: 100%;
+}
+
+.overlay h1 {
+    margin-top: 50%;
+    font-size: 60px;
+    font-weight: 900;
+}
