@@ -149,7 +149,7 @@ def document(d):
             html = re.sub(r'<h(\d) id="[^"]+">', r'<h\1>', html)
 
             ws_were = set()
-            for word, w, topics, _ in content:
+            for word, w, topics, _, _ in content:
                 if w != -1 and w not in ws_were:
                     ws_were.add(w)
                     html = re.sub(ur'(\W)(%s)(\W)' % word, r'\1<span data-word="%d" data-color="%d"><a href="#">\2</a></span>\3' % (w, topics[0]), html, flags=re.I | re.U)
@@ -166,29 +166,16 @@ def document(d):
         wtopics = [TopicTuple(ts[0], ps[0])
                    for ts, ps in zip(content['topics'], content['pts'])]
 
-        topics = groupby(sorted((t
-                                 for t in wtopics
-                                 if not isnan(t.np)),
-                                key=lambda t: t.t),
-                         key=lambda t: t.t)
-        topics = [(tt, sum(t.np for t in items))
-                  for tt, items in topics]
-        topics.sort(key=lambda (tt, np): np, reverse=True)
-
         # generate smooth topics flow
-        topics_flow = content['topics'][:, 0]
-        top_topics = np.bincount(topics_flow).argsort()[::-1][:5]
-        topics_flow = (top_topics[:, np.newaxis] == topics_flow).T.astype(np.float32)
-
+        topics_flow = content['pts_glob']
         wlen = 100
         window = np.ones(wlen)
-
         topics_flow = convolve1d(topics_flow, window / window.sum(), axis=0)
-        topics_flow = list( starmap(TopicTuple, zip( top_topics, zip(*map(tuple, topics_flow)) )) )
+        topics_flow = list( starmap(TopicTuple, zip( [t.t for t in doc.topics], zip(*map(tuple, topics_flow)) )) )
 
         doc.content = list( starmap(ContentWordTuple, zip(ws, nws, words, words_norm, wtopics)) )
 
-    return render_template('document.html', doc=doc, topics=topics, topics_flow=topics_flow, html_content=html, filename=filename)
+    return render_template('document.html', doc=doc, topics_flow=topics_flow, html_content=html, filename=filename)
 
 
 @app.route('/word/<int:w>')
