@@ -42,6 +42,7 @@
                         href_fmt: '{{ url_for('document', d=999) }}'.replace('999', '%d'),
                         href_field: 'd',
                         text_field: 'd',
+                        valprefix: 'P(t | d) = ',
                         size_field: 'np',
                     },
                     {
@@ -50,6 +51,7 @@
                         href_fmt: '{{ url_for('word', w=999) }}'.replace('999', '%d'),
                         href_field: 'w',
                         text_field: 'word',
+                        valprefix: 'P(w | t) = ',
                         size_field: 'np'
                     },
                 ],

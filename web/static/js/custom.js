@@ -190,11 +190,15 @@ Highcharts.setOptions({
 
 function process_tagclouds() {
     $('.tagcloud:visible').each(function process_tagcloud() {
+        var valprefix = $(this).data('valprefix');
         var elems = $(this).find('a');
         var sizes = elems.map(function get_datasize() { return $(this).data('size'); }).get();
         var max = Math.max.apply(null, sizes);
         elems.each(function setsize() {
             var val = $(this).data('size');
+            if (valprefix) {
+                $(this).attr('title', valprefix + val)
+            }
             var relval = Math.max(Math.sqrt(val / max), 0.2);
             $(this).fadeTo(0, relval);
             if (relval > 0.8) {
@@ -233,6 +237,9 @@ function fill_table(table, dataset, limit) {
                     case 'tagcloud':
                         var ul = $('<ul></ul>');
                         ul.addClass('tagcloud');
+                        if (col['valprefix']) {
+                            ul.attr('data-valprefix', col['valprefix']);
+                        }
                         row[col['field']].forEach(function (val) {
                             var li = $('<li></li>');
                             var a = $('<a></a>');
