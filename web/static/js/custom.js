@@ -4,7 +4,7 @@ function createPieChart(container, title, ttipNames, cnt, threshold, data) {
     ).length;
     cnt = Math.min(cnt, cntThresh);
 
-    if (cnt < data.length) {
+    if (cnt < data.length - 3) {
         var drilldown = data.slice(cnt);
         var ddown_item = {
             name: 'Other',
@@ -25,7 +25,7 @@ function createPieChart(container, title, ttipNames, cnt, threshold, data) {
             text: title
         },
         tooltip: {
-            headerFormat: '<b>' + ttipNames[0] + ':</b> {point.key}<br/><b>' + ttipNames[1] + ':</b> {point.y}',
+            headerFormat: sprintf('<b>%s:</b> {point.key}<br/><b>%s:</b> {point.y}', ttipNames[0], ttipNames[1]),
             pointFormat: ''
         },
         series: [
@@ -41,9 +41,9 @@ function createPieChart(container, title, ttipNames, cnt, threshold, data) {
                     formatter: function() {
                         var point = this.point;
                         if (!isNaN(point.name)) {
-                            return sprintf('<b>%s = %s</b>: %.2f %%', ttipNames[0], point.name, point.percentage);
+                            return sprintf('<b>%s = %s</b>: %s = %s', ttipNames[0], point.name, ttipNames[1], point.y);
                         } else {
-                            return sprintf('<b>%s</b>: %.2f %%', point.name, point.percentage);
+                            return sprintf('<b>%s</b>: %s = %s', point.name, ttipNames[1], point.y);
                         }
                     }
                 }
