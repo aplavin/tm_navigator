@@ -9,6 +9,7 @@ from itertools import starmap, groupby
 from math import isnan
 import numpy as np
 from scipy.ndimage.filters import convolve1d
+import scipy.sparse
 import codecs
 import re
 import inspect
@@ -66,6 +67,11 @@ def zipnp(*arrs):
     return zip(*lsts)
 
 
+def get_nwd(h5f):
+    arr = h5f['n_wd_coo'][...]
+    return scipy.sparse.coo_matrix((arr['data'], (arr['row'], arr['col'])))
+
+
 WordTuple = recordtype('WordTuple', ['w', 'np', 'word', 'topics', 'documents'], default=None)
 ContentWordTuple = recordtype('ContentWordTuple', ['w', 'np', 'word', 'word_norm', 'topics'], default=None)
 TopicTuple = recordtype('TopicTuple', ['t', 'np', 'documents', 'words'], default=None)
@@ -75,12 +81,12 @@ DocumentTuple = recordtype('DocumentTuple', ['d', 'np', 'name', 'topics', 'words
 @app.route('/')
 def overview():
     with h5py.File('../data.hdf', mode='r') as h5f:
-        nws = h5f['n_wd'][...].sum(1)
+        nws = get_nwd(h5f).sum(1).A1
         ws = nws.argsort()[::-1]
         words = h5f['dictionary'][...][ws]
         words = list( starmap(WordTuple, zip(ws, nws[ws], words)) )
 
-        nds = h5f['n_wd'][...].sum(0)
+        nds = get_nwd(h5f).sum(0).A1
         ds = nds.argsort()[::-1]
         docs = list( starmap(DocumentTuple, zip(ds, nds[ds])) )
 
@@ -96,7 +102,7 @@ def overview():
 def topics():
     with h5py.File('../data.hdf', mode='r') as h5f:
         ptds = h5f['p_td'][...]
-        nds = h5f['n_wd'][...].sum(0)
+        nds = get_nwd(h5f).sum(0).A1
         pts = ptds.dot(1.0 * nds / nds.sum())
         indices = pts.argsort()[::-1]
 
@@ -108,7 +114,7 @@ def topics():
 @app.route('/documents')
 def documents():
     with h5py.File('../data.hdf', mode='r') as h5f:
-        nw = h5f['n_wd'][...].sum(0)
+        nw = get_nwd(h5f).sum(0).A1
         indices = nw.argsort()[::-1]
 
         docs = get_docs_info(indices, h5f, 15)
@@ -119,7 +125,7 @@ def documents():
 @app.route('/words')
 def words():
     with h5py.File('../data.hdf', mode='r') as h5f:
-        nw = h5f['n_wd'][...].sum(1)
+        nw = get_nwd(h5f).sum(1).A1
         indices = nw.argsort()[::-1]
 
         words = get_words_info(indices, h5f, 15)
@@ -142,20 +148,26 @@ def document(d):
 
         content = h5f['documents'][str(d)][...]
 
-        filename = h5f['filenames'][d]
+        filename = h5f['metadata']['filename', d]
         with codecs.open('static/docsdata/%s.html' % filename, encoding='utf-8') as f:
             html = f.read()
-        html = re.search(r'<body>.*</body>', html, re.DOTALL).group(0)
-        html = re.sub(r'<h(\d) id="[^"]+">', r'<h\1>', html)
+        # html = re.search(r'<body>.*</body>', html, re.DOTALL).group(0)
+        # html = re.sub(r'<h(\d) id="[^"]+">', r'<h\1>', html)
 
         topics_used = Counter()
-        ws_were = set()
-        for word, w, _, _, pts_glob in content:
+        html_new = ''
+        html_pos = 0
+        for w, start, end, _, _, pts_glob in content:
             topic = doc.topics[pts_glob.argmax()]
             topics_used[topic.t] += 1
-            if w != -1 and w not in ws_were:
-                ws_were.add(w)
-                html = re.sub(ur'(\W)(%s)(\W)' % word, r'\1<span data-word="%d" data-color="%d"><a href="#">\2</a></span>\3' % (w, topic.t), html, flags=re.I | re.U)
+
+            html_new += html[html_pos:start]
+            html_new += '<span data-word="%d" data-color="%d"><a href="#">' % (w, topic.t)
+            html_new += html[start:end]
+            html_new += '</a></span>'
+            html_pos = end
+
+        html = html_new
 
         html = re.sub(r'<img class="(\w+)" src="\w+/(eqn\d+).png".*?/>',
                       r'<span class="sprite-\2"></span>',
@@ -191,7 +203,7 @@ def word(w):
 
 def get_topics_info(ts, h5f, ntop=-1):
     pds = h5f['p_td'][...][ts,:]
-    nds = h5f['n_wd'][...].sum(0)
+    nds = get_nwd(h5f).sum(0).A1
     pt = pds.dot(1.0 * nds / nds.sum())
 
     pws = h5f['p_wt'][...][:,ts].T
@@ -218,8 +230,8 @@ def get_topics_info(ts, h5f, ntop=-1):
 
 
 def get_docs_info(ds, h5f, ntop=-1):
-    name = h5f['docinfo'][...]['name'][ds]
-    nd = h5f['n_wd'][...].sum(0)[ds]
+    name = h5f['metadata'][...]['title'][ds]
+    nd = get_nwd(h5f).sum(0).A1[ds]
 
     pts = h5f['p_td'][...][:,ds].T
     topics = pts.argsort(axis=1)[:,::-1]
@@ -231,7 +243,7 @@ def get_docs_info(ds, h5f, ntop=-1):
         lambda topics_r: filter(lambda t: t.np > 0, topics_r),
         topics)
 
-    nws = h5f['n_wd'][...][:,ds].T
+    nws = get_nwd(h5f).tocsc()[:,ds].A.T
     ws = nws.argsort()[:, ::-1]
     if ntop >= 0:
         ws = ws[:,:ntop]
@@ -246,7 +258,7 @@ def get_docs_info(ds, h5f, ntop=-1):
 
 
 def get_words_info(ws, h5f, ntop=-1):
-    nw = h5f['n_wd'][...].sum(1)[ws]
+    nw = get_nwd(h5f).sum(1).A1[ws]
     word = h5f['dictionary'][...][ws]
 
     pts = h5f['p_wt'][...][ws,:]
@@ -259,7 +271,7 @@ def get_words_info(ws, h5f, ntop=-1):
         lambda topics_r: filter(lambda t: t.np > 0, topics_r),
         topics)
 
-    nds = h5f['n_wd'][...][ws,:]
+    nds = get_nwd(h5f).tocsr()[ws,:].A
     docs = nds.argsort(axis=1)[:,::-1]
     if ntop >= 0:
         docs = docs[:,:ntop]
