@@ -110,7 +110,7 @@ function createLineChart(container, title, ttipNames, data) {
             series: {
                 states: {
                     hover: {
-                        lineWidth: 2
+                        lineWidth: 3
                     }
                 }
             }
