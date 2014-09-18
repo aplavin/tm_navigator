@@ -176,6 +176,9 @@ def document(d):
         topics_in_content = [TopicTuple(t.t, (t.np, topics_used[t.t]))
                              for t in doc.topics
                              if t.t in topics_used]
+        doc.topics = [t
+                      for t in doc.topics
+                      if t.t in topics_used]
 
         # generate smooth topics flow
         topics_flow = content['pts_glob']
