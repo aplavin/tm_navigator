@@ -47,6 +47,15 @@ function createPieChart(container, title, ttipNames, cnt, threshold, data) {
                         }
                     }
                 }
+            },
+            series: {
+                point: {
+                    events: {
+                        click: function () {
+                            location.href = this.options.url;
+                        }
+                    }
+                }
             }
         },
         drilldown: {

@@ -61,7 +61,8 @@
                             {% for t in word.topics | sort(attribute='np', reverse=True)  %}
                                 {
                                     name: '{{ t.t }}',
-                                    y: {{ t.np | round(4) }}
+                                    y: {{ t.np | round(4) }},
+                                    url: '{{ url_for('topic', t=t.t) }}'
                                 },
                             {% endfor %}
                         ]
@@ -79,7 +80,8 @@
                             {% for d in word.documents | sort(attribute='np', reverse=True)  %}
                                 {
                                     name: '{{ d.d }}',
-                                    y: {{ d.np }}
+                                    y: {{ d.np }},
+                                    url: '{{ url_for('document', d=d.d) }}'
                                 },
                             {% endfor %}
                         ]
