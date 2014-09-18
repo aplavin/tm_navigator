@@ -26,7 +26,7 @@
                         <ul class="tagcloud">
                             {% for t in doc.topics %}
                                 <li>
-                                    <a href="{{ url_for('topic', t=t.t) }}" title="P(t | d) = {{ t.np }}" data-size="{{ t.np }}">{{ t.t }}</a>
+                                    <a href="{{ url_for('topic', t=t.t) }}" title="P(t | d) = {{ t.np | round(3) }}" data-size="{{ t.np }}">{{ t.t }}</a>
                                 </li>
                             {% endfor %}
                         </ul>
@@ -62,7 +62,7 @@
                             {% for t in doc.topics | sort(attribute='np', reverse=True)  %}
                                 {
                                     name: '{{ t.t }}',
-                                    y: {{ t.np }}
+                                    y: {{ t.np | round(3) }}
                                 },
                             {% endfor %}
                         ]
@@ -141,7 +141,7 @@
             <ul class="nav nav-pills">
                 {% for t in topics_in_content %}
                     <li data-color="{{ t.t }}">
-                        <a style="border: 1px solid grey" href="{{ url_for('topic', t=t.t) }}" title="P(t | d) = {{ t.np[0] }}&#10;# of words here: {{ t.np[1] }}">
+                        <a style="border: 1px solid grey" href="{{ url_for('topic', t=t.t) }}" title="P(t | d) = {{ t.np[0] | round(3) }}&#10;# of words here: {{ t.np[1] }}">
                             {{ t.t }} <!-- <span class="badge">{{ p }}</span> -->
                         </a>
                     </li>

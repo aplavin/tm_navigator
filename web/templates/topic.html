@@ -21,12 +21,12 @@
                     <td>
                         <a href="{{ url_for('topic', t=topic.t) }}">{{ topic.t }}</a>
                     </td>
-                    <td>{{ topic.np }}</td>
+                    <td>{{ topic.np | round(3) }}</td>
                     <td>
                         {% set comma_j = joiner(',') %}
                         {% for d in topic.documents[:5] %}
                             {{ comma_j() }}
-                            <a href="{{ url_for('document', d=d.d) }}" title="P(t | d) = {{ d.np }}">{{ d.d }}</a>
+                            <a href="{{ url_for('document', d=d.d) }}" title="P(t | d) = {{ d.np | round(3) }}">{{ d.d }}</a>
                         {% endfor %}
                         {{ comma_j() }}
                         ...
@@ -35,7 +35,7 @@
                         {% set comma_j = joiner(',') %}
                         {% for w in topic.words[:5] %}
                             {{ comma_j() }}
-                            <a href="{{ url_for('word', w=w.w) }}" title="P(w | t) = {{ w.np }}">{{ w.word }}</a>
+                            <a href="{{ url_for('word', w=w.w) }}" title="P(w | t) = {{ w.np | round(4) }}">{{ w.word }}</a>
                         {% endfor %}
                         {{ comma_j() }}
                         ...
@@ -61,7 +61,7 @@
                             {% for d in topic.documents | sort(attribute='np', reverse=True)  %}
                                 {
                                     name: '{{ d.d }}',
-                                    y: {{ d.np }}
+                                    y: {{ d.np | round(3) }}
                                 },
                             {% endfor %}
                         ]
@@ -79,7 +79,7 @@
                             {% for w in topic.words | sort(attribute='np', reverse=True)  %}
                                 {
                                     name: '{{ w.word }}',
-                                    y: {{ w.np }}
+                                    y: {{ w.np | round(4) }}
                                 },
                             {% endfor %}
                         ]

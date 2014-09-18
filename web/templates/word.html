@@ -26,7 +26,7 @@
                         {% set comma_j = joiner(',') %}
                         {% for t in word.topics[:5] %}
                             {{ comma_j() }}
-                            <a href="{{ url_for('topic', t=t.t) }}" title="P(w | t) = {{ t.np }}">{{ t.t }}</a>
+                            <a href="{{ url_for('topic', t=t.t) }}" title="P(w | t) = {{ t.np | round(4) }}">{{ t.t }}</a>
                         {% endfor %}
                         {{ comma_j() }}
                         ...
@@ -61,7 +61,7 @@
                             {% for t in word.topics | sort(attribute='np', reverse=True)  %}
                                 {
                                     name: '{{ t.t }}',
-                                    y: {{ t.np }}
+                                    y: {{ t.np | round(4) }}
                                 },
                             {% endfor %}
                         ]

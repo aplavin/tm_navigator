@@ -64,7 +64,7 @@
                             {% for t in d.topics %}
                                 {
                                     t: {{ t.t }},
-                                    np: {{ t.np }}
+                                    np: {{ t.np | round(3) }}
                                 },
                             {% endfor %}
                         ],
