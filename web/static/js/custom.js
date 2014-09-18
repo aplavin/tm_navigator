@@ -190,8 +190,6 @@ Highcharts.setOptions({
 
 function process_tagclouds() {
     $('.tagcloud:visible').each(function process_tagcloud() {
-        var useweight = typeof $(this).data('useweight') != 'undefined';
-
         var elems = $(this).find('a');
         var sizes = elems.map(function get_datasize() { return $(this).data('size'); }).get();
         var max = Math.max.apply(null, sizes);
@@ -199,7 +197,7 @@ function process_tagclouds() {
             var val = $(this).data('size');
             var relval = Math.max(Math.sqrt(val / max), 0.2);
             $(this).fadeTo(0, relval);
-            if (useweight && relval > 0.8) {
+            if (relval > 0.8) {
                 $(this).css('font-weight', 'bold');
             }
             // $(this).css('font-size', relval + 'em');
@@ -234,7 +232,6 @@ function fill_table(table, dataset, limit) {
                         break;
                     case 'tagcloud':
                         var ul = $('<ul></ul>');
-                        ul.data('useweight', 1);
                         ul.addClass('tagcloud');
                         row[col['field']].forEach(function (val) {
                             var li = $('<li></li>');
