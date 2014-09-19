@@ -14,6 +14,17 @@ function createPieChart(container, title, ttipNames, cnt, threshold, data) {
         data = data.slice(0, cnt).concat([ddown_item]);
     }
 
+    function labelf() {
+        var point = this.point;
+        if (point.name == 'Other') {
+            return sprintf('Other: %d items', drilldown.length);
+        } else if (!isNaN(point.name)) {
+            return sprintf('<b>%s = %s</b>: %s = %s', ttipNames[0], point.name, ttipNames[1], point.y);
+        } else {
+            return sprintf('<b>%s</b>: %s = %s', point.name, ttipNames[1], point.y);
+        }
+    }
+
     container.highcharts({
         chart: {
             type: 'pie'
@@ -25,7 +36,7 @@ function createPieChart(container, title, ttipNames, cnt, threshold, data) {
             text: title
         },
         tooltip: {
-            headerFormat: sprintf('<b>%s:</b> {point.key}<br/><b>%s:</b> {point.y}', ttipNames[0], ttipNames[1]),
+            formatter: labelf,
             pointFormat: ''
         },
         series: [
@@ -38,14 +49,7 @@ function createPieChart(container, title, ttipNames, cnt, threshold, data) {
                 allowPointSelect: true,
                 cursor: 'pointer',
                 dataLabels: {
-                    formatter: function() {
-                        var point = this.point;
-                        if (!isNaN(point.name)) {
-                            return sprintf('<b>%s = %s</b>: %s = %s', ttipNames[0], point.name, ttipNames[1], point.y);
-                        } else {
-                            return sprintf('<b>%s</b>: %s = %s', point.name, ttipNames[1], point.y);
-                        }
-                    }
+                    formatter: labelf
                 }
             },
             series: {
