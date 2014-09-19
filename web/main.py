@@ -106,7 +106,7 @@ def topics():
         pts = ptds.dot(1.0 * nds / nds.sum())
         indices = pts.argsort()[::-1]
 
-        topics = get_topics_info(indices, h5f, 30)
+        topics = get_topics_info(indices, h5f, (15, 30))
 
     return render_template('topics.html', topics=topics)
 
@@ -117,7 +117,7 @@ def documents():
         nw = get_nwd(h5f).sum(0).A1
         indices = nw.argsort()[::-1]
 
-        docs = get_docs_info(indices, h5f, 15)
+        docs = get_docs_info(indices, h5f, (-1, 15))
 
     return render_template('documents.html', docs=docs)
 
@@ -128,7 +128,7 @@ def words():
         nw = get_nwd(h5f).sum(1).A1
         indices = nw.argsort()[::-1]
 
-        words = get_words_info(indices, h5f, 15)
+        words = get_words_info(indices, h5f, (15, 10))
 
     return render_template('words.html', words=words)
 
@@ -189,7 +189,6 @@ def document(slug=None, d=None):
         # generate smooth topics flow
         topics_flow = content['pts_glob']
         wlen = 100
-        # window = np.ones(wlen)
         window = np.bartlett(wlen)
         topics_flow = convolve1d(topics_flow, window / window.sum(), axis=0)
         topics_flow = list( starmap(TopicTuple, zip( [t.t for t in doc.topics], zip(*map(tuple, topics_flow)) )) )
@@ -210,15 +209,15 @@ def word(w):
     return render_template('word.html', word=word)
 
 
-def get_topics_info(ts, h5f, ntop=-1):
+def get_topics_info(ts, h5f, ntop=(-1, -1)):
     pds = h5f['p_td'][...][ts,:]
     nds = get_nwd(h5f).sum(0).A1
     pt = pds.dot(1.0 * nds / nds.sum())
 
     pws = h5f['p_wt'][...][:,ts].T
     ws = pws.argsort(axis=1)[:,::-1]
-    if ntop >= 0:
-        ws = ws[:,:ntop]
+    if ntop[1] >= 0:
+        ws = ws[:,:ntop[1]]
     words = h5f['dictionary'][...][ws]
     words = [list( starmap(WordTuple, zipnp(ws_r, pws_r[ws_r], words_r)) )
              for ws_r, pws_r, words_r in zip(ws, pws, words)]
@@ -227,8 +226,8 @@ def get_topics_info(ts, h5f, ntop=-1):
         words)
 
     docs = pds.argsort(axis=1)[:, ::-1]
-    if ntop >= 0:
-        docs = docs[:, :ntop]
+    if ntop[0] >= 0:
+        docs = docs[:, :ntop[0]]
     docsmeta = h5f['metadata'][...][docs]
     docs = [list( starmap(DocumentTuple, zipnp(docs_r, pds_r[docs_r], meta_r)) )
             for docs_r, pds_r, meta_r in zip(docs, pds, docsmeta)]
@@ -239,14 +238,14 @@ def get_topics_info(ts, h5f, ntop=-1):
     return list( starmap(TopicTuple, zip(ts, pt, docs, words)) )
 
 
-def get_docs_info(ds, h5f, ntop=-1):
+def get_docs_info(ds, h5f, ntop=(-1, -1)):
     meta = h5f['metadata'][...][ds]
     nd = get_nwd(h5f).sum(0).A1[ds]
 
     pts = h5f['p_td'][...][:,ds].T
     topics = pts.argsort(axis=1)[:,::-1]
-    if ntop >= 0:
-        topics = topics[:,:ntop]
+    if ntop[0] >= 0:
+        topics = topics[:,:ntop[0]]
     topics = [list( starmap(TopicTuple, zipnp(topics_r, pts_r[topics_r])) )
               for topics_r, pts_r in zip(topics, pts)]
     topics = map(
@@ -255,8 +254,8 @@ def get_docs_info(ds, h5f, ntop=-1):
 
     nws = get_nwd(h5f).tocsc()[:,ds].A.T
     ws = nws.argsort()[:, ::-1]
-    if ntop >= 0:
-        ws = ws[:,:ntop]
+    if ntop[1] >= 0:
+        ws = ws[:,:ntop[1]]
     words = h5f['dictionary'][...][ws]
     words = [list( starmap(WordTuple, zipnp(ws_r, nws_r[ws_r], words_r)) )
              for ws_r, nws_r, words_r in zip(ws, nws, words)]
@@ -267,14 +266,14 @@ def get_docs_info(ds, h5f, ntop=-1):
     return list( starmap(DocumentTuple, zipnp(ds, nd, meta, topics, words)) )
 
 
-def get_words_info(ws, h5f, ntop=-1):
+def get_words_info(ws, h5f, ntop=(-1, -1)):
     nw = get_nwd(h5f).sum(1).A1[ws]
     word = h5f['dictionary'][...][ws]
 
     pts = h5f['p_wt'][...][ws,:]
     topics = pts.argsort(axis=1)[:,::-1]
-    if ntop >= 0:
-        topics = topics[:,:ntop]
+    if ntop[0] >= 0:
+        topics = topics[:,:ntop[0]]
     topics = [list( starmap(TopicTuple, zipnp(topics_r, pts_r[topics_r])) )
               for topics_r, pts_r in zip(topics, pts)]
     topics = map(
@@ -283,8 +282,8 @@ def get_words_info(ws, h5f, ntop=-1):
 
     nds = get_nwd(h5f).tocsr()[ws,:].A
     docs = nds.argsort(axis=1)[:,::-1]
-    if ntop >= 0:
-        docs = docs[:,:ntop]
+    if ntop[1] >= 0:
+        docs = docs[:,:ntop[1]]
     docsmeta = h5f['metadata'][...][docs]
     docs = [list( starmap(DocumentTuple, zipnp(docs_r, nds_r[docs_r], meta_r)) )
             for docs_r, nds_r, meta_r in zip(docs, nds, docsmeta)]
