@@ -104,7 +104,11 @@ function createLineChart(container, title, ttipNames, data) {
             shared: true,
             formatter: function() {
                 var x = this.x;
-                var label = data.filter(function(p) { return p.x == x; })[0].label;
+                try {
+                    var label = data.filter(function(p) { return p.x == x; })[0].label;
+                } catch (e) {
+                    return '';
+                }
                 if (!isNaN(label)) {
                     return sprintf('<b>%s = %s</b>: #%d<br/><b>%s</b>: %s', ttipNames[0], label, this.x, ttipNames[1], this.y);
                 } else {
@@ -352,4 +356,4 @@ $(function(){
             });
         }
     });
-  });
+});
