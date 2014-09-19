@@ -233,6 +233,9 @@ function process_tagclouds() {
 $(process_tagclouds);
 
 function fill_table(table, dataset, limit) {
+    if (!limit) {
+        limit = dataset.length;
+    }
     var tbody = $(table).find('tbody');
     tbody.empty();
 
