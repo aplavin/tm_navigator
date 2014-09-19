@@ -56,7 +56,6 @@
                         $('#plot-documents'),
                         'Usage in documents',
                         ['d', 'P(t | d)'],
-                        15, 0.01,
                         [
                             {% for d in topic.documents | sort(attribute='np', reverse=True)  %}
                                 {
@@ -75,7 +74,6 @@
                         $('#plot-words'),
                         'Words distribution',
                         ['w', 'P(w | t)'],
-                        15, 0,
                         [
                             {% for w in topic.words | sort(attribute='np', reverse=True)  %}
                                 {

@@ -1,9 +1,12 @@
-function createPieChart(container, title, ttipNames, cnt, threshold, data) {
-    var total = data.reduce(function(total, cur) { return total + cur.y; }, 0);
-    var cntThresh = data.filter(
-        function (point) { return point.y / total > threshold; }
-    ).length;
-    cnt = Math.min(cnt, cntThresh);
+function createPieChart(container, title, ttipNames, data) {
+    var cnt = 15;
+    // var threshold = 0.01;
+
+    // var total = data.reduce(function(total, cur) { return total + cur.y; }, 0);
+    // var cntThresh = data.filter(
+    //     function (point) { return point.y / total > threshold; }
+    // ).length;
+    // cnt = Math.min(cnt, cntThresh);
 
     if (cnt < data.length - 3) {
         var drilldown = data.slice(cnt);

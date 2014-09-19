@@ -58,7 +58,6 @@
                         $('#plot-topics'),
                         'Topics distribution',
                         ['t', 'P(t | d)'],
-                        15, 0.01,
                         [
                             {% for t in doc.topics | sort(attribute='np', reverse=True)  %}
                                 {
@@ -77,7 +76,6 @@
                         $('#plot-words'),
                         'Words distribution',
                         ['w', 'N_wd'],
-                        15, 0,
                         [
                             {% for w in doc.words | sort(attribute='np', reverse=True)  %}
                                 {

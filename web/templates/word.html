@@ -56,7 +56,6 @@
                         $('#plot-topics'),
                         'Usage in topics',
                         ['t', 'P(w | t)'],
-                        15, 0.01,
                         [
                             {% for t in word.topics | sort(attribute='np', reverse=True)  %}
                                 {
@@ -75,7 +74,6 @@
                         $('#plot-documents'),
                         'Usage in documents',
                         ['d', 'N_wd'],
-                        15, 0,
                         [
                             {% for d in word.documents | sort(attribute='np', reverse=True)  %}
                                 {
