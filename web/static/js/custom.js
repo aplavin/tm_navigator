@@ -282,12 +282,18 @@ function fill_table(table, dataset, limit) {
     show_data(dataset['data'].slice(0, limit));
     process_tagclouds();
 
-    var input_div = $('<div></div>');
-    input_div.addClass('filter-input');
-    var input = $('<input type="text" placeholder="enter search terms..." />');
-    input.attr('id', 'filter-input');
-    input_div.append('<label>Search:</label>');
-    input_div.append(input);
+    var input_div = $('<div>', {
+        'class': 'form-horizontal'
+    }).append($('<div>', {
+        'class': 'has-feedback'
+    }).append(input = $('<input>', {
+        'type': 'text',
+        'class': 'form-control',
+        'id': 'filter-input',
+        'placeholder': 'Search'
+    })).append($('<span>', {
+        'class': 'form-control-feedback glyphicon glyphicon-search'
+    })));
     $(table).before(input_div);
 
     $(input).on('input', function() {

@@ -25,13 +25,6 @@ a:hover {
     text-decoration: underline !important;
 }
 
-.filter-table input {
-    margin-left: 5px;
-}
-td.alt {
-    background-color: rgba(255, 255, 0, 0.2) !important;
-}
-
 td {
     min-width: 100px;
 }
