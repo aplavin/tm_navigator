@@ -32,6 +32,10 @@ td.alt {
     background-color: rgba(255, 255, 0, 0.2) !important;
 }
 
+td {
+    min-width: 100px;
+}
+
 .overlay-container {
     position: relative;
 }
@@ -48,7 +52,7 @@ td.alt {
 }
 
 .overlay h1 {
-    margin-top: 50%;
+    margin-top: 20%;
     font-size: 60px;
     font-weight: 900;
 }
