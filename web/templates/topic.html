@@ -60,9 +60,9 @@
                         [
                             {% for d in topic.documents | sort(attribute='np', reverse=True)  %}
                                 {
-                                    name: '{{ d.d }}',
+                                    name: '{{ d.meta['slug'] }}',
                                     y: {{ d.np | round(3) }},
-                                    url: '{{ url_for('document', d=d.d) }}'
+                                    url: '{{ url_for('document', slug=d.meta['slug']) }}'
                                 },
                             {% endfor %}
                         ]

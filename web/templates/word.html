@@ -79,9 +79,9 @@
                         [
                             {% for d in word.documents | sort(attribute='np', reverse=True)  %}
                                 {
-                                    name: '{{ d.d }}',
+                                    name: '{{ d.meta['slug'] }}',
                                     y: {{ d.np }},
-                                    url: '{{ url_for('document', d=d.d) }}'
+                                    url: '{{ url_for('document', slug=d.meta['slug']) }}'
                                 },
                             {% endfor %}
                         ]
