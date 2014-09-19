@@ -23,7 +23,7 @@
                     </td>
                     <td>{{ word.np }}</td>
                     <td>
-                        <ul class="tagcloud">
+                        <ul class="tagcloud collapsed">
                             {% for t in word.topics %}
                                 <li>
                                     <a href="{{ url_for('topic', t=t.t) }}" title="P(w | t) = {{ t.np | round(4) }}" data-size="{{ t.np }}">{{ t.t }}</a>
@@ -32,7 +32,7 @@
                         </ul>
                     </td>
                     <td>
-                        <ul class="tagcloud">
+                        <ul class="tagcloud collapsed">
                             {% for d in word.documents %}
                                 <li>
                                     <a href="{{ url_for('document', slug=d.meta['slug']) }}" title="N_wd = {{ d.np }}" data-size="{{ d.np }}">{{ d.meta['slug'] }}</a>

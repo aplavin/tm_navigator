@@ -357,3 +357,52 @@ $(function(){
         }
     });
 });
+
+
+$(function () {
+    $('.collapsed').each(function () {
+        var collapsed = $(this);
+
+        var cnt_hidden = collapsed.children().filter(function () {
+            return $(this).position().top - collapsed.position().top >= collapsed.height();
+        }).length;
+
+        if (cnt_hidden == 0) {
+            return;
+        }
+
+        collapsed.removeClass('collapsed');
+        var height = collapsed.height();
+        collapsed.addClass('collapsed');
+
+        var a = $('<a></a>');
+        a.attr('href', '#');
+        a.addClass('text-muted');
+        collapsed.before(a);
+
+        var a_icon = $('<span></span>');
+        a_icon.addClass('glyphicon glyphicon-expand');
+        a.append(a_icon);
+
+        a.append('&nbsp;');
+
+        var a_text = $('<span></span>');
+        a_text.text(sprintf('%d more', cnt_hidden));
+        a.append(a_text);
+
+        a.click(function (evt) {
+            evt.preventDefault();
+            if (a_text.text() != 'Less') {
+                collapsed.css('max-height', height);
+                a_text.text('Less');
+                a_icon.removeClass('glyphicon-expand');
+                a_icon.addClass('glyphicon-collapse-down');
+            } else {
+                collapsed.css('max-height', '');
+                a_text.text(sprintf('%d more', cnt_hidden));
+                a_icon.addClass('glyphicon-expand');
+                a_icon.removeClass('glyphicon-collapse-down');
+            }
+        });
+    });
+});
