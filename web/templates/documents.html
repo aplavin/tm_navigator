@@ -28,8 +28,8 @@
                     },
                     {
                         type: 'link',
-                        href_fmt: '{{ url_for('document', d=999) }}'.replace('999', '%d'),
-                        href_field: 'd',
+                        href_fmt: '{{ url_for('document', slug='999') }}'.replace('999', '%s'),
+                        href_field: 'slug',
                         text_field: 'name'
                     },
                     {
@@ -60,7 +60,8 @@
                 {% for d in docs %}
                     {
                         d: {{ d.d }},
-                        name: '{{ d.name }}',
+                        slug: '{{ d.meta['slug'] }}',
+                        name: '{{ d.meta['title'] }}',
                         np: {{ d.np }},
                         topics: [
                             {% for t in d.topics %}

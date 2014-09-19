@@ -41,7 +41,7 @@
                         field: 'documents',
                         href_fmt: '{{ url_for('document', d=999) }}'.replace('999', '%d'),
                         href_field: 'd',
-                        text_field: 'd',
+                        text_field: 'slug',
                         valprefix: 'P(t | d) = ',
                         size_field: 'np',
                     },
@@ -65,6 +65,7 @@
                             {% for d in t.documents %}
                                 {
                                     d: {{ d.d }},
+                                    slug: '{{ d.meta['slug'] }}',
                                     np: {{ d.np | round(3) }}
                                 },
                             {% endfor %}

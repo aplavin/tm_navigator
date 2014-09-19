@@ -19,7 +19,8 @@
             <tbody>
                 <tr>
                     <td>
-                        <a href="{{ url_for('document', d=doc.d) }}">{{ doc.d }}</a>
+                        {{ doc.d }},<br/>
+                        {{ doc.meta['slug'] }}
                     </td>
                     <td>{{ doc.np }}</td>
                     <td>
@@ -33,7 +34,7 @@
                     </td>
                     <td>
                         <ul class="tagcloud">
-                            {% for w in doc.words[:50] %}
+                            {% for w in doc.words %}
                                 <li>
                                     <a href="{{ url_for('word', w=w.w) }}" title="N_wd = {{ w.np }}" data-size="{{ w.np }}">{{ w.word }}</a>
                                 </li>
@@ -164,7 +165,7 @@
 {% block body %}
 <div class="container">
     <div>
-        <h3>{{ doc.name }}</h3>
+        <h3>{{ doc.meta['title'] }}</h3>
         <div class="bs-component">
             <ul class="nav nav-pills">
                 <li class="active"><a href="#overview" data-toggle="tab">Overview</a></li>
