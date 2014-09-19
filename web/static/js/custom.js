@@ -1,6 +1,7 @@
 function createPieChart(container, title, ttipNames, cnt, threshold, data) {
+    var total = data.reduce(function(total, cur) { return total + cur.y; }, 0);
     var cntThresh = data.filter(
-        function (point) { return point.y > threshold; }
+        function (point) { return point.y / total > threshold; }
     ).length;
     cnt = Math.min(cnt, cntThresh);
 
