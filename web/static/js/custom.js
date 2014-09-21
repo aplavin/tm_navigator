@@ -76,10 +76,12 @@ function createPieChart(container, title, ttipNames, data) {
 }
 
 function createLineChart(container, title, ttipNames, data) {
-    if (!data[0].name) {
-        series = [ { data: data }];
-    } else {
+    if (data[0].name) {
         series = data;
+    } else {
+        series = [
+            { data: data }
+        ];
     }
 
     container.highcharts({
@@ -91,10 +93,6 @@ function createLineChart(container, title, ttipNames, data) {
         },
         title: {
             text: title
-        },
-        tooltip: {
-            headerFormat: '<b>' + ttipNames[0] + ':</b> {point.key}<br/><b>' + ttipNames[1] + ':</b> {point.y}',
-            pointFormat: ''
         },
         xAxis: {
             title: {
@@ -117,10 +115,10 @@ function createLineChart(container, title, ttipNames, data) {
                 } catch (e) {
                     return '';
                 }
-                if (!isNaN(label)) {
-                    return sprintf('<b>%s = %s</b>: #%d<br/><b>%s</b>: %s', ttipNames[0], label, this.x, ttipNames[1], this.y);
-                } else {
+                if (isNaN(label)) {
                     return sprintf('<b>%s</b>: #%d<br/><b>%s</b>: %s', label, this.x, ttipNames[1], this.y);
+                } else {
+                    return sprintf('<b>%s = %s</b>: #%d<br/><b>%s</b>: %s', ttipNames[0], label, this.x, ttipNames[1], this.y);
                 }
             }
         },
@@ -147,7 +145,9 @@ function unique(array){
 }
 
 function process_data_color(mode) {
-    mode = (typeof mode == 'string') ? mode : 'active';
+    if (typeof mode != 'string') {
+        mode = 'active';
+    }
 
     var backgroundColor = tinycolor('white').darken(5);
 
@@ -167,7 +167,7 @@ function process_data_color(mode) {
     });
 
     $('[data-color]').each(function() {
-        var value = $(this).data('color')
+        var value = $(this).data('color');
         var color = colormap[value];
         var el = $(this).find('a');
 
@@ -210,7 +210,7 @@ Highcharts.setOptions({
 });
 
 function process_tagclouds() {
-    $('.tagcloud:visible').each(function process_tagcloud() {
+    $('.tagcloud').each(function process_tagcloud() {
         var valprefix = $(this).data('valprefix');
         var elems = $(this).find('a');
         var sizes = elems.map(function get_datasize() { return $(this).data('size'); }).get();
@@ -221,10 +221,10 @@ function process_tagclouds() {
                 $(this).attr('title', valprefix + val)
             }
             var relval = Math.max(Math.sqrt(val / max), 0.2);
-            $(this).fadeTo(0, relval);
-            if (relval > 0.8) {
-                $(this).css('font-weight', 'bold');
-            }
+            $(this).css('opacity', relval);
+            // if (relval > 0.8) {
+            //     $(this).css('font-weight', 'bold');
+            // }
             // $(this).css('font-size', relval + 'em');
         });
     });
@@ -234,7 +234,7 @@ $(process_tagclouds);
 
 function fill_table(table, dataset, limit) {
     if (!limit) {
-        limit = dataset.length;
+        limit = dataset.data.length;
     }
     var tbody = $(table).find('tbody');
     tbody.empty();
@@ -242,7 +242,6 @@ function fill_table(table, dataset, limit) {
     function show_data(data) {
         data.forEach(function (row, i) {
             var trow = $('<tr></tr>');
-            tbody.append(trow);
             dataset['columns'].forEach(function (col) {
                 var tcell = $('<td></td>');
                 switch (col['type']) {
@@ -259,17 +258,21 @@ function fill_table(table, dataset, limit) {
                         tcell.append(a);
                         break;
                     case 'tagcloud':
-                        var ul = $('<ul></ul>');
+                        var ul = $('<ul>');
                         ul.addClass('tagcloud');
                         if (col['valprefix']) {
                             ul.attr('data-valprefix', col['valprefix']);
                         }
                         row[col['field']].forEach(function (val) {
-                            var li = $('<li></li>');
-                            var a = $('<a></a>');
-                            a.data('size', val[col['size_field']]);
-                            a.attr('href', sprintf(col['href_fmt'], val[col['href_field']]));
-                            a.text(val[col['text_field']]);
+                            var li = $('<li>');
+                            var a = $('<a>',{
+                                'data-size': val[col['size_field']],
+                                'href': sprintf(col['href_fmt'], val[col['href_field']]),
+                                'text': val[col['text_field']]
+                            });
+                            // a.data('size', val[col['size_field']]);
+                            // a.attr('href', sprintf(col['href_fmt'], val[col['href_field']]));
+                            // a.text(val[col['text_field']]);
                             li.append(a);
                             ul.append(li);
                             ul.append('\n');
@@ -279,6 +282,7 @@ function fill_table(table, dataset, limit) {
                 }
                 trow.append(tcell);
             });
+            tbody.append(trow);
         })
     }
 
@@ -322,6 +326,7 @@ function fill_table(table, dataset, limit) {
             data.push(dataset['data'][ri]);
         });
         show_data(data);
+        process_tagclouds();
     });
 }
 
@@ -409,16 +414,16 @@ $(function () {
 
         a.click(function (evt) {
             evt.preventDefault();
-            if (a_text.text() != 'Less') {
-                collapsed.css('max-height', height);
-                a_text.text('Less');
-                a_icon.removeClass('glyphicon-expand');
-                a_icon.addClass('glyphicon-collapse-down');
-            } else {
+            if (a_text.text() == 'Less') {
                 collapsed.css('max-height', '');
                 a_text.text(sprintf('%d more', cnt_hidden));
                 a_icon.addClass('glyphicon-expand');
                 a_icon.removeClass('glyphicon-collapse-down');
+            } else {
+                collapsed.css('max-height', height);
+                a_text.text('Less');
+                a_icon.removeClass('glyphicon-expand');
+                a_icon.addClass('glyphicon-collapse-down');
             }
         });
     });
