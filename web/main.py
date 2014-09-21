@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, url_for, redirect, request
 from flask.ext.assets import Environment
 from flask_debugtoolbar import DebugToolbarExtension
 from flask_debugtoolbar_lineprofilerpanel.profile import line_profile
@@ -16,6 +16,7 @@ import inspect
 import sys
 import subprocess
 import datetime
+from whoosh import index, qparser, query as wh_query, analysis, sorting, highlight
 
 
 app = Flask(__name__)
@@ -96,6 +97,61 @@ def overview():
         topics = list( starmap(TopicTuple, zip(ts, pts[ts])) )
 
     return render_template('overview.html', words=words, docs=docs, topics=topics)
+
+
+@app.route('/search')
+@app.route('/search/', defaults={'query': ''})
+@app.route('/search/<query>')
+def search(query=None):
+    if 'query' in request.args:
+        return redirect(url_for('search', **request.args))
+    return render_template('search.html', query=query or '')
+
+class RemoveDuplicatesFilter(analysis.Filter):
+    def __call__(self, stream):
+        lasttext = None
+        for token in stream:
+            if lasttext != token.text:
+                yield token
+            lasttext = token.text
+
+@app.route('/search_results/')
+@app.route('/search_results/<query>')
+def search_results(query=''):
+    ix = index.open_dir('../whoosh_ix', readonly=True)
+    qp = qparser.MultifieldParser(['title', 'authors', 'authors_ngrams', 'title_ngrams'],
+                                  ix.schema,
+                                  termclass=wh_query.FuzzyTerm)
+
+    highlighter_whole = highlight.Highlighter(fragmenter=highlight.WholeFragmenter())
+
+    def hl_whole(hit, field, text=None):
+        return highlighter_whole.highlight_hit(hit, field, text)
+
+    with ix.searcher() as searcher:
+        query_parsed = qp.parse(query)
+
+        kwargs = {}
+        if 'groupby[]' in request.args:
+            kwargs['groupedby'] = sorting.MultiFacet(
+                items=[sorting.FieldFacet(field, allow_overlap=True) if not field.endswith('_stored') else sorting.StoredFieldFacet(field[:-7])
+                       for field in request.args.getlist('groupby[]')])
+
+        results = searcher.search(query_parsed, limit=50, **kwargs)
+
+        if results.facet_names():
+            groups = sorted(results.groups().items(), key=lambda gr: -len(gr[1]))
+            grouped = [(' '.join(map(str, gr_name)) if isinstance(gr_name, tuple) else gr_name,
+                        [next(hit for hit in results if hit.docnum == docnum)
+                         for docnum in gr_nums])
+                       for gr_name, gr_nums in groups]
+        else:
+            grouped = None
+
+        return render_template('search_results.html',
+                               grouped=grouped,
+                               results=results,
+                               hl_whole=hl_whole)
 
 
 @app.route('/topics')

@@ -1,0 +1,104 @@
+<div class="well well-sm">
+    Showing <samp id="search-count"></samp> of <samp>{{ results|length }}</samp> results.
+</div>
+
+<table class="table table-hover table-striped">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Title</th>
+            <th>
+                <div class="dropdown">
+                    Authors
+                    <a class="dropdown-toggle small-link" data-toggle="dropdown" href="#">
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu" role="menu">
+                        <li><a href="#" onclick="search_set_grouping('authors_tags'); return false;">Group by individual author</a></li>
+                        <li><a href="#" onclick="search_set_grouping('authors_tags_stored'); return false;">Group by authors</a></li>
+                    </ul>
+                </div>
+            </th>
+            <th>
+                <div class="dropdown">
+                    Source
+                    <a class="dropdown-toggle small-link" data-toggle="dropdown" href="#">
+                        <span class="caret"></span>
+                    </a>
+                    <ul class="dropdown-menu" role="menu">
+                        <li><a href="#" onclick="search_set_grouping(['conference', 'year']); return false;">Group by source</a></li>
+                    </ul>
+                </div>
+            </th>
+        </tr>
+    </thead>
+
+    {% if grouped %}
+        {% for gr_name, gr_hits in grouped[:10] %}
+            {% set gr_loop = loop %}
+            <tbody>
+                <tr class="success">
+                    <th colspan="4">
+                        <h3>{{ gr_name }}</h3>
+                    </th>
+                </tr>
+                {% for hit in gr_hits[:10] %}
+                    <tr>
+                        <td>
+                            {{ gr_loop.index }}.{{ loop.index }}<br/>
+                            {{ total_shown }}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('document', slug=hit['slug']) }}">
+                                {{ hl_whole(hit, 'title')|safe or hl_whole(hit, 'title_ngrams', hit['title'])|safe or hit['title'] }}
+                            </a>
+                        </td>
+                        <td>
+                            {{ hl_whole(hit, 'authors')|safe or hl_whole(hit, 'authors_ngrams', hit['authors'])|safe or hit['authors'] }}
+                        </td>
+                        <td>
+                            {{ hit['conference'] }},&nbsp;{{ hit['year'] }}
+                        </td>
+                    </tr>
+                {% endfor %}
+                {% if gr_hits|length > 10 %}
+                    <tr class="info text-center">
+                        <td colspan="4">
+                            {{ gr_hits|length - 10 }} more results from this group are not shown
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        {% endfor %}
+        {% if grouped|length > 10 %}
+            <tbody>
+                <tr class="info text-center">
+                    <td colspan="4">
+                        {{ grouped|length - 10 }} more groups are not shown
+                    </td>
+                </tr>
+            </tbody>
+        {% endif %}
+    {% else %}
+        <tbody>
+            {% for hit in results %}
+                <tr>
+                    <td>
+                        {{ loop.index }}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('document', slug=hit['slug']) }}">
+                            {{ hl_whole(hit, 'title')|safe or hl_whole(hit, 'title_ngrams', hit['title'])|safe or hit['title'] }}
+                        </a>
+                    </td>
+                    <td>
+                        {{ hl_whole(hit, 'authors')|safe or hl_whole(hit, 'authors_ngrams', hit['authors'])|safe or hit['authors'] }}
+                    </td>
+                    <td>
+                        {{ hit['conference'] }},&nbsp;{{ hit['year'] }}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    {% endif %}
+</table>
