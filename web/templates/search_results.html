@@ -1,5 +1,5 @@
 <div class="well well-sm">
-    Showing <samp id="search-count"></samp> of <samp>{{ results|length }}</samp> results.
+    Showing <samp id="search-count"></samp> of <samp>{{ results_cnt }}</samp> results.
 </div>
 
 <table class="table table-hover table-striped">
@@ -44,10 +44,10 @@
                 </tr>
                 {% for hit in gr_hits[:10] %}
                     <tr>
-                        <td>
+                        <th>
                             {{ gr_loop.index }}.{{ loop.index }}<br/>
                             {{ total_shown }}
-                        </td>
+                        </th>
                         <td>
                             <a href="{{ url_for('document', slug=hit['slug']) }}">
                                 {{ hl_whole(hit, 'title')|safe or hl_whole(hit, 'title_ngrams', hit['title'])|safe or hit['title'] }}
@@ -83,9 +83,9 @@
         <tbody>
             {% for hit in results %}
                 <tr>
-                    <td>
+                    <th>
                         {{ loop.index }}
-                    </td>
+                    </th>
                     <td>
                         <a href="{{ url_for('document', slug=hit['slug']) }}">
                             {{ hl_whole(hit, 'title')|safe or hl_whole(hit, 'title_ngrams', hit['title'])|safe or hit['title'] }}
@@ -96,6 +96,13 @@
                     </td>
                     <td>
                         {{ hit['conference'] }},&nbsp;{{ hit['year'] }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td></td>
+                    <td colspan="3">
+                        {{ hl_content(hit)|safe }}
                     </td>
                 </tr>
             {% endfor %}

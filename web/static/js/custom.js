@@ -529,6 +529,8 @@ function search(new_args) {
 
     if (args['groupby']) $('#search-groupby-disable').show();
     else $('#search-groupby-disable').hide();
+    if (args['in_text']) $('#search-in-text-switch').removeClass('btn-default').addClass('btn-primary').text('In-text search: On');
+    else $('#search-in-text-switch').removeClass('btn-primary').addClass('btn-default').text('In-text search: Off');;
 
     $.ajax({
         url: sprintf('/search_results/%s', $('#search-input').val()),
@@ -555,4 +557,10 @@ function search_set_grouping(fields) {
         fields = [fields];
     }
     search({groupby: fields});
+}
+
+function search_switch_in_text() {
+    var btn = $('#search-in-text-switch');
+    var enabled = btn.hasClass('btn-primary');
+    search({in_text: !enabled});
 }
