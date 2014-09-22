@@ -410,14 +410,14 @@ $(function () {
         a.append('&nbsp;');
 
         var a_text = $('<span></span>');
-        a_text.text(sprintf('%d more', cnt_hidden));
+        a_text.text(sprintf('Show %d more', cnt_hidden));
         a.append(a_text);
 
         a.click(function (evt) {
             evt.preventDefault();
             if (a_text.text() == 'Less') {
                 collapsed.css('max-height', '');
-                a_text.text(sprintf('%d more', cnt_hidden));
+                a_text.text(sprintf('Show %d more', cnt_hidden));
                 a_icon.addClass('glyphicon-expand');
                 a_icon.removeClass('glyphicon-collapse-down');
             } else {

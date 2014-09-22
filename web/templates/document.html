@@ -30,7 +30,7 @@
             <div class="bs-callout bs-callout-info">
                 <h4>Topics:</h4>
                 <div id="plot-topics" style="height:400px;"></div>
-                <ul class="tagcloud text-center">
+                <ul class="tagcloud">
                     {% for t in doc.topics %}
                         <li>
                             <a href="{{ url_for('topic', t=t.t) }}" title="P(t | d) = {{ t.np | round(3) }}" data-size="{{ t.np }}">{{ t.t }}</a>
@@ -43,7 +43,7 @@
             <div class="bs-callout bs-callout-info">
                 <h4>Words:</h4>
                 <div id="plot-words" style="height:400px;"></div>
-                <ul class="tagcloud collapsed text-center">
+                <ul class="tagcloud collapsed">
                     {% for w in doc.words %}
                         <li>
                             <a href="{{ url_for('word', w=w.w) }}" title="N_wd = {{ w.np }}" data-size="{{ w.np }}">{{ w.word }}</a>
