@@ -39,8 +39,8 @@
                     {
                         type: 'tagcloud',
                         field: 'documents',
-                        href_fmt: '{{ url_for('document', d=999) }}'.replace('999', '%d'),
-                        href_field: 'd',
+                        href_fmt: '{{ url_for('document', slug='999') }}'.replace('999', '%s'),
+                        href_field: 'slug',
                         text_field: 'slug',
                         valprefix: 'P(t | d) = ',
                         size_field: 'np',
