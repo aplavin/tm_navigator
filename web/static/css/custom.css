@@ -133,4 +133,7 @@ thead th {
 .bs-callout-info {
     border-color: #5bc0de;
 }
+
+#content h1 {
+    font-size: 1.5em;
 }

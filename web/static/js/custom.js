@@ -150,6 +150,7 @@ function process_data_color(mode) {
     }
 
     var backgroundColor = tinycolor('white').darken(5);
+    backgroundColor.setAlpha(0.7);
 
     var values = unique($('[data-color]').map(function() { return $(this).data('color'); }).get());
     var colormap = {};
@@ -570,3 +571,8 @@ function search_switch_in_text() {
 $(function () {
     $('[data-toggle=tooltip]').tooltip();
 })
+
+
+$(function () {
+    $('#content h1 br').replaceWith(' ');
+});
