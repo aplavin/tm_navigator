@@ -115,7 +115,7 @@ class RemoveDuplicatesFilter(analysis.Filter):
 
 @app.route('/search_results/')
 @app.route('/search_results/<query>')
-def search_results(query=''):
+def search_results(query='*'):
     ix = index.open_dir('../whoosh_ix', readonly=True)
 
     fields = ['title', 'authors', 'authors_ngrams', 'title_ngrams']
