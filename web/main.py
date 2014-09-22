@@ -103,8 +103,6 @@ def overview():
 @app.route('/search/', defaults={'query': ''})
 @app.route('/search/<query>')
 def search(query=None):
-    if 'query' in request.args:
-        return redirect(url_for('search', **request.args))
     return render_template('search.html', query=query or '')
 
 class RemoveDuplicatesFilter(analysis.Filter):
