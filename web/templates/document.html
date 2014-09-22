@@ -6,119 +6,113 @@
 ] %}
 
 {% macro overview() %}
-    <div class="container">
-        <table class="table table-striped table-hover ">
-            <thead>
-                <tr>
-                    <th>Document #</th>
-                    <th># of Words</th>
-                    <th>Topics</th>
-                    <th>Words</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>
-                        {{ doc.d }},<br/>
-                        {{ doc.meta['slug'] }}
-                    </td>
-                    <td>{{ doc.np }}</td>
-                    <td>
-                        <ul class="tagcloud collapsed">
-                            {% for t in doc.topics %}
-                                <li>
-                                    <a href="{{ url_for('topic', t=t.t) }}" title="P(t | d) = {{ t.np | round(3) }}" data-size="{{ t.np }}">{{ t.t }}</a>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    </td>
-                    <td>
-                        <ul class="tagcloud collapsed">
-                            {% for w in doc.words %}
-                                <li>
-                                    <a href="{{ url_for('word', w=w.w) }}" title="N_wd = {{ w.np }}" data-size="{{ w.np }}">{{ w.word }}</a>
-                                </li>
-                            {% endfor %}
-                            <li>...<li>
-                        </ul>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
-    <div class="container">
-        <div class="row">
-            <div class="col-md-6" id="plot-topics" style="height:400px;"></div>
-            <div class="col-md-6" id="plot-words" style="height:400px;"></div>
-
-            <script type="text/javascript">
-                $(function () {
-                    createPieChart(
-                        $('#plot-topics'),
-                        'Topics distribution',
-                        ['t', 'P(t | d)'],
-                        [
-                            {% for t in doc.topics | sort(attribute='np', reverse=True)  %}
-                                {
-                                    name: '{{ t.t }}',
-                                    y: {{ t.np | round(3) }},
-                                    url: '{{ url_for('topic', t=t.t) }}'
-                                },
-                            {% endfor %}
-                        ]
-                    );
-                });
-
-
-                $(function () {
-                    createPieChart(
-                        $('#plot-words'),
-                        'Words distribution',
-                        ['w', 'N_wd'],
-                        [
-                            {% for w in doc.words | sort(attribute='np', reverse=True)  %}
-                                {
-                                    name: '{{ w.word }}',
-                                    y: {{ w.np }},
-                                    url: '{{ url_for('word', w=w.w) }}'
-                                },
-                            {% endfor %}
-                        ]
-                    );
-                });
-            </script>
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h3 class="panel-title">
+                <a href="{{ url_for('document', slug=doc.meta['slug']) }}">
+                    {{ doc.meta['title'] }}
+                </a>
+            </h3>
+            {{ doc.meta['slug'] }}
+            <div>
+                <a href="{{ url_for('search', query='authors:"%s"' % (doc.meta['author'])) }}">
+                    {{ doc.meta['author'] }}
+                </a>
+            </div>
+            <div>
+                <a href="{{ url_for('search', query='conference:%s AND year:%s' % (doc.meta['conference'], doc.meta['year'])) }}">
+                    {{ doc.meta['conference'] }},&nbsp;{{ doc.meta['year'] }}
+                </a>
+            </div>
         </div>
 
-        <div class="row">
-            <div class="col-md-12" id="plot-topics-flow" style="height:400px;"></div>
+        <div class="panel-body">
+            <div class="bs-callout bs-callout-info">
+                <h4>Topics:</h4>
+                <div id="plot-topics" style="height:400px;"></div>
+                <ul class="tagcloud text-center">
+                    {% for t in doc.topics %}
+                        <li>
+                            <a href="{{ url_for('topic', t=t.t) }}" title="P(t | d) = {{ t.np | round(3) }}" data-size="{{ t.np }}">{{ t.t }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+                <div id="plot-topics-flow" style="height:400px;"></div>
+            </div>
 
-            <script type="text/javascript">
-                $(function () {
-                    createLineChart(
-                        $('#plot-topics-flow'),
-                        'Topics flow',
-                        ['Word #', 'P'],
-                        [
-                            {% for tf in topics_flow %}
-                                {
-                                    name: "Topic {{ tf.t }}",
-                                    data: [
-                                        {% for p in tf.np %}
-                                            [
-                                                {{ loop.index }},
-                                                {{ p }}
-                                            ],
-                                        {% endfor %}
-                                    ]
-                                },
-                            {% endfor %}
-                        ]
-                    );
-                });
-            </script>
+            <div class="bs-callout bs-callout-info">
+                <h4>Words:</h4>
+                <div id="plot-words" style="height:400px;"></div>
+                <ul class="tagcloud collapsed text-center">
+                    {% for w in doc.words %}
+                        <li>
+                            <a href="{{ url_for('word', w=w.w) }}" title="N_wd = {{ w.np }}" data-size="{{ w.np }}">{{ w.word }}</a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
         </div>
     </div>
+
+    <script type="text/javascript">
+        $(function () {
+            createPieChart(
+                $('#plot-topics'),
+                'Topics distribution',
+                ['t', 'P(t | d)'],
+                [
+                    {% for t in doc.topics | sort(attribute='np', reverse=True)  %}
+                        {
+                            name: '{{ t.t }}',
+                            y: {{ t.np | round(3) }},
+                            url: '{{ url_for('topic', t=t.t) }}'
+                        },
+                    {% endfor %}
+                ]
+            );
+        });
+
+
+        $(function () {
+            createPieChart(
+                $('#plot-words'),
+                'Words distribution',
+                ['w', 'N_wd'],
+                [
+                    {% for w in doc.words | sort(attribute='np', reverse=True)  %}
+                        {
+                            name: '{{ w.word }}',
+                            y: {{ w.np }},
+                            url: '{{ url_for('word', w=w.w) }}'
+                        },
+                    {% endfor %}
+                ]
+            );
+        });
+
+        $(function () {
+            createLineChart(
+                $('#plot-topics-flow'),
+                'Topics flow',
+                ['Word #', 'P'],
+                [
+                    {% for tf in topics_flow %}
+                        {
+                            name: "Topic {{ tf.t }}",
+                            data: [
+                                {% for p in tf.np %}
+                                    [
+                                        {{ loop.index }},
+                                        {{ p }}
+                                    ],
+                                {% endfor %}
+                            ]
+                        },
+                    {% endfor %}
+                ]
+            );
+        });
+    </script>
 {% endmacro %}
 
 {% macro content() %}
