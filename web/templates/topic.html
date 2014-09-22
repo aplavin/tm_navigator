@@ -2,90 +2,83 @@
 
 {% set breadcrumbs = [
     (url_for('topics'), 'Topics'),
-    'Topic %d' % topic.t
+    'Topic'
 ] %}
 
 {% block body %}
     <div class="container">
-        <table class="table table-striped table-hover ">
-            <thead>
-                <tr>
-                    <th>Topic</th>
-                    <th>P(t)</th>
-                    <th>Documents</th>
-                    <th>Words</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>
-                        <a href="{{ url_for('topic', t=topic.t) }}">{{ topic.t }}</a>
-                    </td>
-                    <td>{{ topic.np | round(3) }}</td>
-                    <td>
-                        <ul class="tagcloud collapsed">
-                            {% for d in topic.documents %}
-                                <li>
-                                    <a href="{{ url_for('document', slug=d.meta['slug']) }}" title="P(t | d) = {{ d.np | round(3) }}" data-size="{{ d.np }}">{{ d.meta['slug'] }}</a>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    </td>
-                    <td>
-                        <ul class="tagcloud collapsed">
-                            {% for w in topic.words %}
-                                <li>
-                                    <a href="{{ url_for('word', w=w.w) }}" title="P(w | t) = {{ w.np | round(4) }}" data-size="{{ w.np }}">{{ w.word }}</a>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    <a href="{{ url_for('topic', t=topic.t) }}">
+                        Topic #{{ topic.t }}
+                    </a>
+                </h3>
+                P(t) = {{ topic.np | round(3) }}
+            </div>
 
-    <div class="container">
-        <div class="row">
-            <div class="col-md-6" id="plot-documents" style="height:400px;"></div>
-            <div class="col-md-6" id="plot-words" style="height:400px;"></div>
+            <div class="panel-body">
+                <div class="bs-callout bs-callout-info">
+                    <h4>Documents:</h4>
+                    <div id="plot-documents" style="height:400px;"></div>
+                    <ul class="tagcloud collapsed">
+                        {% for d in topic.documents %}
+                            <li>
+                                <a href="{{ url_for('document', slug=d.meta['slug']) }}" title="P(t | d) = {{ d.np | round(3) }}" data-size="{{ d.np }}">{{ d.meta['slug'] }}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
 
-            <script type="text/javascript">
-                $(function () {
-                    createPieChart(
-                        $('#plot-documents'),
-                        'Usage in documents',
-                        ['d', 'P(t | d)'],
-                        [
-                            {% for d in topic.documents | sort(attribute='np', reverse=True)  %}
-                                {
-                                    name: '{{ d.meta['slug'] }}',
-                                    y: {{ d.np | round(3) }},
-                                    url: '{{ url_for('document', slug=d.meta['slug']) }}'
-                                },
-                            {% endfor %}
-                        ]
-                    );
-                });
-
-
-                $(function () {
-                    createPieChart(
-                        $('#plot-words'),
-                        'Words distribution',
-                        ['w', 'P(w | t)'],
-                        [
-                            {% for w in topic.words | sort(attribute='np', reverse=True)  %}
-                                {
-                                    name: '{{ w.word }}',
-                                    y: {{ w.np | round(4) }},
-                                    url: '{{ url_for('word', w=w.w) }}'
-                                },
-                            {% endfor %}
-                        ]
-                    );
-                });
-            </script>
+                <div class="bs-callout bs-callout-info">
+                    <h4>Words:</h4>
+                    <div id="plot-words" style="height:400px;"></div>
+                    <ul class="tagcloud collapsed">
+                        {% for w in topic.words %}
+                            <li>
+                                <a href="{{ url_for('word', w=w.w) }}" title="P(w | t) = {{ w.np | round(4) }}" data-size="{{ w.np }}">{{ w.word }}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
+
+    <script type="text/javascript">
+        $(function () {
+            createPieChart(
+                $('#plot-documents'),
+                'Usage in documents',
+                ['d', 'P(t | d)'],
+                [
+                    {% for d in topic.documents | sort(attribute='np', reverse=True)  %}
+                        {
+                            name: '{{ d.meta['slug'] }}',
+                            y: {{ d.np | round(3) }},
+                            url: '{{ url_for('document', slug=d.meta['slug']) }}'
+                        },
+                    {% endfor %}
+                ]
+            );
+        });
+
+
+        $(function () {
+            createPieChart(
+                $('#plot-words'),
+                'Words distribution',
+                ['w', 'P(w | t)'],
+                [
+                    {% for w in topic.words | sort(attribute='np', reverse=True)  %}
+                        {
+                            name: '{{ w.word }}',
+                            y: {{ w.np | round(4) }},
+                            url: '{{ url_for('word', w=w.w) }}'
+                        },
+                    {% endfor %}
+                ]
+            );
+        });
+    </script>
 {% endblock %}
