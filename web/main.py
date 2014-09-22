@@ -137,6 +137,12 @@ def search_results(query=''):
     def hl_content(hit):
         return highlighter_content.highlight_hit(hit, 'content')
 
+    def htopics(hit):
+        topics = [TopicTuple(name, ptd)
+                  for name, [(_, ptd)] in searcher.vector_as('position_boosts', hit.docnum, 'topics')]
+        topics.sort(key=lambda t: t.np, reverse=True)
+        return topics
+
     with ix.searcher() as searcher:
         query_parsed = qp.parse(query)
 
@@ -164,7 +170,8 @@ def search_results(query=''):
                                results=results,
                                results_cnt=results_cnt,
                                hl_whole=hl_whole,
-                               hl_content=hl_content)
+                               hl_content=hl_content,
+                               htopics=htopics)
 
 
 @app.route('/topics')

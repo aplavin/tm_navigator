@@ -15,11 +15,21 @@
             </div>
         </div>
         <div class="form-group">
-            <a class="btn btn-primary" onclick="search_set_grouping()" id="search-groupby-disable" style="display: none">
-                Disable grouping
-            </a>
+            <div class="btn-group">
+                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" id="search-grouping-switch">
+                    Grouping: <span>off</span> <span class="caret"></span>
+                </button>
+                <ul class="dropdown-menu" role="menu">
+                    <li><a href="#" onclick="search_set_grouping()">Disabled</a></li>
+                    <li class="divider"></li>
+                    <li><a href="#" onclick="search_set_grouping('authors_tags'); return false;">Individual author</a></li>
+                    <li><a href="#" onclick="search_set_grouping('authors_tags_stored'); return false;">Authors</a></li>
+                    <li><a href="#" onclick="search_set_grouping(['conference', 'year']); return false;">Source</a></li>
+                </ul>
+            </div>
+
             <a class="btn btn-default" onclick="search_switch_in_text()" id="search-in-text-switch">
-                In-text search: Off
+                In-text search: off
             </a>
         </div>
     </form>

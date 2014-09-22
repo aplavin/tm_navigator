@@ -2,89 +2,20 @@
     Showing <samp id="search-count"></samp> of <samp>{{ results_cnt }}</samp> results.
 </div>
 
-<table class="table table-hover table-striped">
-    <thead>
-        <tr>
-            <th>#</th>
-            <th>Title</th>
-            <th>
-                <div class="dropdown">
-                    Authors
-                    <a class="dropdown-toggle small-link" data-toggle="dropdown" href="#">
-                        <span class="caret"></span>
-                    </a>
-                    <ul class="dropdown-menu" role="menu">
-                        <li><a href="#" onclick="search_set_grouping('authors_tags'); return false;">Group by individual author</a></li>
-                        <li><a href="#" onclick="search_set_grouping('authors_tags_stored'); return false;">Group by authors</a></li>
-                    </ul>
-                </div>
-            </th>
-            <th>
-                <div class="dropdown">
-                    Source
-                    <a class="dropdown-toggle small-link" data-toggle="dropdown" href="#">
-                        <span class="caret"></span>
-                    </a>
-                    <ul class="dropdown-menu" role="menu">
-                        <li><a href="#" onclick="search_set_grouping(['conference', 'year']); return false;">Group by source</a></li>
-                    </ul>
-                </div>
-            </th>
-        </tr>
-    </thead>
-
-    {% if grouped %}
-        {% for gr_name, gr_hits in grouped[:10] %}
-            {% set gr_loop = loop %}
-            <tbody>
-                <tr class="success">
-                    <th colspan="4">
-                        <h3>{{ gr_name }}</h3>
-                    </th>
-                </tr>
-                {% for hit in gr_hits[:10] %}
-                    <tr>
-                        <th>
-                            {{ gr_loop.index }}.{{ loop.index }}<br/>
-                            {{ total_shown }}
-                        </th>
-                        <td>
-                            <a href="{{ url_for('document', slug=hit['slug']) }}">
-                                {{ hl_whole(hit, 'title')|safe or hl_whole(hit, 'title_ngrams', hit['title'])|safe or hit['title'] }}
-                            </a>
-                        </td>
-                        <td>
-                            {{ hl_whole(hit, 'authors')|safe or hl_whole(hit, 'authors_ngrams', hit['authors'])|safe or hit['authors'] }}
-                        </td>
-                        <td>
-                            {{ hit['conference'] }},&nbsp;{{ hit['year'] }}
-                        </td>
-                    </tr>
-                {% endfor %}
-                {% if gr_hits|length > 10 %}
-                    <tr class="info text-center">
-                        <td colspan="4">
-                            {{ gr_hits|length - 10 }} more results from this group are not shown
-                        </td>
-                    </tr>
-                {% endif %}
-            </tbody>
-        {% endfor %}
-        {% if grouped|length > 10 %}
-            <tbody>
-                <tr class="info text-center">
-                    <td colspan="4">
-                        {{ grouped|length - 10 }} more groups are not shown
-                    </td>
-                </tr>
-            </tbody>
-        {% endif %}
-    {% else %}
+{% if grouped %}
+    {% for gr_name, gr_hits in grouped[:10] %}
+        {% set gr_loop = loop %}
         <tbody>
-            {% for hit in results %}
+            <tr class="success">
+                <th colspan="4">
+                    <h3>{{ gr_name }}</h3>
+                </th>
+            </tr>
+            {% for hit in gr_hits[:10] %}
                 <tr>
                     <th>
-                        {{ loop.index }}
+                        {{ gr_loop.index }}.{{ loop.index }}<br/>
+                        {{ total_shown }}
                     </th>
                     <td>
                         <a href="{{ url_for('document', slug=hit['slug']) }}">
@@ -98,14 +29,71 @@
                         {{ hit['conference'] }},&nbsp;{{ hit['year'] }}
                     </td>
                 </tr>
-
-                <tr>
-                    <td></td>
-                    <td colspan="3">
-                        {{ hl_content(hit)|safe }}
+            {% endfor %}
+            {% if gr_hits|length > 10 %}
+                <tr class="info text-center">
+                    <td colspan="4">
+                        {{ gr_hits|length - 10 }} more results from this group are not shown
                     </td>
                 </tr>
-            {% endfor %}
+            {% endif %}
+        </tbody>
+    {% endfor %}
+    {% if grouped|length > 10 %}
+        <tbody>
+            <tr class="info text-center">
+                <td colspan="4">
+                    {{ grouped|length - 10 }} more groups are not shown
+                </td>
+            </tr>
         </tbody>
     {% endif %}
-</table>
+{% else %}
+    <div>
+        {% for hit in results %}
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <a href="{{ url_for('document', slug=hit['slug']) }}">
+                            {{ hl_whole(hit, 'title')|safe or hl_whole(hit, 'title_ngrams', hit['title'])|safe or hit['title'] }}
+                        </a>
+                    </h3>
+                    <div>
+                        {{ hl_whole(hit, 'authors')|safe or hl_whole(hit, 'authors_ngrams', hit['authors'])|safe or hit['authors'] }}
+                    </div>
+                    <div>
+                        {{ hit['conference'] }},&nbsp;{{ hit['year'] }}
+                    </div>
+                </div>
+
+                <div class="panel-body">
+                    <h4 class="progress-label">Topics:</h4>
+                    <div class="progress">
+                        {% set topics = htopics(hit) %}
+                        {% for t in topics[:5] %}
+                            <div class="progress-bar progress-bar-{{ loop.cycle('default', 'info', 'success', 'warning', 'danger') }}" style="width: {{ t.np * 100 }}%"
+                            data-placement="top" data-toggle="tooltip" data-html="true"
+                            title="<h4>Topic #{{ t.t }}</h4>P(t | d) = {{ t.np | round(3) }}"></div>
+                        {% endfor %}
+                        {% if topics | length > 5 %}
+                            <div class="progress-bar progress-bar-transparent" style="width: {{ topics[5:] | sum('np') * 100 }}%"
+                            data-placement="top" data-toggle="tooltip" data-html="true"
+                            title="<h4>Topics #{{ topics[5:] | join(', #', attribute='t') }}</h4>Total P(t | d) = {{ topics[5:] | sum('np') | round(3) }}"></div>
+                        {% endif %}
+                    </div>
+
+                    {% if request.args.get('in_text', False) == 'true' %}
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                Matches in text
+                            </div>
+                            <div class="panel-body">
+                                {{ hl_content(hit)|safe }}
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}

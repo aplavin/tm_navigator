@@ -220,7 +220,7 @@ function process_tagclouds() {
             if (valprefix) {
                 $(this).attr('title', valprefix + val)
             }
-            var relval = Math.max(Math.sqrt(val / max), 0.2);
+            var relval = Math.max(Math.sqrt(val / max), 0.3);
             $(this).css('opacity', relval);
             // if (relval > 0.8) {
             //     $(this).css('font-weight', 'bold');
@@ -527,10 +527,10 @@ function search(new_args) {
         }
     }
 
-    if (args['groupby']) $('#search-groupby-disable').show();
-    else $('#search-groupby-disable').hide();
-    if (args['in_text']) $('#search-in-text-switch').removeClass('btn-default').addClass('btn-primary').text('In-text search: On');
-    else $('#search-in-text-switch').removeClass('btn-primary').addClass('btn-default').text('In-text search: Off');;
+    if (args['groupby']) $('#search-grouping-switch').removeClass('btn-default').addClass('btn-primary').find('span:first-child').text('on');
+    else $('#search-grouping-switch').removeClass('btn-primary').addClass('btn-default').find('span:first-child').text('off');
+    if (args['in_text']) $('#search-in-text-switch').removeClass('btn-default').addClass('btn-primary').text('In-text search: on');
+    else $('#search-in-text-switch').removeClass('btn-primary').addClass('btn-default').text('In-text search: off');;
 
     $.ajax({
         url: sprintf('/search_results/%s', $('#search-input').val()),
@@ -538,7 +538,9 @@ function search(new_args) {
         dataType: 'html'
     }).success(function (data, status) {
         $('#search-results').html(data);
-        $('#search-count').text($('#search-results tr > td:nth-child(4)').length);
+        $('#search-count').text($('#search-results .panel').length);
+        process_tagclouds();
+        $('[data-toggle=tooltip]').tooltip();
     }).complete(function () {
         $('#search-loading').hide();
         window.history.pushState(null, null, this.url.replace('/search_results', '/search'));
@@ -564,3 +566,7 @@ function search_switch_in_text() {
     var enabled = btn.hasClass('btn-primary');
     search({in_text: !enabled});
 }
+
+$(function () {
+    $('[data-toggle=tooltip]').tooltip();
+})
