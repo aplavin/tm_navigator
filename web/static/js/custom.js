@@ -534,7 +534,7 @@ function search(new_args) {
     else $('#search-in-text-switch').removeClass('btn-primary').addClass('btn-default').text('In-text search: off');;
 
     $.ajax({
-        url: sprintf('/search_results/%s', $('#search-input').val()),
+        url: sprintf('/search_results/%s', $('#search-input').val().replace('/', ' ')),
         data: args,
         dataType: 'html'
     }).success(function (data, status) {
