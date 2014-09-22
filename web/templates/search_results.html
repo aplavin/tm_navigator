@@ -1,5 +1,6 @@
 <div class="well well-sm">
     Showing <samp id="search-count"></samp> of <samp>{{ results_cnt }}</samp> results.
+    Search took <samp>{{ (results.runtime * 1000) | int }}</samp> ms.
 </div>
 
 {% if corrected %}
