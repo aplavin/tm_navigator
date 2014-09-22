@@ -290,9 +290,13 @@ def document(slug=None, d=None):
                             filename=filename)
 
 
-@app.route('/word/<int:w>')
-def word(w):
+@app.route('/word/w/<int:w>')
+@app.route('/word/<word>')
+def word(w=None, word=None):
     with h5py.File('../data.hdf', mode='r') as h5f:
+        if w is None:
+            words = h5f['dictionary'][...]
+            w = np.nonzero(words == word)[0][0]
         word = get_words_info([w], h5f)[0]
 
     return render_template('word.html', word=word)

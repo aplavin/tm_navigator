@@ -46,7 +46,7 @@
                 <ul class="tagcloud collapsed">
                     {% for w in doc.words %}
                         <li>
-                            <a href="{{ url_for('word', w=w.w) }}" title="N_wd = {{ w.np }}" data-size="{{ w.np }}">{{ w.word }}</a>
+                            <a href="{{ url_for('word', word=w.word) }}" title="N_wd = {{ w.np }}" data-size="{{ w.np }}">{{ w.word }}</a>
                         </li>
                     {% endfor %}
                 </ul>
@@ -83,7 +83,7 @@
                         {
                             name: '{{ w.word }}',
                             y: {{ w.np }},
-                            url: '{{ url_for('word', w=w.w) }}'
+                            url: '{{ url_for('word', word=w.word) }}'
                         },
                     {% endfor %}
                 ]

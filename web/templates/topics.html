@@ -48,8 +48,8 @@
                     {
                         type: 'tagcloud',
                         field: 'words',
-                        href_fmt: '{{ url_for('word', w=999) }}'.replace('999', '%d'),
-                        href_field: 'w',
+                        href_fmt: '{{ url_for('word', word='999') }}'.replace('999', '%s'),
+                        href_field: 'word',
                         text_field: 'word',
                         valprefix: 'P(w | t) = ',
                         size_field: 'np'
