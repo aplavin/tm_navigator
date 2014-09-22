@@ -1,10 +1,14 @@
 {% extends "base.html" %}
 
 {% set breadcrumbs = [
-    'Search'
+    'Documents'
 ] %}
 
 {% block body %}
+    <div class="well container text-center">
+        <a href="{{ url_for('documents_old') }}">Old documents page</a>, if you want to see it.
+    </div>
+
     <form class="container form-horizontal" onsubmit="return false;">
         <div class="form-group">
             <label for="search-input" class="control-label col-sm-1">Search:</label>

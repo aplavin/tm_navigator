@@ -197,8 +197,8 @@ def topics():
     return render_template('topics.html', topics=topics)
 
 
-@app.route('/documents')
-def documents():
+@app.route('/documents_old')
+def documents_old():
     with h5py.File('../data.hdf', mode='r') as h5f:
         nw = get_nwd(h5f).sum(0).A1
         indices = nw.argsort()[::-1]
