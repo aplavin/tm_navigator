@@ -7,85 +7,79 @@
 
 {% block body %}
     <div class="container">
-        <table class="table table-striped table-hover ">
-            <thead>
-                <tr>
-                    <th>Word</th>
-                    <th># of Occurences</th>
-                    <th>Topics</th>
-                    <th>Documents</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>
-                        <a href="{{ url_for('word', w=word.w) }}">{{ word.word }}</a>
-                    </td>
-                    <td>{{ word.np }}</td>
-                    <td>
-                        <ul class="tagcloud collapsed">
-                            {% for t in word.topics %}
-                                <li>
-                                    <a href="{{ url_for('topic', t=t.t) }}" title="P(w | t) = {{ t.np | round(4) }}" data-size="{{ t.np }}">{{ t.t }}</a>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    </td>
-                    <td>
-                        <ul class="tagcloud collapsed">
-                            {% for d in word.documents %}
-                                <li>
-                                    <a href="{{ url_for('document', slug=d.meta['slug']) }}" title="N_wd = {{ d.np }}" data-size="{{ d.np }}">{{ d.meta['slug'] }}</a>
-                                </li>
-                            {% endfor %}
-                        </ul>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    Word:
+                    <a href="{{ url_for('word', w=word.w) }}">
+                        {{ word.word }}
+                    </a>
+                </h3>
+                Number of occurrences = {{ word.np }}
+            </div>
 
-    <div class="container">
-        <div class="row">
-            <div class="col-md-6" id="plot-topics" style="height:400px;"></div>
-            <div class="col-md-6" id="plot-documents" style="height:400px;"></div>
+            <div class="panel-body">
+                <div class="bs-callout bs-callout-info">
+                    <h4>Topics:</h4>
+                    <div id="plot-topics" style="height:400px;"></div>
+                    <ul class="tagcloud">
+                        {% for t in word.topics %}
+                            <li>
+                                <a href="{{ url_for('topic', t=t.t) }}" title="P(w | t) = {{ t.np | round(4) }}" data-size="{{ t.np }}">{{ t.t }}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
 
-            <script type="text/javascript">
-                $(function () {
-                    createPieChart(
-                        $('#plot-topics'),
-                        'Usage in topics',
-                        ['t', 'P(w | t)'],
-                        [
-                            {% for t in word.topics | sort(attribute='np', reverse=True)  %}
-                                {
-                                    name: '{{ t.t }}',
-                                    y: {{ t.np | round(4) }},
-                                    url: '{{ url_for('topic', t=t.t) }}'
-                                },
-                            {% endfor %}
-                        ]
-                    );
-                });
-
-
-                $(function () {
-                    createPieChart(
-                        $('#plot-documents'),
-                        'Usage in documents',
-                        ['d', 'N_wd'],
-                        [
-                            {% for d in word.documents | sort(attribute='np', reverse=True)  %}
-                                {
-                                    name: '{{ d.meta['slug'] }}',
-                                    y: {{ d.np }},
-                                    url: '{{ url_for('document', slug=d.meta['slug']) }}'
-                                },
-                            {% endfor %}
-                        ]
-                    );
-                });
-            </script>
+                <div class="bs-callout bs-callout-info">
+                    <h4>Documents:</h4>
+                    <div id="plot-documents" style="height:400px;"></div>
+                    <ul class="tagcloud collapsed">
+                        {% for d in word.documents %}
+                            <li>
+                                <a href="{{ url_for('document', slug=d.meta['slug']) }}" title="N_wd = {{ d.np }}" data-size="{{ d.np }}">{{ d.meta['slug'] }}</a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
         </div>
     </div>
+
+    <script type="text/javascript">
+        $(function () {
+            createPieChart(
+                $('#plot-topics'),
+                'Usage in topics',
+                ['t', 'P(w | t)'],
+                [
+                    {% for t in word.topics | sort(attribute='np', reverse=True)  %}
+                        {
+                            name: '{{ t.t }}',
+                            y: {{ t.np | round(4) }},
+                            url: '{{ url_for('topic', t=t.t) }}'
+                        },
+                    {% endfor %}
+                ]
+            );
+        });
+
+
+        $(function () {
+            createPieChart(
+                $('#plot-documents'),
+                'Usage in documents',
+                ['d', 'N_wd'],
+                [
+                    {% for d in word.documents | sort(attribute='np', reverse=True)  %}
+                        {
+                            name: '{{ d.meta['slug'] }}',
+                            y: {{ d.np }},
+                            url: '{{ url_for('document', slug=d.meta['slug']) }}'
+                        },
+                    {% endfor %}
+                ]
+            );
+        });
+    </script>
 {% endblock %}
