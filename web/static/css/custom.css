@@ -78,6 +78,10 @@ thead th {
     margin-right: 1em;
 }
 
+.progress {
+    margin-bottom: 0;
+}
+
 .progress-bar.progress-bar-transparent {
     background-color: inherit;
 }
@@ -87,7 +91,7 @@ thead th {
 }
 
 .bs-callout {
-    padding: 20px;
+    padding: 10px;
     margin: 20px 0;
     border: 1px solid #eee;
     border-left-width: 5px;
@@ -114,36 +118,19 @@ thead th {
 .bs-callout-default {
     border-color: #777;
 }
-.bs-callout-default h4 {
-    color: #777;
-}
 .bs-callout-primary {
     border-color: #428bca;
-}
-.bs-callout-primary h4 {
-    color: #428bca;
 }
 .bs-callout-success {
     border-color: #5cb85c;
 }
-.bs-callout-success h4 {
-    color: #5cb85c;
-}
 .bs-callout-danger {
     border-color: #d9534f;
-}
-.bs-callout-danger h4 {
-    color: #d9534f;
 }
 .bs-callout-warning {
     border-color: #f0ad4e;
 }
-.bs-callout-warning h4 {
-    color: #f0ad4e;
-}
 .bs-callout-info {
     border-color: #5bc0de;
 }
-.bs-callout-info h4 {
-    color: #5bc0de;
 }
