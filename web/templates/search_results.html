@@ -2,6 +2,12 @@
     Showing <samp id="search-count"></samp> of <samp>{{ results_cnt }}</samp> results.
 </div>
 
+{% if corrected %}
+    <div class="well well-lg">
+        Did you mean <a href="{{ url_for('search', query=corrected.string, **request.args) }}">{{ corrected.html|safe }}</a>?
+    </div>
+{% endif %}
+
 {% macro show_results(results) %}
     {% for hit in results %}
         <div class="panel panel-default">

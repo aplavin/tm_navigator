@@ -153,6 +153,15 @@ def search_results(query=''):
 
         results = searcher.search(query_parsed, limit=50, terms=True, **kwargs)
 
+        if not results:
+            corrected = searcher.correct_query(query_parsed, query)
+            if corrected.string != query:
+                corrected.html = corrected.format_string(highlight.HtmlFormatter())
+            else:
+                corrected = None
+        else:
+            corrected = None
+
         if results.facet_names():
             groups = sorted(results.groups().items(), key=lambda gr: (-len(gr[1]), gr[0]))
             grouped = [(' '.join(map(str, gr_name)) if isinstance(gr_name, tuple) else gr_name,
@@ -165,12 +174,14 @@ def search_results(query=''):
             results_cnt = len(results)
 
         return render_template('search_results.html',
+                               query=query,
                                grouped=grouped,
                                results=results,
                                results_cnt=results_cnt,
                                hl_whole=hl_whole,
                                hl_content=hl_content,
-                               htopics=htopics)
+                               htopics=htopics,
+                               corrected=corrected)
 
 
 @app.route('/topics')
