@@ -130,7 +130,8 @@ def search_results(query=''):
         return highlighter_whole.highlight_hit(hit, field, text)
 
     highlighter_content = highlight.Highlighter(
-        fragmenter=highlight.PinpointFragmenter(surround=50)
+        fragmenter=highlight.PinpointFragmenter(surround=50, maxchars=1000, autotrim=True),
+        formatter=highlight.HtmlFormatter(between='<hr/>')
     )
     def hl_content(hit):
         return highlighter_content.highlight_hit(hit, 'content')
