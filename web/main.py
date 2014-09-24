@@ -260,10 +260,7 @@ def document(slug=None, d=None):
         html_new += html[end:]
 
         html = html_new
-        html = re.search(r'<body>(.*)</body>', html, re.DOTALL).group(1)
-        header_m = re.search(r'</header>(.*)', html, re.DOTALL)
-        if header_m:
-            html = header_m.group(1)
+        html = re.search(r'</header>(.*)</body>', html, re.DOTALL).group(1)
 
         html = re.sub(r'<img class="(\w+)" src="\w+/(eqn\d+).png".*?/>',
                       r'<span class="sprite-\2"></span>',
