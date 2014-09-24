@@ -113,7 +113,7 @@ def overview():
 @app.route('/search/', defaults={'query': ''})
 @app.route('/search/<query>')
 def search(query=None):
-    return render_template('search.html', query=query or '')
+    return render_template('document/search.html', query=query or '')
 
 class RemoveDuplicatesFilter(analysis.Filter):
     def __call__(self, stream):
@@ -200,7 +200,7 @@ def search_results(query='*'):
             grouped = None
             results_cnt = len(results)
 
-        return render_template('search_results.html',
+        return render_template('document/search_results.html',
                                query=query,
                                grouped=grouped,
                                results=results,
@@ -221,7 +221,7 @@ def topics():
 
         topics = get_topics_info(indices, h5f, (15, 30))
 
-    return render_template('topics.html', topics=topics)
+    return render_template('topic/list.html', topics=topics)
 
 
 @app.route('/documents_old')
@@ -232,7 +232,7 @@ def documents_old():
 
         docs = get_docs_info(indices, h5f, (-1, 15))
 
-    return render_template('documents.html', docs=docs)
+    return render_template('document/list.html', docs=docs)
 
 
 @app.route('/words')
@@ -243,7 +243,7 @@ def words():
 
         words = get_words_info(indices, h5f, (15, 10))
 
-    return render_template('words.html', words=words)
+    return render_template('word/list.html', words=words)
 
 
 @app.route('/topic/<int:t>')
@@ -251,7 +251,7 @@ def topic(t):
     with h5py.File('../data.hdf', mode='r') as h5f:
         topic = get_topics_info([t], h5f)[0]
 
-    return render_template('topic.html', topic=topic)
+    return render_template('topic/single.html', topic=topic)
 
 
 @app.route('/document/<slug>')
@@ -308,7 +308,7 @@ def document(slug=None, d=None):
         topics_flow = convolve1d(topics_flow, window / window.sum(), axis=0)
         topics_flow = list( starmap(TopicTuple, zip( [t.t for t in doc.topics], zip(*map(tuple, topics_flow)) )) )
 
-    return render_template('document.html',
+    return render_template('document/single.html',
                             doc=doc,
                             topics_flow=topics_flow,
                             html_content=html,
@@ -325,7 +325,7 @@ def word(w=None, word=None):
             w = np.nonzero(words == word)[0][0]
         word = get_words_info([w], h5f)[0]
 
-    return render_template('word.html', word=word)
+    return render_template('word/single.html', word=word)
 
 
 def get_topics_info(ts, h5f, ntop=(-1, -1)):
