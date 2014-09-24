@@ -54,7 +54,7 @@
                                 {% for d in docs[:100] | sort(attribute='np', reverse=True)  %}
                                     {
                                         x: {{ loop.index }},
-                                        label: "{{ d.d }}",
+                                        label: "{{ d.meta['slug'] }}",
                                         y: {{ d.np }}
                                     },
                                 {% endfor %}

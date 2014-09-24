@@ -89,7 +89,8 @@ def overview():
 
         nds = get_nwd(h5f).sum(0).A1
         ds = nds.argsort()[::-1]
-        docs = list( starmap(DocumentTuple, zip(ds, nds[ds])) )
+        meta = h5f['metadata'][...][ds]
+        docs = list( starmap(DocumentTuple, zip(ds, nds[ds], meta)) )
 
         ptds = h5f['p_td'][...]
         pts = ptds.dot(1.0 * nds / nds.sum())
