@@ -1,7 +1,15 @@
 import numpy as np
 import scipy.sparse
+from scipy.ndimage.filters import convolve1d
 from itertools import starmap
+from collections import Counter
 from recordtype import recordtype
+import h5py
+import codecs
+import re
+
+
+h5f = h5py.File('../data.hdf', mode='r')
 
 
 def zipnp(*arrs):
@@ -31,7 +39,32 @@ TopicTuple = recordtype('TopicTuple', ['t', 'np', 'documents', 'words'], default
 DocumentTuple = recordtype('DocumentTuple', ['d', 'np', 'meta', 'topics', 'words', 'content'], default=None)
 
 
-def get_topics_info(ts, h5f, ntop=(-1, -1)):
+def get_words_all():
+    nws = get_nwd(h5f).sum(1).A1
+    ws = nws.argsort()[::-1]
+    words = h5f['dictionary'][...][ws]
+    words = list( starmap(WordTuple, zip(ws, nws[ws], words)) )
+    return words
+
+
+def get_documents_all():
+    nds = get_nwd(h5f).sum(0).A1
+    ds = nds.argsort()[::-1]
+    meta = h5f['metadata'][...][ds]
+    docs = list( starmap(DocumentTuple, zip(ds, nds[ds], meta)) )
+    return docs
+
+
+def get_topics_all():
+    nds = get_nwd(h5f).sum(0).A1
+    ptds = h5f['p_td'][...]
+    pts = ptds.dot(1.0 * nds / nds.sum())
+    ts = pts.argsort()[::-1]
+    topics = list( starmap(TopicTuple, zip(ts, pts[ts])) )
+    return topics
+
+
+def get_topics_info(ts, ntop=(-1, -1)):
     pds = h5f['p_td'][...][ts,:]
     nds = get_nwd(h5f).sum(0).A1
     pt = pds.dot(1.0 * nds / nds.sum())
@@ -60,7 +93,13 @@ def get_topics_info(ts, h5f, ntop=(-1, -1)):
     return list( starmap(TopicTuple, zip(ts, pt, docs, words)) )
 
 
-def get_docs_info(ds, h5f, ntop=(-1, -1)):
+def d_by_slug(slug):
+    slugs = h5f['metadata']['slug']
+    d = np.nonzero(slugs == slug)[0][0]
+    return d
+
+
+def get_docs_info(ds, ntop=(-1, -1)):
     meta = h5f['metadata'][...][ds]
     nd = get_nwd(h5f).sum(0).A1[ds]
 
@@ -88,7 +127,63 @@ def get_docs_info(ds, h5f, ntop=(-1, -1)):
     return list( starmap(DocumentTuple, zipnp(ds, nd, meta, topics, words)) )
 
 
-def get_words_info(ws, h5f, ntop=(-1, -1)):
+def get_doc_content(doc):
+    content = h5f['documents'][str(doc.d)][...]
+
+    filename = h5f['metadata']['filename', doc.d]
+    with codecs.open('static/docsdata/%s.html' % filename, encoding='utf-8') as f:
+        html = f.read()
+
+    topics_used = Counter()
+    html_new = ''
+    html_pos = 0
+    for w, start, end, _, _, pts_glob in content:
+        topic = doc.topics[pts_glob.argmax()]
+        topics_used[topic.t] += 1
+
+        html_new += html[html_pos:start]
+        html_new += '<span data-word="%d" data-color="%d"><a href="#">' % (w, topic.t)
+        html_new += html[start:end]
+        html_new += '</a></span>'
+        html_pos = end
+    html_new += html[end:]
+
+    html = re.search(r'</header>(.*)</body>', html_new, re.DOTALL).group(1)
+
+    html = re.sub(r'<img class="(\w+)" src="\w+/(eqn\d+).png".*?/>',
+                  r'<span class="sprite-\2"></span>',
+                  html, flags=re.DOTALL | re.MULTILINE)
+
+    topics_in_content = [TopicTuple(t.t, (t.np, topics_used[t.t]))
+                         for t in doc.topics
+                         if t.t in topics_used]
+    doc.topics = [t
+                  for t in doc.topics
+                  if t.t in topics_used]
+
+    # generate smooth topics flow
+    topics_flow = content['pts_glob']
+    if topics_flow.ndim == 1:
+        topics_flow = topics_flow[:, np.newaxis]
+    wlen = 100
+    window = np.bartlett(wlen)
+    topics_flow = convolve1d(topics_flow, window / window.sum(), axis=0)
+    topics_flow = list( starmap(TopicTuple, zip( [t.t for t in doc.topics], zip(*map(tuple, topics_flow)) )) )
+
+    return {
+        'html': html,
+        'topics_in_content': topics_in_content,
+        'topics_flow': topics_flow
+    }
+
+
+def w_by_word(word):
+    words = h5f['dictionary'][...]
+    w = np.nonzero(words == word)[0][0]
+    return w
+
+
+def get_words_info(ws, ntop=(-1, -1)):
     nw = get_nwd(h5f).sum(1).A1[ws]
     word = h5f['dictionary'][...][ws]
 
