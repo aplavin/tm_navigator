@@ -7,30 +7,6 @@ from data import (get_topics_all, get_documents_all, get_words_all,
 from app import app
 
 
-def error_handler(error):
-    if hasattr(error, 'code'):
-        params = {
-            'code': error.code,
-            'desc': error.description,
-            'name': error.name,
-        }
-    else:
-        error.code = 500
-        params = {
-            'code': error.code,
-            'desc': error.message,
-            'tech_desc': traceback.format_exc(),
-            'name': error.__class__.__name__,
-        }
-
-    return render_template('error.html', **params), error.code
-
-
-for error in range(400, 420) + range(500, 506):
-    app.errorhandler(error)(error_handler)
-# app.errorhandler(Exception)(error_handler)
-
-
 @app.route('/')
 def overview():
     return render_template(
@@ -73,3 +49,27 @@ def document(slug=None, d=None):
 def word(w=None, word=None):
     word = get_words_info([w if w is not None else w_by_word(word)])[0]
     return render_template('word/single.html', word=word)
+
+
+def error_handler(error):
+    if hasattr(error, 'code'):
+        params = {
+            'code': error.code,
+            'desc': error.description,
+            'name': error.name,
+        }
+    else:
+        error.code = 500
+        params = {
+            'code': error.code,
+            'desc': error.message,
+            'tech_desc': traceback.format_exc(),
+            'name': error.__class__.__name__,
+        }
+
+    return render_template('error.html', **params), error.code
+
+
+for error in range(400, 420) + range(500, 506):
+    app.errorhandler(error)(error_handler)
+# app.errorhandler(Exception)(error_handler)
