@@ -7,6 +7,7 @@ from collections import Counter
 from recordtype import recordtype
 from itertools import starmap, groupby
 from math import isnan
+import traceback
 import numpy as np
 from scipy.ndimage.filters import convolve1d
 import scipy.sparse
@@ -77,6 +78,30 @@ WordTuple = recordtype('WordTuple', ['w', 'np', 'word', 'topics', 'documents'], 
 ContentWordTuple = recordtype('ContentWordTuple', ['w', 'np', 'word', 'word_norm', 'topics'], default=None)
 TopicTuple = recordtype('TopicTuple', ['t', 'np', 'documents', 'words'], default=None)
 DocumentTuple = recordtype('DocumentTuple', ['d', 'np', 'meta', 'topics', 'words', 'content'], default=None)
+
+
+def error_handler(error):
+    if hasattr(error, 'code'):
+        params = {
+            'code': error.code,
+            'desc': error.description,
+            'name': error.name,
+        }
+    else:
+        error.code = 500
+        params = {
+            'code': error.code,
+            'desc': error.message,
+            'tech_desc': traceback.format_exc(),
+            'name': error.__class__.__name__,
+        }
+
+    return render_template('error.html', **params), error.code
+
+
+for error in range(400, 420) + range(500, 506):
+    app.errorhandler(error)(error_handler)
+app.errorhandler(Exception)(error_handler)
 
 
 @app.route('/')

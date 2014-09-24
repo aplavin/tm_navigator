@@ -431,6 +431,42 @@ $(function () {
 });
 
 
+$(function () {
+    $('[data-collapsed]').each(function () {
+        var elem = $(this);
+        elem.hide();
+
+        var a = $('<a></a>');
+        a.attr('href', '#');
+        a.addClass('text-muted');
+        elem.before(a);
+
+        var a_icon = $('<span></span>');
+        a_icon.addClass('glyphicon glyphicon-expand');
+        a.append(a_icon);
+
+        a.append('&nbsp;');
+
+        var a_text = $('<span></span>');
+        a_text.text(elem.data('collapse-label'));
+        a.append(a_text);
+
+        a.click(function (evt) {
+            evt.preventDefault();
+            if (elem.is(':visible')) {
+                elem.hide();
+                a_icon.addClass('glyphicon-expand');
+                a_icon.removeClass('glyphicon-collapse-down');
+            } else {
+                elem.show();
+                a_icon.removeClass('glyphicon-expand');
+                a_icon.addClass('glyphicon-collapse-down');
+            }
+        });
+    });
+});
+
+
 // Add an URL parser to JQuery that returns an object
 // This function is meant to be used with an URL like the window.location
 // Use: $.parseParams('http://mysite.com/?var=string') or $.parseParams() to parse the window.location

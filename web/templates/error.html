@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% set breadcrumbs = [
+    'Error occurred :('
+] %}
+
+{% block body %}
+    <div class="container">
+        {% if code != 500 %}
+            <h2>Oops... {{ code }}&nbsp;&mdash;&nbsp;{{ name }}!</h2>
+            <p class="lead">{{ desc }}</p>
+        {% else %}
+            <h2>Oops... 500&nbsp;&mdash;&nbsp;ApplicationError!</h2>
+            <hr/>
+            <div>
+                <div class="bs-callout" data-collapsed="true" data-collapse-label="Technical info">
+                    <h4>Send it to the web-site administrator along with the current URL: {{ request.url }}</h4>
+                    {{ tech_desc.replace('\n', '<br/>') | safe }}
+                </div>
+            </div>
+            <hr/>
+        {% endif %}
+        <p class="lead">
+            Meanwhile you can try visiting other pages over here :)
+        </p>
+        <div class="bor"></div>
+    </div>
+{% endblock %}
