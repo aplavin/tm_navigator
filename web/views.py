@@ -31,6 +31,11 @@ def error_handler(error):
     return render_template('error.html', **params), error.code
 
 
+for error in range(400, 420) + range(500, 506):
+    app.errorhandler(error)(error_handler)
+app.errorhandler(Exception)(error_handler)
+
+
 @app.route('/')
 def overview():
     with h5py.File('../data.hdf', mode='r') as h5f:

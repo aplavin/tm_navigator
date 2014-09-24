@@ -29,10 +29,5 @@ def inject_last_updated():
 from views import *
 
 
-# for error in range(400, 420) + range(500, 506):
-#     app.errorhandler(error)(views.error_handler)
-# app.errorhandler(Exception)(views.error_handler)
-
-
 if __name__ == '__main__':
     app.run(use_reloader=app.config['DEBUG'])
