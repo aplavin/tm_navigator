@@ -21,24 +21,8 @@ from whoosh import index, qparser, query as wh_query, analysis, sorting, highlig
 
 
 app = Flask(__name__)
+app.config.from_pyfile('config.cfg')
 assets = Environment(app)
-app.debug = True
-app.config.update({
-    'SECRET_KEY': '\xcby\x01V\xff\x80\xf5\xb0I]\xa5\x84:\xd8\xfd\x87 \xc5\xa49\x05\x92\xa7\xafP\x87\x1b\xfe\xa8\x03\x84\xad',
-    'DEBUG_TB_PANELS': [
-        'flask_debugtoolbar.panels.versions.VersionDebugPanel',
-        'flask_debugtoolbar.panels.timer.TimerDebugPanel',
-        'flask_debugtoolbar.panels.headers.HeaderDebugPanel',
-        'flask_debugtoolbar.panels.request_vars.RequestVarsDebugPanel',
-        'flask_debugtoolbar.panels.template.TemplateDebugPanel',
-        'flask_debugtoolbar.panels.logger.LoggingPanel',
-        'flask_debugtoolbar.panels.profiler.ProfilerDebugPanel',
-
-        'flask_debugtoolbar_lineprofilerpanel.panels.LineProfilerPanel'
-    ],
-    'DEBUG_TB_PROFILER_ENABLED': True,
-    'DEBUG_TB_TEMPLATE_EDITOR_ENABLED': True,
-})
 toolbar = DebugToolbarExtension(app)
 
 def debug():
@@ -434,4 +418,4 @@ for _, f in inspect.getmembers(sys.modules[__name__], inspect.isfunction):
         line_profile(f)
 
 if __name__ == '__main__':
-    app.run()
+    app.run(use_reloader=app.config['DEBUG'])
