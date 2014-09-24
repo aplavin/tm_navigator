@@ -16,7 +16,7 @@ import inspect
 import sys
 import subprocess
 import datetime
-from whoosh import index, qparser, query as wh_query, analysis, sorting, highlight
+from whoosh import index, qparser, query as wh_query, analysis, sorting, highlight, formats
 
 
 app = Flask(__name__)
@@ -114,10 +114,27 @@ class RemoveDuplicatesFilter(analysis.Filter):
                 yield token
             lasttext = token.text
 
+class WithData(formats.Format):
+
+    def word_values(self, value, analyzer, **kwargs):
+        fb = self.field_boost
+
+        for text, val in value:
+            yield (text, 1, fb, formats.pack_float(val))
+
+    def decode_data(self, valuestring):
+        return formats.unpack_float(valuestring)[0]
+
+    def decode_frequency(self, valuestring):
+        return 1
+
+    def decode_weight(self, v):
+        return self.field_boost
+
 @app.route('/search_results/')
 @app.route('/search_results/<query>')
 def search_results(query='*'):
-    ix = index.open_dir('../whoosh_ix', readonly=True)
+    ix = index.open_dir('../whoosh_ix', readonly=True, indexname='docs')
 
     fields = ['title', 'authors', 'authors_ngrams', 'title_ngrams']
     if request.args.get('in_text', False) == 'true':
@@ -139,7 +156,7 @@ def search_results(query='*'):
 
     def htopics(hit):
         topics = [TopicTuple(name, ptd)
-                  for name, [(_, ptd)] in searcher.vector_as('position_boosts', hit.docnum, 'topics')]
+                  for name, ptd in searcher.vector_as('data', hit.docnum, 'topics')]
         topics.sort(key=lambda t: t.np, reverse=True)
         return topics
 
