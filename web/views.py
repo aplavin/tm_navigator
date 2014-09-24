@@ -1,5 +1,7 @@
 from flask import render_template
+from flask.ext.classy import FlaskView, route
 import traceback
+import sys
 from data import (get_topics_all, get_documents_all, get_words_all,
                   get_topics_info, get_docs_info, get_words_info,
                   d_by_slug, w_by_word,
@@ -21,34 +23,53 @@ def search():
     pass
 
 
-@app.route('/topic/<int:t>')
-def topic(t):
-    topic = get_topics_info([t])[0]
-    return render_template('topic/single.html', topic=topic)
+class EntitiesView(FlaskView):
+
+    @classmethod
+    def build_route_name(cls, method_name):
+        return cls.name + ":%s" % method_name
 
 
-@app.route('/document/<slug>')
-@app.route('/document/<int:d>')
-@app.route('/document/<int:d>/<slug>')
-def document(slug=None, d=None):
-    if d is None:
-        d = d_by_slug(slug)
-
-    doc = get_docs_info([d])[0]
-    data = get_doc_content(doc)
-
-    return render_template('document/single.html',
-                            doc=doc,
-                            topics_flow=data['topics_flow'],
-                            html_content=data['html'],
-                            topics_in_content=data['topics_in_content'])
+    @classmethod
+    def render_template(cls, **kwargs):
+        name = '%s/%s.html' % (cls.name, sys._getframe().f_back.f_code.co_name)
+        return render_template(name, **kwargs)
 
 
-@app.route('/word/w/<int:w>')
-@app.route('/word/<word>')
-def word(w=None, word=None):
-    word = get_words_info([w if w is not None else w_by_word(word)])[0]
-    return render_template('word/single.html', word=word)
+    @route('/<name>')
+    def single(self, name):
+        ind = self.ind_by_name(name)
+        data = self.get_data(ind)
+        return self.render_template(**data)
+
+
+class TopicView(EntitiesView):
+    ind_by_name = staticmethod(int)
+    get_data = staticmethod(lambda t: {'topic': get_topics_info([t])[0]})
+    name = 'topic'
+
+
+class DocumentView(EntitiesView):
+    ind_by_name = staticmethod(d_by_slug)
+    name = 'document'
+
+    @staticmethod
+    def get_data(d):
+        doc = get_docs_info([d])[0]
+        data = get_doc_content(doc)
+        data.update(doc=doc)
+        return data
+
+
+class WordView(EntitiesView):
+    ind_by_name = staticmethod(w_by_word)
+    get_data = staticmethod(lambda w: {'word': get_words_info([w])[0]})
+    name = 'word'
+
+
+TopicView.register(app)
+DocumentView.register(app)
+WordView.register(app)
 
 
 def error_handler(error):
