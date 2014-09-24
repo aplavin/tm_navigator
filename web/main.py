@@ -317,6 +317,8 @@ def document(slug=None, d=None):
 
         # generate smooth topics flow
         topics_flow = content['pts_glob']
+        if topics_flow.ndim == 1:
+            topics_flow = topics_flow[:, np.newaxis]
         wlen = 100
         window = np.bartlett(wlen)
         topics_flow = convolve1d(topics_flow, window / window.sum(), axis=0)
