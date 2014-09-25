@@ -1,49 +1,58 @@
 {% extends "base.html" %}
 
 {% set breadcrumbs = [
-    'Documents'
+    (url_for(base_ep), base_title),
+    'Search'
 ] %}
 
 {% block body %}
-    <div class="well container text-center">
-        <a href="{{ url_for('documents_old') }}">Old documents page</a>, if you want to see it.
-    </div>
-
     <form class="container form-horizontal" onsubmit="return false;">
         <div class="form-group">
             <label for="search-input" class="control-label col-sm-1">Search:</label>
             <div class="col-sm-10 has-feedback">
                 <input type="text" name="query" id="search-input" class="form-control"
-                       value="{{ query }}" placeholder="enter query here...">
+                       value="{{ query }}" placeholder="enter query here..."
+                       data-search-base-url="{{ url_for('documents:search_results', query='%s').replace('%25s', '%s') }}">
                 <span class="form-control-feedback glyphicon glyphicon-search"></span>
             </div>
         </div>
         <div class="form-group">
-            <div class="btn-group">
-                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" id="search-grouping-switch">
-                    Grouping: <span>off</span> <span class="caret"></span>
-                </button>
-                <ul class="dropdown-menu" role="menu">
-                    <li><a href="#" onclick="search_set_grouping()">Disabled</a></li>
-                    <li class="divider"></li>
-                    <li><a href="#" onclick="search_set_grouping('authors_tags'); return false;">Individual author</a></li>
-                    <li><a href="#" onclick="search_set_grouping('authors_tags_stored'); return false;">Authors</a></li>
-                    <li><a href="#" onclick="search_set_grouping(['conference', 'year']); return false;">Source</a></li>
-                </ul>
-            </div>
-
-            <a class="btn btn-default" onclick="search_switch_in_text()" id="search-in-text-switch">
-                In-text search: off
-            </a>
+            {% for settings_item in settings %}
+                {% if settings_item['mode'] == 'choice' %}
+                    <div class="btn-group" data-switch-name="{{ settings_item['name'] }}" data-switch-selected="{{ settings_item['options'][0]['value'] }}">
+                        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+                            <span>{{ settings_item['options'][0]['text'] }}</span> <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu" role="menu">
+                            {% for option in settings_item['options'] %}
+                                {% if option['text'] == '-' %}
+                                    <li class="divider"></li>
+                                {% else %}
+                                    <li><a href="#" data-switch-value="{{ option['value'] }}">{{ option['text'] }}</a></li>
+                                {% endif %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% elif settings_item['mode'] == 'bool' %}
+                    <a class="btn btn-default" data-switch-name="{{ settings_item['name'] }}" data-switch-selected="0">
+                        {{ settings_item['text'] }}: <span>off</span>
+                    </a>
+                {% endif %}
+            {% endfor %}
         </div>
     </form>
 
-    <div id="search-loading">
+    <div id="search-loading" style="display: none">
         <div class="progress progress-striped active">
             <div class="progress-bar" style="width: 100%"></div>
         </div>
     </div>
 
     <div class="container" id="search-results">
+        {{ results_page }}
     </div>
+
+    <script type="text/javascript">
+        init_search();
+    </script>
 {% endblock %}

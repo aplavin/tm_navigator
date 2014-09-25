@@ -18,21 +18,17 @@ def overview():
         topics=get_topics_all())
 
 
-@app.route('/search')
-def search():
-    pass
-
-
 class EntitiesView(FlaskView):
+    route_base = ''
 
     @classmethod
-    def build_route_name(cls, method_name):
-        if method_name == 'single':
-            return cls.name
-        elif method_name == 'index':
-            return cls.name + 's'
-        else:
-            return cls.name + ":%s" % method_name
+    def postprocess_endpoint(cls, endpoint):
+        return endpoint.format(name=cls.name)
+
+
+    @classmethod
+    def build_rule(cls, rule, method=None):
+        return rule.format(name=cls.name)
 
 
     @classmethod
@@ -41,8 +37,8 @@ class EntitiesView(FlaskView):
         return render_template(name, **kwargs)
 
 
-    @route('/<int:ind>')
-    @route('/<name>')
+    @route('/{name}/<int:ind>', endpoint='{name}')
+    @route('/{name}/<name>', endpoint='{name}')
     def single(self, ind=None, name=None):
         if ind is None:
             ind = self.ind_by_name(name)
@@ -50,8 +46,25 @@ class EntitiesView(FlaskView):
         return self.render_template(**data)
 
 
-    @route('/')
+    @route('/{name}s/', endpoint='{name}s')
     def index(self):
+        return self.search()
+
+
+    @route('/{name}s/search/', endpoint='{name}s:search')
+    @route('/{name}s/search/<query>', endpoint='{name}s:search')
+    def search(self, query='*'):
+        return self.render_template(
+            base_ep='{name}s'.format(name=self.name),
+            base_title='{name}s'.format(name=self.name.capitalize()),
+            query=query,
+            settings=self.search_settings,
+            results_page=self.search_results(query)
+        )
+
+
+    @route('/{name}s/search_results/<query>', endpoint='{name}s:search_results')
+    def search_results(self, query):
         pass
 
 
@@ -64,6 +77,24 @@ class TopicView(EntitiesView):
 class DocumentView(EntitiesView):
     ind_by_name = staticmethod(d_by_slug)
     name = 'document'
+    search_settings = [
+        {
+            'mode': 'choice',
+            'name': 'grouping',
+            'options': [
+                {'text': 'Disable grouping', 'value': ''},
+                {'text': '-'},
+                {'text': 'Group by authors', 'value': 'authors_tags_stored'},
+                {'text': 'Group by individual author', 'value': 'authors_tags'},
+                {'text': 'Group by source', 'value': 'conference,year'},
+            ]
+        },
+        {
+            'mode': 'bool',
+            'name': 'content_search',
+            'text': 'In-text search'
+        }
+    ]
 
     @staticmethod
     def get_data(d):
