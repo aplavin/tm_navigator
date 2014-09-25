@@ -596,7 +596,7 @@ function search_settings_display_from_args(args) {
             $(this).find('span:first-child').text('off');
         }
     });
-    $('[data-switch-name]').each(function () {
+    $('div[data-switch-name]').each(function () {
         if (args[$(this).data('switch-name')]) {
             $(this).data('switch-selected', args[$(this).data('switch-name')]);
             $(this).find('button').removeClass('btn-default').addClass('btn-primary');
@@ -627,7 +627,7 @@ function init_search() {
             search(args);
         });
     });
-    $('[data-switch-name]').each(function () {
+    $('div[data-switch-name]').each(function () {
         var elem = $(this);
         var name = $(this).data('switch-name');
         $(this).find('ul li a').click(function (evt) {
