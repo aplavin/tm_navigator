@@ -10,7 +10,7 @@
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">
-                    <a href="{{ url_for('topic:single', name=topic.t) }}">
+                    <a href="{{ url_for('topic', name=topic.t) }}">
                         Topic #{{ topic.t }}
                     </a>
                 </h3>
@@ -24,7 +24,7 @@
                     <ul class="tagcloud collapsed">
                         {% for d in topic.documents %}
                             <li>
-                                <a href="{{ url_for('document:single', name=d.meta['slug']) }}" title="P(t | d) = {{ d.np | round(3) }}" data-size="{{ d.np }}">{{ d.meta['slug'] }}</a>
+                                <a href="{{ url_for('document', name=d.meta['slug']) }}" title="P(t | d) = {{ d.np | round(3) }}" data-size="{{ d.np }}">{{ d.meta['slug'] }}</a>
                             </li>
                         {% endfor %}
                     </ul>
@@ -36,7 +36,7 @@
                     <ul class="tagcloud collapsed">
                         {% for w in topic.words %}
                             <li>
-                                <a href="{{ url_for('word:single', name=w.word) }}" title="P(w | t) = {{ w.np | round(4) }}" data-size="{{ w.np }}">{{ w.word }}</a>
+                                <a href="{{ url_for('word', name=w.word) }}" title="P(w | t) = {{ w.np | round(4) }}" data-size="{{ w.np }}">{{ w.word }}</a>
                             </li>
                         {% endfor %}
                     </ul>
@@ -56,7 +56,7 @@
                         {
                             name: '{{ d.meta['slug'] }}',
                             y: {{ d.np | round(3) }},
-                            url: '{{ url_for('document:single', name=d.meta['slug']) }}'
+                            url: '{{ url_for('document', name=d.meta['slug']) }}'
                         },
                     {% endfor %}
                 ]
@@ -74,7 +74,7 @@
                         {
                             name: '{{ w.word }}',
                             y: {{ w.np | round(4) }},
-                            url: '{{ url_for('word:single', name=w.word) }}'
+                            url: '{{ url_for('word', name=w.word) }}'
                         },
                     {% endfor %}
                 ]

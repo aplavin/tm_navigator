@@ -11,7 +11,7 @@
             <div class="panel-heading">
                 <h3 class="panel-title">
                     Word:
-                    <a href="{{ url_for('word:single', name=word.word) }}">
+                    <a href="{{ url_for('word', name=word.word) }}">
                         {{ word.word }}
                     </a>
                 </h3>
@@ -25,7 +25,7 @@
                     <ul class="tagcloud">
                         {% for t in word.topics %}
                             <li>
-                                <a href="{{ url_for('topic:single', name=t.t) }}" title="P(w | t) = {{ t.np | round(4) }}" data-size="{{ t.np }}">{{ t.t }}</a>
+                                <a href="{{ url_for('topic', name=t.t) }}" title="P(w | t) = {{ t.np | round(4) }}" data-size="{{ t.np }}">{{ t.t }}</a>
                             </li>
                         {% endfor %}
                     </ul>
@@ -37,7 +37,7 @@
                     <ul class="tagcloud collapsed">
                         {% for d in word.documents %}
                             <li>
-                                <a href="{{ url_for('document:single', name=d.meta['slug']) }}" title="N_wd = {{ d.np }}" data-size="{{ d.np }}">{{ d.meta['slug'] }}</a>
+                                <a href="{{ url_for('document', name=d.meta['slug']) }}" title="N_wd = {{ d.np }}" data-size="{{ d.np }}">{{ d.meta['slug'] }}</a>
                             </li>
                         {% endfor %}
                     </ul>
@@ -57,7 +57,7 @@
                         {
                             name: '{{ t.t }}',
                             y: {{ t.np | round(4) }},
-                            url: '{{ url_for('topic:single', name=t.t) }}'
+                            url: '{{ url_for('topic', name=t.t) }}'
                         },
                     {% endfor %}
                 ]
@@ -75,7 +75,7 @@
                         {
                             name: '{{ d.meta['slug'] }}',
                             y: {{ d.np }},
-                            url: '{{ url_for('document:single', name=d.meta['slug']) }}'
+                            url: '{{ url_for('document', name=d.meta['slug']) }}'
                         },
                     {% endfor %}
                 ]

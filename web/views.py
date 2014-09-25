@@ -27,7 +27,12 @@ class EntitiesView(FlaskView):
 
     @classmethod
     def build_route_name(cls, method_name):
-        return cls.name + ":%s" % method_name
+        if method_name == 'single':
+            return cls.name
+        elif method_name == 'index':
+            return cls.name + 's'
+        else:
+            return cls.name + ":%s" % method_name
 
 
     @classmethod
