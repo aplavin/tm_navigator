@@ -602,7 +602,7 @@ function search_settings_display_from_args(args) {
             $(this).find('button').removeClass('btn-default').addClass('btn-primary');
         } else {
             $(this).data('switch-selected', '');
-            $(this).removeClass('btn-primary').addClass('btn-default');
+            $(this).find('button').removeClass('btn-primary').addClass('btn-default');
         }
         var text = $(this).find(sprintf('[data-switch-value="%s"]', $(this).data('switch-selected'))).text();
         $(this).find('button span:first-child').text(text);
