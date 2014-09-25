@@ -36,9 +36,11 @@ class EntitiesView(FlaskView):
         return render_template(name, **kwargs)
 
 
+    @route('/<int:ind>')
     @route('/<name>')
-    def single(self, name):
-        ind = self.ind_by_name(name)
+    def single(self, ind=None, name=None):
+        if ind is None:
+            ind = self.ind_by_name(name)
         data = self.get_data(ind)
         return self.render_template(**data)
 
