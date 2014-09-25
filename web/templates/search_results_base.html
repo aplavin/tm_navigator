@@ -1,0 +1,43 @@
+<div class="well well-sm">
+    Showing <samp id="search-count"></samp> of <samp>{{ results_cnt }}</samp> results.
+    Search took <samp>{{ (results.runtime * 1000) | int }}</samp> ms.
+</div>
+
+{% if corrected %}
+    <div class="well well-lg">
+        Did you mean <a href="{{ url_for(endpoint, query=corrected.string, **request.args) }}">{{ corrected.html|safe }}</a>?
+    </div>
+{% endif %}
+
+{% macro show_results(results) %}
+    {% for hit in results %}
+        {% block hit_item scoped %}{% endblock %}
+    {% endfor %}
+{% endmacro %}
+
+{% if grouped %}
+    {% for gr_name, gr_hits in grouped[:30] %}
+        <div>
+            <div class="bs-callout bs-callout-right bs-callout-default bg-success">
+                <h4 class="text-right">{{ gr_name }}</h4>
+            </div>
+
+            {{ show_results(gr_hits[:3]) }}
+
+            {% if gr_hits|length > 3 %}
+                <div class="bs-callout bs-callout-default bg-info">
+                    {{ gr_hits|length - 3 }} more results from this group are not shown
+                </div>
+            {% endif %}
+        </div>
+    {% endfor %}
+    {% if grouped|length > 30 %}
+        <div class="bs-callout bs-callout-default bg-info">
+            {{ grouped|length - 30 }} more groups are not shown
+        </div>
+    {% endif %}
+{% else %}
+    <div>
+        {{ show_results(results) }}
+    </div>
+{% endif %}

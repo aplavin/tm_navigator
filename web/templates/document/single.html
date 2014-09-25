@@ -15,12 +15,12 @@
             </h3>
             {{ doc.meta['slug'] }}
             <div>
-                <a href="{{ url_for('search', query='authors:"%s"' % (doc.meta['author'])) }}">
+                <a href="{{ url_for('documents:search', query='authors:"%s"' % (doc.meta['author'])) }}">
                     {{ doc.meta['author'] }}
                 </a>
             </div>
             <div>
-                <a href="{{ url_for('search', query='conference:%s AND year:%s' % (doc.meta['conference'], doc.meta['year'])) }}">
+                <a href="{{ url_for('documents:search', query='conference:%s AND year:%s' % (doc.meta['conference'], doc.meta['year'])) }}">
                     {{ doc.meta['conference'] }},&nbsp;{{ doc.meta['year'] }}
                 </a>
             </div>

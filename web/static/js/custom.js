@@ -564,6 +564,7 @@ function search(new_args) {
             }
         }
     }
+    search_settings_display_from_args(args);
 
     $.ajax({
         url: sprintf($('#search-input').data('search-base-url'), $('#search-input').val().replace('/', ' ')),
@@ -576,47 +577,64 @@ function search(new_args) {
         $('[data-toggle=tooltip]').tooltip();
     }).complete(function () {
         $('#search-loading').hide();
-        var args_str = this.url.substr(this.url.lastIndexOf('/') + 1);
-        var new_url = window.location.href.substr(0, window.location.href.lastIndexOf('/') + 1);
-        new_url += args_str;
+        var new_url = this.url.replace('/search_results/', '/search/')
         if (window.location.href != new_url) {
             window.history.pushState(null, null, new_url);
         }
     });
 }
 
+function search_settings_display_from_args(args) {
+    $('a[data-switch-name]').each(function () {
+        if (args[$(this).data('switch-name')]) {
+            $(this).data('switch-selected', true);
+            $(this).removeClass('btn-default').addClass('btn-primary');
+            $(this).find('span:first-child').text('on');
+        } else {
+            $(this).data('switch-selected', false);
+            $(this).removeClass('btn-primary').addClass('btn-default');
+            $(this).find('span:first-child').text('off');
+        }
+    });
+    $('[data-switch-name]').each(function () {
+        if (args[$(this).data('switch-name')]) {
+            $(this).data('switch-selected', args[$(this).data('switch-name')]);
+            $(this).find('button').removeClass('btn-default').addClass('btn-primary');
+        } else {
+            $(this).data('switch-selected', '');
+            $(this).removeClass('btn-primary').addClass('btn-default');
+        }
+        var text = $(this).find(sprintf('[data-switch-value="%s"]', $(this).data('switch-selected'))).text();
+        $(this).find('button span:first-child').text(text);
+    });
+}
+
+$(function () {
+    var args = $.parseParams();
+    search_settings_display_from_args(args);
+})
+
 function init_search() {
     $('a[data-switch-name]').each(function () {
+        var name = $(this).data('switch-name');
         $(this).on('click', function (evt) {
             evt.preventDefault();
-            var name = $(this).data('switch-name');
+
             var enabled = $(this).data('switch-selected');
             $(this).data('switch-selected', !enabled);
             var args = Object();
-            if (enabled) {
-                $(this).removeClass('btn-primary').addClass('btn-default');
-                $(this).find('span:first-child').text('off');
-            } else {
-                $(this).removeClass('btn-default').addClass('btn-primary');
-                $(this).find('span:first-child').text('on');
-            }
             args[name] = !enabled;
             search(args);
         });
     });
     $('[data-switch-name]').each(function () {
         var elem = $(this);
-        var name = elem.data('switch-name');
-        var default_selected = elem.data('switch-selected');
+        var name = $(this).data('switch-name');
         $(this).find('ul li a').click(function (evt) {
             evt.preventDefault();
+
             var selected = $(this).data('switch-value');
-            if (selected != default_selected) {
-                elem.find('button').removeClass('btn-default').addClass('btn-primary');
-            } else {
-                elem.find('button').removeClass('btn-primary').addClass('btn-default');
-            }
-            elem.find('button span:first-child').text($(this).text());
+            elem.data('switch-selected', selected);
             var args = Object();
             args[name] = selected;
             search(args);
