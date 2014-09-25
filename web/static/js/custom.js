@@ -644,6 +644,7 @@ function init_search() {
 }
 
 $(function () {
+    $('#search-count').text($('#search-results .panel').length);
     $('[data-toggle=tooltip]').tooltip();
 })
 
