@@ -50,6 +50,11 @@ class EntitiesView(FlaskView):
         return self.render_template(**data)
 
 
+    @route('/')
+    def index(self):
+        pass
+
+
 class TopicView(EntitiesView):
     ind_by_name = staticmethod(int)
     get_data = staticmethod(lambda t: {'topic': get_topics_info([t])[0]})
