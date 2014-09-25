@@ -577,7 +577,7 @@ function search(new_args) {
         $('[data-toggle=tooltip]').tooltip();
     }).complete(function () {
         $('#search-loading').hide();
-        var new_url = this.url.replace('/search_results/', '/search/')
+        var new_url = this.url.replace('/search_results/', '/search/');
         if (window.location.href != new_url) {
             window.history.pushState(null, null, new_url);
         }

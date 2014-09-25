@@ -34,7 +34,6 @@ def get_nwd(h5f):
 
 
 WordTuple = recordtype('WordTuple', ['w', 'np', 'word', 'topics', 'documents'], default=None)
-ContentWordTuple = recordtype('ContentWordTuple', ['w', 'np', 'word', 'word_norm', 'topics'], default=None)
 TopicTuple = recordtype('TopicTuple', ['t', 'np', 'documents', 'words'], default=None)
 DocumentTuple = recordtype('DocumentTuple', ['d', 'np', 'meta', 'topics', 'words', 'content'], default=None)
 
