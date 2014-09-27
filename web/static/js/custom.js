@@ -573,7 +573,6 @@ function search(new_args) {
         dataType: 'html'
     }).success(function (data) {
         $('#search-results').html(data);
-        $('#search-count').text($('#search-results .panel').length);
         process_tagclouds();
         $('[data-toggle=tooltip]').tooltip();
     }).error(function (xhr, type, exception) {
@@ -647,7 +646,6 @@ function init_search() {
 }
 
 $(function () {
-    $('#search-count').text($('#search-results .panel').length);
     $('[data-toggle=tooltip]').tooltip();
 })
 

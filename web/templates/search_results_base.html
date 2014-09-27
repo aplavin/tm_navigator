@@ -9,8 +9,14 @@
     </div>
 {% endif %}
 
+{% set cnt = [] %}
+{% macro res_cnt_inc() %}
+    {% if cnt.append(1) %} {% endif %}
+{% endmacro %}
+
 {% macro show_results(results) %}
     {% for hit in results %}
+        {{ res_cnt_inc() }}
         {% set loop_last = loop.last %}
         {% block hit_item scoped %}{% endblock %}
     {% endfor %}
@@ -43,3 +49,7 @@
         {{ show_results(results) }}
     </div>
 {% endif %}
+
+<script type="text/javascript">
+    $('#search-count').text('{{ cnt|length }}');
+</script>
