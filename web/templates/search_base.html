@@ -43,6 +43,12 @@
         </div>
     </div>
 
+    <div id="search-error" style="display: none">
+        <div class="alert alert-danger">
+            <strong>Error occurred!</strong> Results shown below are related to previous successfull search<span></span>.
+        </div>
+    </div>
+
     <div class="container" id="search-results">
         {{ results_page | safe }}
     </div>

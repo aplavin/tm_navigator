@@ -553,6 +553,7 @@ $(function () {
 
 function search(new_args) {
     $('#search-loading').show();
+    $('#search-error').hide();
 
     var args = $.parseParams();
     if (new_args) {
@@ -570,11 +571,13 @@ function search(new_args) {
         url: sprintf($('#search-input').data('search-base-url'), $('#search-input').val().replace('/', ' ')),
         data: args,
         dataType: 'html'
-    }).success(function (data, status) {
+    }).success(function (data) {
         $('#search-results').html(data);
         $('#search-count').text($('#search-results .panel').length);
         process_tagclouds();
         $('[data-toggle=tooltip]').tooltip();
+    }).error(function (xhr, type, exception) {
+        $('#search-error').show();
     }).complete(function () {
         $('#search-loading').hide();
         var new_url = this.url.replace('/search_results/', '/search/');
