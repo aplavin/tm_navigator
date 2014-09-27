@@ -35,7 +35,7 @@
                         </div>
                         </a>
                     {% endfor %}
-                    {% if topics | length > 5 %}
+                    {% if topics[5] %}
                         <div class="progress-bar progress-bar-transparent" style="width: {{ topics[5:] | sum('np') * 100 }}%"
                         data-placement="top" data-toggle="tooltip" data-html="true"
                         title="<h4>Topics #{{ topics[5:] | join(', #', attribute='t') }}</h4>Total P(t | d) = {{ topics[5:] | sum('np') | round(3) }}"></div>
