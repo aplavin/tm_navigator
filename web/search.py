@@ -11,13 +11,13 @@ class RemoveDuplicatesFilter(analysis.Filter):
             lasttext = token.text
 
 
-class WithData(formats.Format):
+class WithFloatData(formats.Format):
 
     def word_values(self, value, analyzer, **kwargs):
         fb = self.field_boost
 
         for text, val in value:
-            yield (text, 1, fb, formats.pack_float(val))
+            yield (text, 1, fb * val, formats.pack_float(val))
 
     def decode_data(self, valuestring):
         return formats.unpack_float(valuestring)[0]
