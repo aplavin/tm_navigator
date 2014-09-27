@@ -13,86 +13,119 @@
     {% set group_elems_max = 1000 %}
 {% endif %}
 
-{% block hit_item %}
-{% if format == 'full' %}
-    <div class="panel panel-default">
-        <div class="panel-heading">
-            <h3 class="panel-title">
-                <a href="{{ url_for('document', name=hit['slug']) }}">
-                    {{ highlight(hit, 'whole', ['title', 'title_ngrams'], 'title') | safe }}
-                </a>
-            </h3>
-            <div>
-                <a href="{{ url_for('documents:search', query='authors:"%s" AND %s' % (hit['authors'], query), **request.args) }}">
-                    {{ highlight(hit, 'whole', ['authors', 'authors_ngrams'], 'authors') | safe }}
-                </a>
-                |
-                <a href="{{ url_for('documents:search', query='conference:%s AND year:%s AND %s' % (hit['conference'], hit['year'], query), **request.args) }}">
-                    {{ hit['conference'] }},&nbsp;{{ hit['year'] }}
-                </a>
-            </div>
-        </div>
-
-        <div class="panel-body">
-            <div class="bs-callout bs-callout-info">
-                {% set topics = vector_data(hit, 'topics') %}
-                <h4 class="progress-label">Topics:</h4>
-                <div class="progress">
-                    {% for t in topics[:5] %}
-                        <a href="{{ url_for('topic', name=t.t) }}">
-                        <div class="progress-bar progress-bar-{{ loop.cycle('default', 'info', 'success', 'warning', 'danger') }}" style="width: {{ t.np * 100 }}%"
-                        data-placement="top" data-toggle="tooltip" data-html="true"
-                        title="<h4>Topic #{{ t.t }}</h4>P(t | d) = {{ t.np | round(3) }}">
-                        </div>
+{% macro show_results(results) %}
+    {% for hit in results %}
+        {{ res_cnt_inc() }}
+        {% if format == 'full' %}
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        <a href="{{ url_for('document', name=hit['slug']) }}">
+                            {{ highlight(hit, 'whole', ['title', 'title_ngrams'], 'title') | safe }}
                         </a>
-                    {% endfor %}
-                    {% if topics[5] %}
-                        <div class="progress-bar progress-bar-transparent" style="width: {{ topics[5:] | sum('np') * 100 }}%"
-                        data-placement="top" data-toggle="tooltip" data-html="true"
-                        title="<h4>Topics #{{ topics[5:] | join(', #', attribute='t') }}</h4>Total P(t | d) = {{ topics[5:] | sum('np') | round(3) }}"></div>
+                    </h3>
+                    <div>
+                        <a href="{{ url_for('documents:search', query='authors:"%s" AND %s' % (hit['authors'], query), **request.args) }}">
+                            {{ highlight(hit, 'whole', ['authors', 'authors_ngrams'], 'authors') | safe }}
+                        </a>
+                        |
+                        <a href="{{ url_for('documents:search', query='conference:%s AND year:%s AND %s' % (hit['conference'], hit['year'], query), **request.args) }}">
+                            {{ hit['conference'] }},&nbsp;{{ hit['year'] }}
+                        </a>
+                    </div>
+                </div>
+
+                <div class="panel-body">
+                    <div class="bs-callout bs-callout-info">
+                        {% set topics = vector_data(hit, 'topics') %}
+                        <h4 class="progress-label">Topics:</h4>
+                        <div class="progress">
+                            {% for t in topics[:5] %}
+                                <a href="{{ url_for('topic', name=t.t) }}">
+                                <div class="progress-bar progress-bar-{{ loop.cycle('default', 'info', 'success', 'warning', 'danger') }}" style="width: {{ t.np * 100 }}%"
+                                data-placement="top" data-toggle="tooltip" data-html="true"
+                                title="<h4>Topic #{{ t.t }}</h4>P(t | d) = {{ t.np | round(3) }}">
+                                </div>
+                                </a>
+                            {% endfor %}
+                            {% if topics[5] %}
+                                <div class="progress-bar progress-bar-transparent" style="width: {{ topics[5:] | sum('np') * 100 }}%"
+                                data-placement="top" data-toggle="tooltip" data-html="true"
+                                title="<h4>Topics #{{ topics[5:] | join(', #', attribute='t') }}</h4>Total P(t | d) = {{ topics[5:] | sum('np') | round(3) }}"></div>
+                            {% endif %}
+                        </div>
+
+                        <ul class="tagcloud">
+                            {% for t in topics %}
+                                <li>
+                                    <a href="{{ url_for('topic', name=t.t) }}" title="P(t | d) = {{ t.np | round(3) }}" data-size="{{ t.np }}">{{ t.t }}</a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+
+                    {% set content_hl = highlight(hit, 'pinpoint', ['content']) %}
+                    {% if content_hl %}
+                        <div class="bs-callout bs-callout-info">
+                            {{ content_hl.strip().replace('\n', '<br/>') | safe }}
+                        </div>
                     {% endif %}
                 </div>
-
-                <ul class="tagcloud">
-                    {% for t in topics %}
-                        <li>
-                            <a href="{{ url_for('topic', name=t.t) }}" title="P(t | d) = {{ t.np | round(3) }}" data-size="{{ t.np }}">{{ t.t }}</a>
-                        </li>
-                    {% endfor %}
-                </ul>
             </div>
-
-            {% set content_hl = highlight(hit, 'pinpoint', ['content']) %}
-            {% if content_hl %}
-                <div class="bs-callout bs-callout-info">
-                    {{ content_hl.strip().replace('\n', '<br/>') | safe }}
+        {% elif format == 'short' %}
+            <div class="list-group-item">
+                <div class="panel-heading">
+                    <h4 class="list-group-item-heading">
+                        <a href="{{ url_for('document', name=hit['slug']) }}">
+                            {{ highlight(hit, 'whole', ['title', 'title_ngrams'], 'title') | safe }}
+                        </a>
+                    </h4>
+                    <div class="list-group-item-text">
+                        <a href="{{ url_for('documents:search', query='authors:"%s" AND %s' % (hit['authors'], query), **request.args) }}">
+                            {{ highlight(hit, 'whole', ['authors', 'authors_ngrams'], 'authors') | safe }}
+                        </a>
+                        |
+                        <a href="{{ url_for('documents:search', query='conference:%s AND year:%s AND %s' % (hit['conference'], hit['year'], query), **request.args) }}">
+                            {{ hit['conference'] }},&nbsp;{{ hit['year'] }}
+                        </a>
+                    </div>
                 </div>
-            {% endif %}
-        </div>
-    </div>
-{% elif format == 'short' %}
-    <div class="list-group-item">
-        <div class="panel-heading">
-            <h4 class="list-group-item-heading">
-                <a href="{{ url_for('document', name=hit['slug']) }}">
-                    {{ highlight(hit, 'whole', ['title', 'title_ngrams'], 'title') | safe }}
-                </a>
-            </h4>
-            <div class="list-group-item-text">
-                <a href="{{ url_for('documents:search', query='authors:"%s" AND %s' % (hit['authors'], query), **request.args) }}">
-                    {{ highlight(hit, 'whole', ['authors', 'authors_ngrams'], 'authors') | safe }}
-                </a>
-                |
-                <a href="{{ url_for('documents:search', query='conference:%s AND year:%s AND %s' % (hit['conference'], hit['year'], query), **request.args) }}">
-                    {{ hit['conference'] }},&nbsp;{{ hit['year'] }}
-                </a>
             </div>
+        {% elif format == 'shortest' %}
+            <a href="{{ url_for('document', name=hit['slug']) }}" title="{{ hit['title'] }}&#10;&#10;{{ hit['authors'] }}">
+                {{ hit['slug'] }}
+            </a>
+            {% if not loop.last %}|{% endif %}
+        {% endif %}
+    {% endfor %}
+{% endmacro %}
+
+{% block body %}
+    {% if grouped %}
+        {% for gr_name, gr_hits in grouped[:groups_max] %}
+            <div class="text-center">
+                <div class="bs-callout bs-callout-right bs-callout-default bg-success">
+                    <h4 class="text-right">{{ gr_name }}</h4>
+                </div>
+                {{ show_results(gr_hits[:group_elems_max]) }}
+                {% if gr_hits|length > group_elems_max %}
+                    <div class="bs-callout bs-callout-default bg-info">
+                        {{ gr_hits|length - group_elems_max }} more results from this group are not shown
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        {% block groups_tail %}
+        {% if grouped|length > groups_max %}
+            <div class="bs-callout bs-callout-default bg-info">
+                {{ grouped|length - groups_max }} more groups are not shown
+            </div>
+        {% endif %}
+        {% endblock %}
+    {% else %}
+        <div class="text-center">
+            {{ show_results(results) }}
         </div>
-    </div>
-{% elif format == 'shortest' %}
-    <a href="{{ url_for('document', name=hit['slug']) }}" title="{{ hit['title'] }}&#10;&#10;{{ hit['authors'] }}">
-        {{ hit['slug'] }}
-    </a>
-    {% if not loop_last %}|{% endif %}
-{% endif %}
+    {% endif %}
 {% endblock %}
