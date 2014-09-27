@@ -57,7 +57,7 @@ class EntitiesView(FlaskView):
 
     @route('/{name}s/search/', endpoint='{name}s:search')
     @route('/{name}s/search/<query>', endpoint='{name}s:search')
-    def search(self, query='*'):
+    def search(self, query=''):
         return self.render_template(
             base_ep='{name}s'.format(name=self.name),
             base_title='{name}s'.format(name=self.name.capitalize()),
