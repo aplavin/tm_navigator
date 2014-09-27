@@ -73,9 +73,10 @@ class EntitiesView(FlaskView):
 
 
     @route('/{name}s/search_results/<query>', endpoint='{name}s:search_results')
-    def search_results(self, query):
+    def search_results(self, query=''):
+        format = request.args.get('format', 'full')
         res = do_search(self.indexname, query, self.get_field(), self.get_groupby())
-        return self.render_template(highlight=highlight, vector_data=self.vector_data, **res)
+        return self.render_template(format=format, highlight=highlight, vector_data=self.vector_data, vector_length=self.vector_length, **res)
 
 
 class TopicView(EntitiesView):
@@ -104,6 +105,15 @@ class DocumentView(EntitiesView):
             'mode': 'bool',
             'name': 'content_search',
             'text': 'In-text search'
+        },
+        {
+            'mode': 'choice',
+            'name': 'format',
+            'options': [
+                {'text': 'Full format', 'value': ''},
+                {'text': 'Short format', 'value': 'short'},
+                {'text': 'Shortest format', 'value': 'shortest'},
+            ]
         }
     ]
     vector_mapf = {'topics': TopicTuple}

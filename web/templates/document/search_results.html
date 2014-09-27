@@ -2,7 +2,19 @@
 
 {% set endpoint = 'documents:search' %}
 
+{% if format == 'full' %}
+    {% set groups_max = 30 %}
+    {% set group_elems_max = 3 %}
+{% elif format == 'short' %}
+    {% set groups_max = 30 %}
+    {% set group_elems_max = 20 %}
+{% elif format == 'shortest' %}
+    {% set groups_max = 30 %}
+    {% set group_elems_max = 1000 %}
+{% endif %}
+
 {% block hit_item %}
+{% if format == 'full' %}
     <div class="panel panel-default">
         <div class="panel-heading">
             <h3 class="panel-title">
@@ -14,8 +26,7 @@
                 <a href="{{ url_for('documents:search', query='authors:"%s" AND %s' % (hit['authors'], query), **request.args) }}">
                     {{ highlight(hit, 'whole', ['authors', 'authors_ngrams'], 'authors') | safe }}
                 </a>
-            </div>
-            <div>
+                |
                 <a href="{{ url_for('documents:search', query='conference:%s AND year:%s AND %s' % (hit['conference'], hit['year'], query), **request.args) }}">
                     {{ hit['conference'] }},&nbsp;{{ hit['year'] }}
                 </a>
@@ -59,4 +70,29 @@
             {% endif %}
         </div>
     </div>
+{% elif format == 'short' %}
+    <div class="list-group-item">
+        <div class="panel-heading">
+            <h4 class="list-group-item-heading">
+                <a href="{{ url_for('document', name=hit['slug']) }}">
+                    {{ highlight(hit, 'whole', ['title', 'title_ngrams'], 'title') | safe }}
+                </a>
+            </h4>
+            <div class="list-group-item-text">
+                <a href="{{ url_for('documents:search', query='authors:"%s" AND %s' % (hit['authors'], query), **request.args) }}">
+                    {{ highlight(hit, 'whole', ['authors', 'authors_ngrams'], 'authors') | safe }}
+                </a>
+                |
+                <a href="{{ url_for('documents:search', query='conference:%s AND year:%s AND %s' % (hit['conference'], hit['year'], query), **request.args) }}">
+                    {{ hit['conference'] }},&nbsp;{{ hit['year'] }}
+                </a>
+            </div>
+        </div>
+    </div>
+{% elif format == 'shortest' %}
+    <a href="{{ url_for('document', name=hit['slug']) }}" title="{{ hit['title'] }}&#10;&#10;{{ hit['authors'] }}">
+        {{ hit['slug'] }}
+    </a>
+    {% if not loop_last %}|{% endif %}
+{% endif %}
 {% endblock %}

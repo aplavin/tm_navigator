@@ -11,33 +11,35 @@
 
 {% macro show_results(results) %}
     {% for hit in results %}
+        {% set loop_last = loop.last %}
         {% block hit_item scoped %}{% endblock %}
     {% endfor %}
 {% endmacro %}
 
 {% if grouped %}
-    {% for gr_name, gr_hits in grouped[:30] %}
-        <div>
+    {% for gr_name, gr_hits in grouped[:groups_max] %}
+        <div class="text-center">
             <div class="bs-callout bs-callout-right bs-callout-default bg-success">
                 <h4 class="text-right">{{ gr_name }}</h4>
             </div>
-
-            {{ show_results(gr_hits[:3]) }}
-
-            {% if gr_hits|length > 3 %}
+            {{ show_results(gr_hits[:group_elems_max]) }}
+            {% if gr_hits|length > group_elems_max %}
                 <div class="bs-callout bs-callout-default bg-info">
-                    {{ gr_hits|length - 3 }} more results from this group are not shown
+                    {{ gr_hits|length - group_elems_max }} more results from this group are not shown
                 </div>
             {% endif %}
         </div>
     {% endfor %}
-    {% if grouped|length > 30 %}
+
+    {% block groups_tail %}
+    {% if grouped|length > groups_max %}
         <div class="bs-callout bs-callout-default bg-info">
-            {{ grouped|length - 30 }} more groups are not shown
+            {{ grouped|length - groups_max }} more groups are not shown
         </div>
     {% endif %}
+    {% endblock %}
 {% else %}
-    <div>
+    <div class="text-center">
         {{ show_results(results) }}
     </div>
 {% endif %}
