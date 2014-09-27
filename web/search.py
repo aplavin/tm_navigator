@@ -68,7 +68,10 @@ def do_search(indexname, query, fields, groupby):
                                   searcher.schema,
                                   termclass=wh_query.FuzzyTerm)
 
-    query_parsed = qp.parse(query)
+    if query != '':
+        query_parsed = qp.parse(query)
+    else:
+        query_parsed = wh_query.Every()
 
     kwargs = {}
     if groupby:
