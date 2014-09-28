@@ -51,6 +51,10 @@ def vector_data(indexname, hit, field):
     return get_searcher(indexname).vector_as('data', hit.docnum, field)
 
 
+def vector_length(indexname, hit, field):
+    return get_searcher(indexname).doc_field_length(hit.docnum, field)
+
+
 searchers = {}
 
 

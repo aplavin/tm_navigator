@@ -9,7 +9,7 @@ from data import (get_topics_all, get_documents_all, get_words_all,
                   d_by_slug, w_by_word,
                   get_doc_content,
                   TopicTuple, DocumentTuple, WordTuple)
-from search import do_search, highlight, vector_data
+from search import do_search, highlight, vector_data, vector_length
 from app import app
 
 
@@ -70,6 +70,11 @@ class EntitiesView(FlaskView):
     @classmethod
     def vector_data(cls, hit, field):
         return LazyList(starmap(cls.vector_mapf[field], vector_data(cls.indexname, hit, field)))
+
+
+    @classmethod
+    def vector_length(cls, hit, field):
+        return vector_length(cls.indexname, hit, field)
 
 
     @route('/{name}s/search_results/<query>', endpoint='{name}s:search_results')
