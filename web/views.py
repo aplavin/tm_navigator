@@ -103,7 +103,15 @@ class TopicView(EntitiesView):
         topics = [TopicTuple(name, gr_weights[name] / len(res['results']), sorted(hits, key=lambda h: h.gr_weights[name], reverse=True))
                   for name, hits in res['grouped']]
 
-        return self.render_template(highlight=highlight,
+        def _highlight(hit, hl_name, fields, fallback=None):
+            if query and _highlight.cnt < 200:
+                _highlight.cnt += 1
+                return highlight(hit, hl_name, fields, fallback)
+            else:
+                return hit[fallback]
+        _highlight.cnt = 0
+
+        return self.render_template(highlight=_highlight,
                                     vector_data=lambda hit, field: vector_data(self.indexname, hit, field).starmap(TopicTuple),
                                     topics=topics,
                                     query=query,
