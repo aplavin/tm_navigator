@@ -95,7 +95,7 @@ def do_search(indexname, query, fields, groupby, kwargs=None):
         corrected = None
 
     if results.facet_names():
-        groups = sorted(results.groups().items(), key=lambda gr: (-len(gr[1]), gr[0]))
+        groups = sorted(results.groups().dict.items(), key=lambda gr: (-len(gr[1]), gr[0]))
 
         indices = {}
         for i, hit in enumerate(results):
@@ -103,7 +103,7 @@ def do_search(indexname, query, fields, groupby, kwargs=None):
 
         grouped = [(' '.join(map(str, gr_name)) if isinstance(gr_name, tuple) else gr_name,
                     [results[indices[docnum]]
-                     for docnum in gr_nums])
+                     for sortkey, value, docnum in gr_nums])
                    for gr_name, gr_nums in groups]
         results_cnt = sum(len(gr) for _, gr in grouped)
     else:
