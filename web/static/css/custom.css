@@ -138,3 +138,8 @@ thead th {
 #content h1 {
     font-size: 1.5em;
 }
+
+.nofloat {
+    float: none;
+    padding: 0;
+}

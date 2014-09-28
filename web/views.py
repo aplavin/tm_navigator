@@ -89,6 +89,12 @@ class TopicView(EntitiesView):
     ind_by_name = staticmethod(int)
     get_data = staticmethod(lambda t: {'topic': get_topics_info([t])[0]})
     name = 'topic'
+    indexname = 'topics'
+    search_settings = []
+    get_field = staticmethod(lambda: ['doctitles', 'docauthors', 'words'])
+    get_groupby = staticmethod(lambda: None)
+    search_kwargs = {'sortedby': 'p', 'reverse': True}
+    vector_mapf = {'words': WordTuple, 'docslugs': DocumentTuple, 'docauthors': WordTuple}
 
 
 class DocumentView(EntitiesView):

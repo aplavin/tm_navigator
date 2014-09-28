@@ -1,0 +1,115 @@
+{% extends "search_results_base.html" %}
+
+{% set endpoint = 'topics:search' %}
+
+{% macro show_results(results) %}
+    {% for hit in results %}
+        {{ res_cnt_inc() }}
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title pull-left col-sm-2 nofloat">
+                    <a href="{{ url_for('topic', name=hit['t']) }}">
+                        Topic #{{ hit['t'] }}
+                    </a>
+                </h3>
+
+                <div class="progress col-sm-10 nofloat">
+                    <div class="progress-bar progress-bar-default" style="width: {{ hit['p'] / 0.036708 * 100 }}%">
+                        <span>
+                            P(t) = {{ hit['p'] | round(3) }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-body">
+                <div class="bs-callout bs-callout-info">
+                    {% set docs = vector_data(hit, 'docslugs') %}
+                    <h4 class="progress-label">Documents:</h4>
+
+                    <ul class="tagcloud">
+                        {% for d in docs[:15] %}
+                            <li>
+                                <a href="{{ url_for('document', name=d.d) }}" title="P(t | d) = {{ d.np | round(3) }}" data-size="{{ d.np }}">{{ d.d }}</a>
+                            </li>
+                        {% endfor %}
+
+                        {% if vector_length(hit, 'docslugs') > 15 %}
+                            <li>&hellip;&nbsp;{{ vector_length(hit, 'docslugs') - 15 }}&nbsp;more&nbsp;&hellip;</li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <div class="bs-callout bs-callout-info">
+                    {% set docs = vector_data(hit, 'docauthors') %}
+                    <h4 class="progress-label">Authors:</h4>
+
+                    <ul class="tagcloud">
+                        {% for d in docs[:15] %}
+                            <li>
+                                <a href="{{ url_for('document', name=d.d) }}" title="Score = {{ d.np | round(3) }}" data-size="{{ d.np }}">{{ d.w }}</a>
+                            </li>
+                        {% endfor %}
+
+                        {% if vector_length(hit, 'docauthors') > 15 %}
+                            <li>&hellip;&nbsp;{{ vector_length(hit, 'docauthors') - 15 }}&nbsp;more&nbsp;&hellip;</li>
+                        {% endif %}
+                    </ul>
+                </div>
+
+                <div class="bs-callout bs-callout-info">
+                    {% set words = vector_data(hit, 'words') %}
+                    <h4 class="progress-label">Words:</h4>
+
+                    <ul class="tagcloud">
+                        {% for w in words[:30] %}
+                            <li>
+                                <a href="{{ url_for('word', name=w.w) }}" title="P(w | t) = {{ w.np | round(3) }}" data-size="{{ w.np }}">{{ w.w }}</a>
+                            </li>
+                        {% endfor %}
+
+                        {% if vector_length(hit, 'words') > 30 %}
+                            <li>&hellip;&nbsp;{{ vector_length(hit, 'words') - 30 }}&nbsp;more&nbsp;&hellip;</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% endmacro %}
+
+{% block body %}
+    {% if grouped %}
+        {% for gr_name, gr_hits in grouped[:groups_max] %}
+            <div class="text-center">
+                {% if format in ['full', 'shortest'] %}
+                    <div class="bs-callout bs-callout-right bs-callout-default bg-success">
+                        <h4 class="text-right">{{ gr_name }}</h4>
+                    </div>
+                {% elif format == 'short' %}
+                    <div class="list-group-item bg-success">
+                        <h4 class="text-right">{{ gr_name }}</h4>
+                    </div>
+                {% endif %}
+                {{ show_results(gr_hits[:group_elems_max]) }}
+                {% if gr_hits|length > group_elems_max %}
+                    <div class="bs-callout bs-callout-default bg-info">
+                        {{ gr_hits|length - group_elems_max }} more results from this group are not shown
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        {% block groups_tail %}
+        {% if grouped|length > groups_max %}
+            <div class="bs-callout bs-callout-default bg-info">
+                {{ grouped|length - groups_max }} more groups are not shown
+            </div>
+        {% endif %}
+        {% endblock %}
+    {% else %}
+        <div class="text-center">
+            {{ show_results(results) }}
+        </div>
+    {% endif %}
+{% endblock %}
