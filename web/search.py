@@ -107,10 +107,12 @@ def do_search(indexname, query, fields, groupby, kwargs=None):
                    for gr_name, gr_nums in groups]
         results_cnt = sum(len(gr) for _, gr in grouped)
     else:
+        groups = None
         grouped = None
         results_cnt = len(results)
 
     return dict(
+        groups=groups,
         grouped=grouped,
         results=results,
         results_cnt=results_cnt,
