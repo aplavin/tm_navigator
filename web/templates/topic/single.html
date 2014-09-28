@@ -32,7 +32,6 @@
 
                 <div class="bs-callout bs-callout-info">
                     <h4>Words:</h4>
-                    <div id="plot-words" style="height:400px;"></div>
                     <ul class="tagcloud collapsed">
                         {% for w in topic.words %}
                             <li>
@@ -57,24 +56,6 @@
                             name: '{{ d.meta['slug'] }}',
                             y: {{ d.np | round(3) }},
                             url: '{{ url_for('document', name=d.meta['slug']) }}'
-                        },
-                    {% endfor %}
-                ]
-            );
-        });
-
-
-        $(function () {
-            createPieChart(
-                $('#plot-words'),
-                'Words distribution',
-                ['w', 'P(w | t)'],
-                [
-                    {% for w in topic.words | sort(attribute='np', reverse=True)  %}
-                        {
-                            name: '{{ w.word }}',
-                            y: {{ w.np | round(4) }},
-                            url: '{{ url_for('word', name=w.word) }}'
                         },
                     {% endfor %}
                 ]

@@ -79,9 +79,30 @@
 {% endmacro %}
 
 {% block body %}
-    {% set pmax = (topics | max(attribute='np'))['np'] %}
+    {% set pmax = topics | max(attribute='np') %}
     {% if pmax > 0 %}
-        {% for t in topics | sort(attribute='np', reverse=True) %}
+        <div id="plot-topics" style="height:400px;"></div>
+
+        <script type="text/javascript">
+            $(function () {
+                createPieChart(
+                    $('#plot-topics'),
+                    'Topics distribution',
+                    ['t', 'P({{ 't' if not query else 't | query' }})'],
+                    [
+                        {% for t in topics | sort(attribute='np', reverse=True) if t.np > 0  %}
+                            {
+                                name: '{{ t.t }}',
+                                y: {{ t.np | round(3) }},
+                                url: '{{ url_for('topic', name=t.t) }}'
+                            },
+                        {% endfor %}
+                    ]
+                );
+            });
+        </script>
+
+        {% for t in topics | sort(attribute='np', reverse=True) if t.np > 0 %}
             <div class="panel panel-default">
                 <div class="panel-heading">
                     <h3 class="panel-title pull-left col-sm-2 nofloat">
@@ -107,7 +128,13 @@
                             {% for d in t.documents[:30] %}
                                 {{ res_cnt_inc() }}
                                 <li>
-                                    <a href="{{ url_for('document', name=d.d) }}">{{ d['slug'] }}</a>
+                                    <a href="{{ url_for('document', name=d.d) }}" data-size="{{ d['gr_weights'][t.t] }}"
+                                    data-placement="top" data-toggle="tooltip" data-html="true"
+                                    title="
+                                    {{ highlight(d, 'whole', ['title', 'title_ngrams'], 'title').replace('"', "'") | safe }}<br/><br/>
+                                    {{ highlight(d, 'whole', ['authors', 'authors_ngrams'], 'authors').replace('"', "'") | safe }}<hr/>
+                                    P(t | d) = {{ d['gr_weights'][t.t] | round(3) }}
+                                    ">{{ d['slug'] }}</a>
                                 </li>
                             {% endfor %}
 

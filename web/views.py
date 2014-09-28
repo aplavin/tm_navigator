@@ -71,27 +71,37 @@ class TopicView(EntitiesView):
     ind_by_name = staticmethod(int)
     get_data = staticmethod(lambda t: {'topic': get_topics_info([t])[0]})
     name = 'topic'
-    search_settings = []
+    search_settings = [
+        {
+            'mode': 'bool',
+            'name': 'content_search',
+            'text': 'In-text search'
+        }
+    ]
 
 
     @route('/{name}s/search_results/', endpoint='{name}s:search_results')
     @route('/{name}s/search_results/<query>', endpoint='{name}s:search_results')
     def search_results(self, query=''):
+        fields = ['title', 'authors', 'authors_ngrams', 'title_ngrams']
+        if request.args.get('content_search', False) == 'true':
+            fields.append('content')
+
         res = do_search('docs',
                         query,
-                        ['title', 'title_ngrams', 'authors', 'authors_ngrams'],
+                        fields,
                         [sorting.FieldFacet('topics', allow_overlap=True)])
 
         gr_weights = defaultdict(float)
         for (gr_name, gr_nums), (_, hits) in zip(res['groups'], res['grouped']):
-    #         print gr_name
             for (sortkey, value, d), hit in zip(gr_nums, hits):
+                if not hasattr(hit, 'gr_weights'):
+                    hit.gr_weights = {}
+                hit.gr_weights[gr_name] = value
                 gr_weights[gr_name] += value
 
-        topics = [TopicTuple(name, gr_weights[name] / len(res['results']), hits) for name, hits in res['grouped']]
-        topics += [TopicTuple(name, 0, [])
-                   for name in map(unicode, range(50))
-                   if name not in gr_weights]
+        topics = [TopicTuple(name, gr_weights[name] / len(res['results']), sorted(hits, key=lambda h: h.gr_weights[name], reverse=True))
+                  for name, hits in res['grouped']]
 
         return self.render_template(highlight=highlight,
                                     vector_data=lambda hit, field: vector_data(self.indexname, hit, field).starmap(TopicTuple),
