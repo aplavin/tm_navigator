@@ -87,6 +87,17 @@ thead th {
     background-color: inherit;
 }
 
+.progress {
+    position: relative;
+}
+
+.progress span {
+    position: absolute;
+    display: block;
+    width: 100%;
+    color: black;
+ }
+
 .tooltip h4 {
     color: white;
 }

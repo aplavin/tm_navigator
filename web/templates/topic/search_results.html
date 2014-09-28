@@ -79,37 +79,45 @@
 {% endmacro %}
 
 {% block body %}
-    {% if grouped %}
-        {% for gr_name, gr_hits in grouped[:groups_max] %}
-            <div class="text-center">
-                {% if format in ['full', 'shortest'] %}
-                    <div class="bs-callout bs-callout-right bs-callout-default bg-success">
-                        <h4 class="text-right">{{ gr_name }}</h4>
+    {% set pmax = (topics | max(attribute='np'))['np'] %}
+    {% if pmax > 0 %}
+        {% for t in topics | sort(attribute='np', reverse=True) %}
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title pull-left col-sm-2 nofloat">
+                        <a href="{{ url_for('topic', name=t.t) }}">
+                            Topic #{{ t.t }}
+                        </a>
+                    </h3>
+
+                    <div class="progress col-sm-10 nofloat">
+                        <div class="progress-bar progress-bar-default" style="width: {{ t.np/pmax * 100 }}%">
+                            <span>
+                                P({{ 't' if not query else 't | query' }}) = {{ t.np | round(3) }}
+                            </span>
+                        </div>
                     </div>
-                {% elif format == 'short' %}
-                    <div class="list-group-item bg-success">
-                        <h4 class="text-right">{{ gr_name }}</h4>
+                </div>
+
+                <div class="panel-body">
+                    <div class="bs-callout bs-callout-info">
+                        <h4 class="progress-label">Documents:</h4>
+
+                        <ul class="tagcloud">
+                            {% for d in t.documents[:30] %}
+                                {{ res_cnt_inc() }}
+                                <li>
+                                    <a href="{{ url_for('document', name=d.d) }}">{{ d['slug'] }}</a>
+                                </li>
+                            {% endfor %}
+
+                            {% if t.documents|length > 30 %}
+                                <li>&hellip;&nbsp;{{ t.documents|length - 30 }}&nbsp;more&nbsp;&hellip;</li>
+                            {% endif %}
+                        </ul>
                     </div>
-                {% endif %}
-                {{ show_results(gr_hits[:group_elems_max]) }}
-                {% if gr_hits|length > group_elems_max %}
-                    <div class="bs-callout bs-callout-default bg-info">
-                        {{ gr_hits|length - group_elems_max }} more results from this group are not shown
-                    </div>
-                {% endif %}
+                </div>
             </div>
         {% endfor %}
-
-        {% block groups_tail %}
-        {% if grouped|length > groups_max %}
-            <div class="bs-callout bs-callout-default bg-info">
-                {{ grouped|length - groups_max }} more groups are not shown
-            </div>
-        {% endif %}
-        {% endblock %}
-    {% else %}
-        <div class="text-center">
-            {{ show_results(results) }}
-        </div>
     {% endif %}
 {% endblock %}

@@ -28,6 +28,18 @@ def inject_last_updated():
     return dict(last_updated=last_updated)
 
 
+@app.template_filter('max')
+def max_filter(iterable, attribute=None):
+    if attribute is not None:
+        keyfunc = lambda elem: getattr(elem, attribute)
+    else:
+        keyfunc = lambda elem: elem
+    if not iterable:
+        return None
+    return max(iterable, key=keyfunc)
+
+
+
 from data import *
 from search import *
 from views import *

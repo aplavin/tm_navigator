@@ -1,5 +1,6 @@
 from flask import render_template, request
 from flask.ext.classy import FlaskView, route
+from collections import defaultdict
 import traceback
 import sys
 from data import (get_topics_all, get_documents_all, get_words_all,
@@ -76,12 +77,26 @@ class TopicView(EntitiesView):
     @route('/{name}s/search_results/', endpoint='{name}s:search_results')
     @route('/{name}s/search_results/<query>', endpoint='{name}s:search_results')
     def search_results(self, query=''):
-        res = do_search(self.indexname,
+        res = do_search('docs',
                         query,
                         ['title', 'title_ngrams', 'authors', 'authors_ngrams'],
-                        sorting.FieldFacet('topics', allow_overlap=True))
+                        [sorting.FieldFacet('topics', allow_overlap=True)])
+
+        gr_weights = defaultdict(float)
+        for (gr_name, gr_nums), (_, hits) in zip(res['groups'], res['grouped']):
+    #         print gr_name
+            for (sortkey, value, d), hit in zip(gr_nums, hits):
+                gr_weights[gr_name] += value
+
+        topics = [TopicTuple(name, gr_weights[name] / len(res['results']), hits) for name, hits in res['grouped']]
+        topics += [TopicTuple(name, 0, [])
+                   for name in map(unicode, range(50))
+                   if name not in gr_weights]
+
         return self.render_template(highlight=highlight,
                                     vector_data=lambda hit, field: vector_data(self.indexname, hit, field).starmap(TopicTuple),
+                                    topics=topics,
+                                    query=query,
                                     **res)
 
 
