@@ -70,7 +70,6 @@ class TopicView(EntitiesView):
     ind_by_name = staticmethod(int)
     get_data = staticmethod(lambda t: {'topic': get_topics_info([t])[0]})
     name = 'topic'
-    indexname = 'docs'
     search_settings = []
 
 
@@ -146,10 +145,10 @@ class DocumentView(EntitiesView):
             groupby = [sorting.FieldFacet(field, allow_overlap=True) if not field.endswith('_stored') else sorting.StoredFieldFacet(field[:-7])
                        for field in groupby]
 
-        res = do_search(self.indexname, query, fields, groupby)
+        res = do_search('docs', query, fields, groupby)
         return self.render_template(format=format,
                                     highlight=highlight,
-                                    vector_data=lambda hit, field: vector_data(self.indexname, hit, field).starmap(TopicTuple),
+                                    vector_data=lambda hit, field: vector_data('docs', hit, field).starmap(TopicTuple),
                                     **res)
 
 
