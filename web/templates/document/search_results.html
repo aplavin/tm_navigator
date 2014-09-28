@@ -9,7 +9,7 @@
     {% set groups_max = 30 %}
     {% set group_elems_max = 20 %}
 {% elif format == 'shortest' %}
-    {% set groups_max = 30 %}
+    {% set groups_max = 100 %}
     {% set group_elems_max = 1000 %}
 {% endif %}
 
@@ -104,9 +104,15 @@
     {% if grouped %}
         {% for gr_name, gr_hits in grouped[:groups_max] %}
             <div class="text-center">
-                <div class="bs-callout bs-callout-right bs-callout-default bg-success">
-                    <h4 class="text-right">{{ gr_name }}</h4>
-                </div>
+                {% if format in ['full', 'shortest'] %}
+                    <div class="bs-callout bs-callout-right bs-callout-default bg-success">
+                        <h4 class="text-right">{{ gr_name }}</h4>
+                    </div>
+                {% elif format == 'short' %}
+                    <div class="list-group-item bg-success">
+                        <h4 class="text-right">{{ gr_name }}</h4>
+                    </div>
+                {% endif %}
                 {{ show_results(gr_hits[:group_elems_max]) }}
                 {% if gr_hits|length > group_elems_max %}
                     <div class="bs-callout bs-callout-default bg-info">

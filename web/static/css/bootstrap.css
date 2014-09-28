@@ -4803,7 +4803,7 @@ a.thumbnail.active {
   display: block;
   padding: 10px 15px;
   margin-bottom: -1px;
-  background-color: #ffffff;
+  /*background-color: #ffffff;*/
   border: 1px solid #dddddd;
 }
 .list-group-item:first-child {
