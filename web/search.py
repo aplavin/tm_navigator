@@ -95,10 +95,6 @@ def do_search(indexname, query, fields, groupby):
         for i, hit in enumerate(results):
             indices[hit.docnum] = i
 
-        for gr, dnums in results.groups().iteritems():
-            for d in dnums:
-                results[d]['d']
-
         grouped = [(' '.join(map(str, gr_name)) if isinstance(gr_name, tuple) else gr_name,
                     [results[indices[docnum]]
                      for docnum in gr_nums])
