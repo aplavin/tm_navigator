@@ -81,7 +81,7 @@ class EntitiesView(FlaskView):
     @route('/{name}s/search_results/<query>', endpoint='{name}s:search_results')
     def search_results(self, query=''):
         format = request.args.get('format', 'full')
-        res = do_search(self.indexname, query, self.get_field(), self.get_groupby())
+        res = do_search(self.indexname, query, self.get_field(), self.get_groupby(), self.search_kwargs)
         return self.render_template(format=format, highlight=highlight, vector_data=self.vector_data, vector_length=self.vector_length, **res)
 
 
@@ -123,6 +123,7 @@ class DocumentView(EntitiesView):
         }
     ]
     vector_mapf = {'topics': TopicTuple}
+    search_kwargs = {}
 
 
     @staticmethod

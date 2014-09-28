@@ -65,7 +65,7 @@ def get_searcher(indexname):
     return searchers[indexname]
 
 
-def do_search(indexname, query, fields, groupby):
+def do_search(indexname, query, fields, groupby, kwargs=None):
     searcher = get_searcher(indexname)
 
     qp = qparser.MultifieldParser(fields,
@@ -77,7 +77,7 @@ def do_search(indexname, query, fields, groupby):
     else:
         query_parsed = wh_query.Every()
 
-    kwargs = {}
+    kwargs = kwargs or {}
     if groupby:
         kwargs['groupedby'] = sorting.MultiFacet(items=groupby)
 
