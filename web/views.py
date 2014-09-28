@@ -77,6 +77,7 @@ class EntitiesView(FlaskView):
         return vector_length(cls.indexname, hit, field)
 
 
+    @route('/{name}s/search_results/', endpoint='{name}s:search_results')
     @route('/{name}s/search_results/<query>', endpoint='{name}s:search_results')
     def search_results(self, query=''):
         format = request.args.get('format', 'full')
