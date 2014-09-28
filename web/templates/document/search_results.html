@@ -64,7 +64,7 @@
                         </ul>
                     </div>
 
-                    {% set content_hl = highlight(hit, 'pinpoint', ['content']) %}
+                    {% set content_hl = hcontent(hit) %}
                     {% if content_hl %}
                         <div class="bs-callout bs-callout-info">
                             {{ content_hl.strip().replace('\n', '<br/>') | safe }}

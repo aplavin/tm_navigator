@@ -178,9 +178,19 @@ class DocumentView(EntitiesView):
             groupby = [sorting.FieldFacet(field, allow_overlap=True) if not field.endswith('_stored') else sorting.StoredFieldFacet(field[:-7])
                        for field in groupby]
 
+        def hcontent(hit):
+            import codecs, re
+            with codecs.open('static/docsdata/%s.html' % hit['fname'], encoding='utf-8') as f:
+                html = f.read()
+                m = re.search(r'</header>(.*)</body>', html, re.DOTALL)
+                html = m.group(1)
+                content = re.sub('<[^<]+?>', ' ', html)
+            return highlight(hit, 'pinpoint', ['content'], text=content)
+
         res = do_search('docs', query, fields, groupby)
         return self.render_template(format=format,
                                     highlight=highlight,
+                                    hcontent=hcontent,
                                     vector_data=lambda hit, field: vector_data('docs', hit, field).starmap(TopicTuple),
                                     **res)
 
