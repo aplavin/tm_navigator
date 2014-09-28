@@ -1,3 +1,4 @@
+from lazylist import LazyList
 from whoosh import (analysis, formats, index, qparser, sorting,
                     query as wh_query, highlight as wh_highlight)
 
@@ -48,7 +49,8 @@ def highlight(hit, hl_name, fields, fallback=None):
 
 
 def vector_data(indexname, hit, field):
-    return get_searcher(indexname).vector_as('data', hit.docnum, field)
+    viter = get_searcher(indexname).vector_as('data', hit.docnum, field)
+    return LazyList(viter)
 
 
 def vector_length(indexname, hit, field):

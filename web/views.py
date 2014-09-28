@@ -2,14 +2,13 @@ from flask import render_template, request
 from flask.ext.classy import FlaskView, route
 import traceback
 import sys
-from itertools import starmap
-from lazylist import LazyList
 from data import (get_topics_all, get_documents_all, get_words_all,
                   get_topics_info, get_docs_info, get_words_info,
                   d_by_slug, w_by_word,
                   get_doc_content,
                   TopicTuple, DocumentTuple, WordTuple)
 from search import do_search, highlight, vector_data, vector_length
+from whoosh import sorting
 from app import app
 
 
@@ -67,34 +66,24 @@ class EntitiesView(FlaskView):
         )
 
 
-    @classmethod
-    def vector_data(cls, hit, field):
-        return LazyList(starmap(cls.vector_mapf[field], vector_data(cls.indexname, hit, field)))
-
-
-    @classmethod
-    def vector_length(cls, hit, field):
-        return vector_length(cls.indexname, hit, field)
+class TopicView(EntitiesView):
+    ind_by_name = staticmethod(int)
+    get_data = staticmethod(lambda t: {'topic': get_topics_info([t])[0]})
+    name = 'topic'
+    indexname = 'docs'
+    search_settings = []
 
 
     @route('/{name}s/search_results/', endpoint='{name}s:search_results')
     @route('/{name}s/search_results/<query>', endpoint='{name}s:search_results')
     def search_results(self, query=''):
-        format = request.args.get('format', 'full')
-        res = do_search(self.indexname, query, self.get_field(), self.get_groupby(), self.search_kwargs)
-        return self.render_template(format=format, highlight=highlight, vector_data=self.vector_data, vector_length=self.vector_length, **res)
-
-
-class TopicView(EntitiesView):
-    ind_by_name = staticmethod(int)
-    get_data = staticmethod(lambda t: {'topic': get_topics_info([t])[0]})
-    name = 'topic'
-    indexname = 'topics'
-    search_settings = []
-    get_field = staticmethod(lambda: ['doctitles', 'docauthors', 'words'])
-    get_groupby = staticmethod(lambda: None)
-    search_kwargs = {'sortedby': 'p', 'reverse': True}
-    vector_mapf = {'words': WordTuple, 'docslugs': DocumentTuple, 'docauthors': WordTuple}
+        res = do_search(self.indexname,
+                        query,
+                        ['title', 'title_ngrams', 'authors', 'authors_ngrams'],
+                        sorting.FieldFacet('topics', allow_overlap=True))
+        return self.render_template(highlight=highlight,
+                                    vector_data=lambda hit, field: vector_data(self.indexname, hit, field).starmap(TopicTuple),
+                                    **res)
 
 
 class DocumentView(EntitiesView):
@@ -140,23 +129,28 @@ class DocumentView(EntitiesView):
         return data
 
 
-    @staticmethod
-    def get_field():
+    @route('/{name}s/search_results/', endpoint='{name}s:search_results')
+    @route('/{name}s/search_results/<query>', endpoint='{name}s:search_results')
+    def search_results(self, query=''):
+        format = request.args.get('format', 'full')
+
         fields = ['title', 'authors', 'authors_ngrams', 'title_ngrams']
         if request.args.get('content_search', False) == 'true':
             fields.append('content')
-        return fields
 
-
-    @staticmethod
-    def get_groupby():
         groupby = request.args.get('grouping')
         if not groupby:
-            return None
-        groupby = groupby.split(',')
-        from whoosh import sorting
-        return [sorting.FieldFacet(field, allow_overlap=True) if not field.endswith('_stored') else sorting.StoredFieldFacet(field[:-7])
-                for field in groupby]
+            groupby = None
+        else:
+            groupby = groupby.split(',')
+            groupby = [sorting.FieldFacet(field, allow_overlap=True) if not field.endswith('_stored') else sorting.StoredFieldFacet(field[:-7])
+                       for field in groupby]
+
+        res = do_search(self.indexname, query, fields, groupby)
+        return self.render_template(format=format,
+                                    highlight=highlight,
+                                    vector_data=lambda hit, field: vector_data(self.indexname, hit, field).starmap(TopicTuple),
+                                    **res)
 
 
 class WordView(EntitiesView):
