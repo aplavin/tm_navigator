@@ -36,7 +36,7 @@ def max_filter(iterable, attribute=None):
         keyfunc = lambda elem: elem
     if not iterable:
         return None
-    return max(iterable, key=keyfunc)
+    return keyfunc(max(iterable, key=keyfunc))
 
 
 
