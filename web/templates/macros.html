@@ -1,0 +1,11 @@
+{% macro document_in_tagcloud(slug, np, np_fmt, title, authors) %}
+    <li>
+        <a href="{{ url_for('document', name=slug) }}" data-size="{{ np }}"
+        data-placement="top" data-toggle="tooltip" data-html="true"
+        title="
+        {{ title }}<br/><br/>
+        {{ authors }}<hr/>
+        {{ np_fmt % np }}
+        ">{{ slug }}</a>
+    </li>
+{% endmacro %}

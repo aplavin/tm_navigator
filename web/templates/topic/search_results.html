@@ -1,4 +1,5 @@
 {% extends "search_results_base.html" %}
+{% import "macros.html" as macros %}
 
 {% set endpoint = 'topics:search' %}
 
@@ -90,22 +91,14 @@
                         </h4>
 
                         <ul class="tagcloud">
-                            {% for d in t.documents[:30] %}
-                                <li>
-                                    <a href="{{ url_for('document', name=d.d) }}" data-size="{{ d['gr_weights'][t.t] }}"
-                                    data-placement="top" data-toggle="tooltip" data-html="true"
-                                    title="
-                                    {{ highlight(d, 'whole', ['title', 'title_ngrams'], 'title').replace('"', "'") | safe }}<br/><br/>
-                                    {{ highlight(d, 'whole', ['authors', 'authors_ngrams'], 'authors').replace('"', "'") | safe }}<hr/>
-                                    P(t | d) = {{ d['gr_weights'][t.t] | round(3) }}
-                                    ">{{ d['slug'] }}</a>
-                                </li>
+                            {% for d in t.documents[:20] %}
+                                {{ macros.document_in_tagcloud(d['slug'], d['gr_weights'][t.t], 'P(t | d) = %.3f', highlight(d, 'whole', ['title', 'title_ngrams'], 'title').replace('"', "'") | safe, highlight(d, 'whole', ['authors', 'authors_ngrams'], 'authors').replace('"', "'") | safe) }}
                             {% else %}
                                 <li>Nothing matched</li>
                             {% endfor %}
 
-                            {% if t.documents|length > 30 %}
-                                <li>&hellip;&nbsp;{{ t.documents|length - 30 }}&nbsp;more&nbsp;&hellip;</li>
+                            {% if t.documents|length > 20 %}
+                                <li>&hellip;&nbsp;{{ t.documents|length - 20 }}&nbsp;more&nbsp;&hellip;</li>
                             {% endif %}
                         </ul>
                     </div>

@@ -1,4 +1,5 @@
 {% extends "search_results_base.html" %}
+{% import "macros.html" as macros %}
 
 {% set endpoint = 'words:search' %}
 
@@ -42,10 +43,7 @@
 
                     <ul class="tagcloud">
                         {% for d in w.documents[:30] %}
-                            <li>
-                                <a href="{{ url_for('document', name=d.meta['slug']) }}" data-size="{{ d.np }}"
-                                title="N(w, d) = {{ d.np }}">{{ d.meta['slug'] }}</a>
-                            </li>
+                            {{ macros.document_in_tagcloud(d.meta['slug'], d.np, 'N(w, d) = %d', d.meta['title'], d.meta['authors']) }}
                         {% endfor %}
 
                         {% if w.documents|length > 30 %}
