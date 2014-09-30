@@ -42,6 +42,14 @@ thead th {
     background-color: #ff6;
 }
 
+.tooltip-inner .match {
+    background-color: #bb4;
+}
+
+.tooltip-inner {
+    max-width: 300px;
+}
+
 .small-link {
     display: inline-block;
     height: 30px;
@@ -152,5 +160,9 @@ thead th {
 
 .nofloat {
     float: none;
+}
+
+.nofloat.progress {
     padding: 0;
+    margin-bottom: 1px;
 }
