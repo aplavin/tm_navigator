@@ -1,9 +1,10 @@
 import numpy as np
 import scipy.sparse
 from scipy.ndimage.filters import convolve1d
-from itertools import starmap
+from itertools import starmap, ifilter, izip
 from collections import Counter
 from recordtype import recordtype
+from lazylist import LazyList
 import h5py
 import codecs
 import re
@@ -87,11 +88,11 @@ def get_topics_info(ts, ntop=(-1, -1)):
     if ntop[1] >= 0:
         ws = ws[:,:ntop[1]]
     words = get('dictionary')[ws]
-    words = [list( starmap(WordTuple, zipnp(ws_r, pws_r[ws_r], words_r)) )
+    words = [starmap(WordTuple, izip(ws_r, pws_r[ws_r], words_r))
              for ws_r, pws_r, words_r in zip(ws, pws, words)]
     words = map(
-        lambda words_r: filter(lambda w: w.np > 0, words_r),
-        words)
+        lambda (i, words_r): LazyList(ifilter(lambda w: w.np > 0, words_r), np.count_nonzero(pws[i])),
+        enumerate(words))
 
     docs = pds.argsort(axis=1)[:, ::-1]
     if ntop[0] >= 0:
