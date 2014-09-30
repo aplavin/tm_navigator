@@ -118,7 +118,7 @@ class TopicView(EntitiesView):
                 return hit[fallback]
         _highlight.cnt = 0
 
-        if request.args.get('words_search', False) == 'true':
+        if query and request.args.get('words_search', False) == 'true':
             words_res = do_search('words',
                                   query,
                                   ['word', 'word_ngrams'],
@@ -141,9 +141,11 @@ class TopicView(EntitiesView):
 
                     words = [WordTuple(w, p, highlights[w]) for w, p in zip(ws, pw)]
                     words = filter(lambda w: w.np > 0, words)
-                    new_topics.append(TopicTuple(t, pw.sum(), None, words))
+                    if pw.sum() > 0:
+                        new_topics.append(TopicTuple(t, pw.sum(), None, words))
 
-                ts = [t.t for t in topics + new_topics]
+                ts = [t.t for t in topics]
+                ts += [unicode(t.t) for t in new_topics if unicode(t.t) not in ts]
 
                 topics = defaultdict(TopicTuple, {t.t: t for t in topics})
                 new_topics = defaultdict(TopicTuple, {unicode(t.t): t for t in new_topics})

@@ -6,52 +6,57 @@
 {% block body %}
     {% set pmax = (topics | max(attribute=['np', 0]), topics | max(attribute=['np', 1])) %}
 
-    {% if pmax[0] and pmax|sum > 0 %}
-        <h2>Distribution overview:</h2>
-        <div id="plot-topics-docs" style="height:400px;"></div>
-        {% if pmax[1] > 0 %}
-            <div id="plot-topics-words" style="height:400px;"></div>
-        {% endif %}
+    {% if topics and pmax|sum > 0 %}
+        <h2>Distribution overview</h2>
 
-        <script type="text/javascript">
-            $(function () {
-                createPieChart(
-                    $('#plot-topics-docs'),
-                    'P({{ 't' if not query else 't | document matches query' }})',
-                    ['t', 'P'],
-                    [
-                        {% for t in topics | sort(attribute='np', reverse=True) if t.np|sum > 0 %}
-                            {
-                                name: '{{ t.t }}',
-                                y: {{ t.np[0] | round(3) }},
-                                url: '{{ url_for('topic', name=t.t) }}'
-                            },
-                        {% endfor %}
-                    ]
-                );
-            });
-
-            {% if pmax[1] > 0 %}
+        {% if pmax[0] > 0 %}
+            <div id="plot-topics-docs" style="height:400px;"></div>
+            <script type="text/javascript">
                 $(function () {
                     createPieChart(
-                        $('#plot-topics-words'),
-                        'P(word matches query | t)',
+                        $('#plot-topics-docs'),
+                        'P({{ 't' if not query else 't | document matches query' }})',
                         ['t', 'P'],
                         [
                             {% for t in topics | sort(attribute='np', reverse=True) if t.np|sum > 0 %}
                                 {
                                     name: '{{ t.t }}',
-                                    y: {{ t.np[1] | round(5) }},
+                                    y: {{ t.np[0] | round(3) }},
                                     url: '{{ url_for('topic', name=t.t) }}'
                                 },
                             {% endfor %}
                         ]
                     );
                 });
-            {% endif %}
-        </script>
+            </script>
+        {% endif %}
 
-        <h2>Topics matched:</h2>
+        {% if pmax[1] > 0 %}
+            <div id="plot-topics-words" style="height:400px;"></div>
+            <script type="text/javascript">
+                {% if pmax[1] > 0 %}
+                    $(function () {
+                        createPieChart(
+                            $('#plot-topics-words'),
+                            'P(word matches query | t)',
+                            ['t', 'P'],
+                            [
+                                {% for t in topics | sort(attribute='np', reverse=True) if t.np|sum > 0 %}
+                                    {
+                                        name: '{{ t.t }}',
+                                        y: {{ t.np[1] | round(5) }},
+                                        url: '{{ url_for('topic', name=t.t) }}'
+                                    },
+                                {% endfor %}
+                            ]
+                        );
+                    });
+                {% endif %}
+            </script>
+        {% endif %}
+
+
+        <h2>{{ 'Matched' if query else 'Top' }} topics</h2>
         {% for t in topics | sort(attribute='np', reverse=True) if t.np|sum > 0 %}
             {{ res_cnt_inc() }}
             <div class="panel panel-default">
@@ -63,13 +68,15 @@
                     </h3>
 
                     <div class="nofloat">
-                        <div class="progress col-sm-10 nofloat">
-                            <div class="progress-bar progress-bar-default" style="width: {{ t.np[0]/pmax[0] * 100 }}%">
-                                <span>
-                                    P({{ 't' if not query else 't | document matches query' }}) = {{ t.np[0] | round(3) }}
-                                </span>
+                        {% if pmax[0] > 0 %}
+                            <div class="progress col-sm-10 nofloat">
+                                <div class="progress-bar progress-bar-default" style="width: {{ t.np[0]/pmax[0] * 100 }}%">
+                                    <span>
+                                        P({{ 't' if not query else 't | document matches query' }}) = {{ t.np[0] | round(3) }}
+                                    </span>
+                                </div>
                             </div>
-                        </div>
+                        {% endif %}
 
                         {% if pmax[1] > 0 %}
                             <div class="progress col-sm-10 nofloat">
