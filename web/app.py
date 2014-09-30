@@ -31,7 +31,15 @@ def inject_last_updated():
 @app.template_filter('max')
 def max_filter(iterable, attribute=None):
     if attribute is not None:
-        keyfunc = lambda elem: getattr(elem, attribute)
+        def keyfunc(elem, attribute=attribute):
+            if isinstance(attribute, list):
+                if not attribute:
+                    return elem
+                return keyfunc(keyfunc(elem, attribute[0]), attribute[1:])
+            elif isinstance(attribute, int):
+                return elem[attribute]
+            else:
+                return getattr(elem, attribute)
     else:
         keyfunc = lambda elem: elem
     if not iterable:
