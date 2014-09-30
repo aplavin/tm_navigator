@@ -39,9 +39,12 @@ highlighters = {
 }
 
 
-def highlight(hit, hl_name, fields, fallback=None):
+def highlight(hit, hl_name, fields, fallback=None, text=None):
     for field in fields:
-        hl = highlighters[hl_name].highlight_hit(hit, field)
+        if text:
+            hl = highlighters[hl_name].highlight_hit(hit, field, text)
+        else:
+            hl = highlighters[hl_name].highlight_hit(hit, field)
         if hl:
             return hl
     if fallback is not None:
