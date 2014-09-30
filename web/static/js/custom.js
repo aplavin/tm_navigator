@@ -40,8 +40,7 @@ function createPieChart(container, title, ttipNames, data) {
             text: title
         },
         tooltip: {
-            formatter: labelf,
-            pointFormat: ''
+            enabled: false
         },
         series: [
             {
