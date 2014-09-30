@@ -107,7 +107,9 @@ class TopicView(EntitiesView):
                 hit.gr_weights[gr_name] = value
                 gr_weights[gr_name] += value
 
-        topics = [TopicTuple(name, gr_weights[name] / len(res['results']), sorted(hits, key=lambda h: h.gr_weights[name], reverse=True))
+        topics = [TopicTuple(name,
+                             gr_weights[name] / len(res['results']),
+                             sorted(hits, key=lambda h: h.gr_weights[name], reverse=True))
                   for name, hits in res['grouped']]
 
         def _highlight(hit, hl_name, fields, fallback=None):
