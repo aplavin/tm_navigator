@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% import "macros.html" as macros %}
 
 {% set breadcrumbs = [
     (url_for('words'), 'Words'),
@@ -22,25 +23,19 @@
                 <div class="bs-callout bs-callout-info">
                     <h4>Topics:</h4>
                     <div id="plot-topics" style="height:400px;"></div>
-                    <ul class="tagcloud">
-                        {% for t in word.topics %}
-                            <li>
-                                <a href="{{ url_for('topic', name=t.t) }}" title="P(w | t) = {{ t.np | round(4) }}" data-size="{{ t.np }}">{{ t.t }}</a>
-                            </li>
-                        {% endfor %}
-                    </ul>
+
+                    {% call(t) macros.tagcloud(word.topics) %}
+                        <a href="{{ url_for('topic', name=t.t) }}" title="P(w | t) = {{ t.np | round(4) }}" data-size="{{ t.np }}">{{ t.t }}</a>
+                    {% endcall %}
                 </div>
 
                 <div class="bs-callout bs-callout-info">
                     <h4>Documents:</h4>
                     <div id="plot-documents" style="height:400px;"></div>
-                    <ul class="tagcloud collapsed">
-                        {% for d in word.documents %}
-                            <li>
-                                <a href="{{ url_for('document', name=d.meta['slug']) }}" title="N_wd = {{ d.np }}" data-size="{{ d.np }}">{{ d.meta['slug'] }}</a>
-                            </li>
-                        {% endfor %}
-                    </ul>
+
+                    {% call(d) macros.tagcloud(word.documents, additional_class='collapsed') %}
+                        {{ macros.document_in_tagcloud(d.meta['slug'], d.np, 'N_wd = %d', d.meta['title'], d.meta['authors']) }}
+                    {% endcall %}
                 </div>
             </div>
         </div>

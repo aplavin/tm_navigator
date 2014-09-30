@@ -97,17 +97,9 @@
                             <small>Matched only</small>
                         </h4>
 
-                        <ul class="tagcloud">
-                            {% for d in t.documents[:20] %}
-                                {{ macros.document_in_tagcloud(d['slug'], d['gr_weights'][t.t], 'P(t | d) = %.3f', highlight(d, 'whole', ['title', 'title_ngrams'], 'title').replace('"', "'") | safe, highlight(d, 'whole', ['authors', 'authors_ngrams'], 'authors').replace('"', "'") | safe) }}
-                            {% else %}
-                                <li>Nothing matched</li>
-                            {% endfor %}
-
-                            {% if t.documents|length > 20 %}
-                                <li>&hellip;&nbsp;{{ t.documents|length - 20 }}&nbsp;more&nbsp;&hellip;</li>
-                            {% endif %}
-                        </ul>
+                        {% call(d) macros.tagcloud(t.documents, 20, 'Nothing matched') %}
+                            {{ macros.document_in_tagcloud(d['slug'], d['gr_weights'][t.t], 'P(t | d) = %.3f', highlight(d, 'whole', ['title', 'title_ngrams'], 'title').replace('"', "'") | safe, highlight(d, 'whole', ['authors', 'authors_ngrams'], 'authors').replace('"', "'") | safe) }}
+                        {% endcall %}
                     </div>
 
                     <div class="bs-callout bs-callout-info">
@@ -116,19 +108,9 @@
                             <small>{{ 'Matched only' if request.args['words_search'] else 'All related' }}</small>
                         </h4>
 
-                        <ul class="tagcloud">
-                            {% for w in t.words[:30] %}
-                                <li>
-                                    <a href="{{ url_for('word', name=w.w) }}" title="P(w | t) = {{ w.np | round(3) }}" data-size="{{ w.np }}">{{ w.word | safe }}</a>
-                                </li>
-                            {% else %}
-                                <li>Nothing matched</li>
-                            {% endfor %}
-
-                            {% if t.words|length > 30 %}
-                                <li>&hellip;&nbsp;{{ t.words|length - 30 }}&nbsp;more&nbsp;&hellip;</li>
-                            {% endif %}
-                        </ul>
+                        {% call(w) macros.tagcloud(t.words, 30, 'Nothing matched') %}
+                            <a href="{{ url_for('word', name=w.w) }}" title="P(w | t) = {{ w.np | round(3) }}" data-size="{{ w.np }}">{{ w.word | safe }}</a>
+                        {% endcall %}
                     </div>
                 </div>
             </div>

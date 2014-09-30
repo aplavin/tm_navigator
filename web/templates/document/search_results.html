@@ -1,4 +1,5 @@
 {% extends "search_results_base.html" %}
+{% import "macros.html" as macros %}
 
 {% set endpoint = 'documents:search' %}
 
@@ -55,13 +56,9 @@
                             {% endif %}
                         </div>
 
-                        <ul class="tagcloud">
-                            {% for t in topics %}
-                                <li>
-                                    <a href="{{ url_for('topic', name=t.t) }}" title="P(t | d) = {{ t.np | round(3) }}" data-size="{{ t.np }}">{{ t.t }}</a>
-                                </li>
-                            {% endfor %}
-                        </ul>
+                        {% call(t) macros.tagcloud(topics) %}
+                            <a href="{{ url_for('topic', name=t.t) }}" title="P(t | d) = {{ t.np | round(3) }}" data-size="{{ t.np }}">{{ t.t }}</a>
+                        {% endcall %}
                     </div>
 
                     {% set content_hl = hcontent(hit) %}

@@ -1,11 +1,23 @@
 {% macro document_in_tagcloud(slug, np, np_fmt, title, authors) %}
-    <li>
-        <a href="{{ url_for('document', name=slug) }}" data-size="{{ np }}"
-        data-placement="top" data-toggle="tooltip" data-html="true"
-        title="
-        {{ title }}<br/><br/>
-        {{ authors }}<hr/>
-        {{ np_fmt % np }}
-        ">{{ slug }}</a>
-    </li>
+    <a href="{{ url_for('document', name=slug) }}" data-size="{{ np }}"
+    data-placement="top" data-toggle="tooltip" data-html="true"
+    title="
+    {{ title }}<br/><br/>
+    {{ authors }}<hr/>
+    {{ np_fmt % np }}
+    ">{{ slug }}</a>
+{% endmacro %}
+
+{% macro tagcloud(items, limit=None, emptystr=None, additional_class='') %}
+    <ul class="tagcloud {{ additional_class }}">
+        {% for it in (items[:limit] if limit is not none else items) %}
+            <li>{{ caller(it) }}</li>
+        {% else %}
+            <li>{{ (emptystr or '') | safe }}</li>
+        {% endfor %}
+
+        {% if limit is not none and items|length > limit %}
+            <li>&hellip;&nbsp;{{ items|length - limit }}&nbsp;more&nbsp;&hellip;</li>
+        {% endif %}
+    </ul>
 {% endmacro %}
