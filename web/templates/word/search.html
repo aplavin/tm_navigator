@@ -1,0 +1,8 @@
+{% extends "search_base.html" %}
+
+{% set breadcrumbs = [
+    (url_for('words'), 'Words'),
+    'Search'
+] %}
+
+{% set search_url = url_for('words:search_results', query='%s').replace('%25s', '%s') %}

@@ -168,7 +168,6 @@ class TopicView(EntitiesView):
 class DocumentView(EntitiesView):
     ind_by_name = staticmethod(d_by_slug)
     name = 'document'
-    indexname = 'docs'
     search_settings = [
         {
             'mode': 'choice',
@@ -246,6 +245,26 @@ class WordView(EntitiesView):
     ind_by_name = staticmethod(w_by_word)
     get_data = staticmethod(lambda w: {'word': get_words_info([w])[0]})
     name = 'word'
+    search_settings = []
+
+
+    @route('/{name}s/search_results/', endpoint='{name}s:search_results')
+    @route('/{name}s/search_results/<query>', endpoint='{name}s:search_results')
+    def search_results(self, query=''):
+        res = do_search('words', query, ['word', 'word_ngrams'], None, {'sortedby': 'n', 'reverse': True})
+        words = [WordTuple(hit['word'], hit['n'], highlight(hit, 'whole', ['word', 'word_ngrams'], 'word'))
+                 for hit in res['results']]
+
+        ws = [hit['w'] for hit in res['results']]
+        word_infos = get_words_info(ws, ntop=(-1, -1))
+
+        words = [WordTuple(w.w, w.np, w.word, wi.topics, wi.documents)
+                 for w, wi in zip(words, word_infos)]
+
+        return self.render_template(format=format,
+                                    highlight=highlight,
+                                    words=words,
+                                    **res)
 
 
 TopicView.register(app)
