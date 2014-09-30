@@ -237,6 +237,7 @@ class DocumentView(EntitiesView):
 
         res = do_search('docs', query, fields, groupby)
         return self.render_template(format=format,
+                                    query=query,
                                     highlight=highlight,
                                     hcontent=hcontent,
                                     vector_data=lambda hit, field: vector_data('docs', hit, field).starmap(TopicTuple),
@@ -266,6 +267,7 @@ class WordView(EntitiesView):
         return self.render_template(format=format,
                                     highlight=highlight,
                                     words=words,
+                                    query=query,
                                     **res)
 
 

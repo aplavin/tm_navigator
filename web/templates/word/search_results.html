@@ -6,6 +6,7 @@
 {% block body %}
     {% set nmax = words | max(attribute='np') %}
 
+    <h2>{{ 'Matched' if query else 'Top' }} words</h2>
     {% for w in words | sort(attribute='np', reverse=True) %}
         {{ res_cnt_inc() }}
         <div class="panel panel-default">

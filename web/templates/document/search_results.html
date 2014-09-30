@@ -101,6 +101,7 @@
 {% endmacro %}
 
 {% block body %}
+    <h2>{{ 'Matched documents' if query else 'Documents' }}</h2>
     {% if grouped %}
         {% for gr_name, gr_hits in grouped[:groups_max] %}
             <div class="text-center">
