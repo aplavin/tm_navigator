@@ -186,15 +186,6 @@ class DocumentView(EntitiesView):
             'mode': 'bool',
             'name': 'content_search',
             'text': 'In-text search'
-        },
-        {
-            'mode': 'choice',
-            'name': 'format',
-            'options': [
-                {'text': 'Full format', 'value': ''},
-                {'text': 'Short format', 'value': 'short'},
-                {'text': 'Shortest format', 'value': 'shortest'},
-            ]
         }
     ]
     vector_mapf = {'topics': TopicTuple}
