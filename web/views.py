@@ -157,6 +157,8 @@ class TopicView(EntitiesView):
             topics = [TopicTuple(t.t, (t.np, 0), t.documents, topics_info[i].words)
                       for i, t in enumerate(topics)]
 
+        res['results_cnt'] = len(topics)
+
         return self.render_template(highlight=_highlight,
                                     topics=topics,
                                     query=query,
