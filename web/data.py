@@ -179,7 +179,7 @@ def get_doc_content(doc):
     topics_flow = content['pts_glob']
     if topics_flow.ndim == 1:
         topics_flow = topics_flow[:, np.newaxis]
-    wlen = 100
+    wlen = 50
     window = np.bartlett(wlen)
     topics_flow = convolve1d(topics_flow, window / window.sum(), axis=0)
     topics_flow = list( starmap(TopicTuple, zip( [t.t for t in doc.topics], zip(*map(tuple, topics_flow)) )) )
