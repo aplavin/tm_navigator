@@ -7,9 +7,11 @@ from data import (get_topics_all, get_documents_all, get_words_all,
                   get_topics_info, get_docs_info, get_words_info,
                   d_by_slug, w_by_word,
                   get_doc_content,
-                  TopicTuple, DocumentTuple, WordTuple)
-from search import do_search, highlight, vector_data, vector_length
+                  TopicTuple, DocumentTuple, WordTuple,
+                  get as data_get)
+from search import do_search, highlight, vector_data
 from whoosh import sorting
+import numpy as np
 from app import app
 
 
@@ -76,6 +78,11 @@ class TopicView(EntitiesView):
             'mode': 'bool',
             'name': 'content_search',
             'text': 'In-text search'
+        },
+        {
+            'mode': 'bool',
+            'name': 'words_search',
+            'text': 'Search for words also'
         }
     ]
 
@@ -111,8 +118,46 @@ class TopicView(EntitiesView):
                 return hit[fallback]
         _highlight.cnt = 0
 
+        if request.args.get('words_search', False) == 'true':
+            words_res = do_search('words',
+                                  query,
+                                  ['word', 'word_ngrams'],
+                                  None,
+                                  kwargs={'limit': None})
+            ws_matched = np.array(sorted(hit.docnum
+                                         for hit in words_res['results']))
+            highlights = {hit.docnum: _highlight(hit, 'whole', ['word', 'word_ngrams'])
+                          for hit in words_res['results']}
+
+            if len(ws_matched) > 0:
+                ptw_matched = data_get('p_wt')[ws_matched].T
+                ts_matched = ptw_matched.sum(1).argsort()[::-1]
+
+                new_topics = []
+                for t, pw in zip(ts_matched, ptw_matched[ts_matched]):
+                    ws = pw.argsort()[::-1]
+                    pw = pw[ws]
+                    ws = ws_matched[ws]
+
+                    words = [WordTuple(w, p, highlights[w]) for w, p in zip(ws, pw)]
+                    words = filter(lambda w: w.np > 0, words)
+                    new_topics.append(TopicTuple(t, pw.sum(), None, words))
+
+                ts = [t.t for t in topics + new_topics]
+
+                topics = defaultdict(TopicTuple, {t.t: t for t in topics})
+                new_topics = defaultdict(TopicTuple, {unicode(t.t): t for t in new_topics})
+                topics = [TopicTuple(t, (topics[t].np or 0, new_topics[t].np or 0), topics[t].documents or [], new_topics[t].words or [])
+                          for t in ts]
+            else:
+                topics = [TopicTuple(t.t, (t.np, 0), t.documents, [])
+                          for t in topics]
+        else:
+            topics_info = get_topics_info([t.t for t in topics], ntop=(0, -1))
+            topics = [TopicTuple(t.t, (t.np, 0), t.documents, topics_info[i].words)
+                      for i, t in enumerate(topics)]
+
         return self.render_template(highlight=_highlight,
-                                    vector_data=lambda hit, field: vector_data(self.indexname, hit, field).starmap(TopicTuple),
                                     topics=topics,
                                     query=query,
                                     **res)
