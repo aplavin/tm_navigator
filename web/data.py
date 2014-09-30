@@ -205,7 +205,7 @@ def get_words_info(ws, ntop=(-1, -1)):
     topics = pts.argsort(axis=1)[:,::-1]
     if ntop[0] >= 0:
         topics = topics[:,:ntop[0]]
-    topics = [list( starmap(TopicTuple, zipnp(topics_r, pts_r[topics_r])) )
+    topics = [starmap(TopicTuple, izip(topics_r, pts_r[topics_r]))
               for topics_r, pts_r in zip(topics, pts)]
     topics = map(
         lambda topics_r: filter(lambda t: t.np > 0, topics_r),
@@ -216,10 +216,10 @@ def get_words_info(ws, ntop=(-1, -1)):
     if ntop[1] >= 0:
         docs = docs[:,:ntop[1]]
     docsmeta = get('metadata')[docs]
-    docs = [list( starmap(DocumentTuple, zipnp(docs_r, nds_r[docs_r], meta_r)) )
+    docs = [starmap(DocumentTuple, izip(docs_r, nds_r[docs_r], meta_r))
             for docs_r, nds_r, meta_r in zip(docs, nds, docsmeta)]
     docs = map(
-        lambda docs_r: filter(lambda d: d.np > 0, docs_r),
-        docs)
+        lambda (i, docs_r): LazyList(ifilter(lambda d: d.np > 0, docs_r), np.count_nonzero(nds[i])),
+        enumerate(docs))
 
     return list( starmap(WordTuple, zipnp(ws, nw, word, topics, docs)) )
