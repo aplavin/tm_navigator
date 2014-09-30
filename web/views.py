@@ -111,7 +111,7 @@ class TopicView(EntitiesView):
                   for name, hits in res['grouped']]
 
         def _highlight(hit, hl_name, fields, fallback=None):
-            if query and _highlight.cnt < 200:
+            if query and _highlight.cnt < 500:
                 _highlight.cnt += 1
                 return highlight(hit, hl_name, fields, fallback)
             else:
