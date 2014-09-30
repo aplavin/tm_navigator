@@ -3,14 +3,18 @@ import itertools
 class LazyList(object):
     """A Sequence whose values are computed lazily by an iterator.
     """
-    def __init__(self, iterable):
+    def __init__(self, iterable, reallen=None):
         self._exhausted = False
         self._iterator = iter(iterable)
         self._data = []
+        self._reallen = reallen
 
     def __len__(self):
         """Get the length of a LazyList's computed data."""
-        return len(self._data)
+        if self._reallen is None:
+            raise NotImplemented
+        else:
+            return self._reallen
 
     def __getitem__(self, i):
         """Get an item from a LazyList.
@@ -18,7 +22,7 @@ class LazyList(object):
         if isinstance(i, int):
             #index has not yet been yielded by iterator (or iterator exhausted
             #before reaching that index)
-            if i >= len(self):
+            if i >= len(self._data):
                 self.exhaust(i)
             elif i < 0:
                 raise ValueError('cannot index LazyList with negative number')
@@ -60,7 +64,7 @@ class LazyList(object):
     def computed(self):
         """Return an iterator over the values in a LazyList that have
         already been computed."""
-        return self[:len(self)]
+        return self[:len(self._data)]
 
     def exhaust(self, index = None):
         """Exhaust the iterator generating this LazyList's values.
@@ -71,9 +75,9 @@ class LazyList(object):
         if self._exhausted:
             return
         if index is None:
-            ind_range = itertools.count(len(self))
+            ind_range = itertools.count(len(self._data))
         else:
-            ind_range = range(len(self), index + 1)
+            ind_range = range(len(self._data), index + 1)
 
         for ind in ind_range:
             try:
