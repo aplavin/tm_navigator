@@ -82,11 +82,12 @@ def do_search(indexname, query, fields, groupby, kwargs=None):
     else:
         query_parsed = wh_query.Every()
 
-    kwargs = kwargs or {}
+    kwargs_ = {'limit': 50, 'terms': True}
     if groupby:
-        kwargs['groupedby'] = sorting.MultiFacet(items=groupby)
+        kwargs_['groupedby'] = sorting.MultiFacet(items=groupby)
+    kwargs_.update(kwargs or {})
 
-    results = searcher.search(query_parsed, limit=50, terms=True, **kwargs)
+    results = searcher.search(query_parsed, **kwargs_)
 
     if not results:
         corrected = searcher.correct_query(query_parsed, query)
