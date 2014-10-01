@@ -37,7 +37,7 @@
                 </div>
 
                 <div class="panel-body">
-                    <div class="bs-callout bs-callout-info">
+                    <div class="bs-callout bs-callout-{{ macros.colcl('topics') }}">
                         {% set topics = vector_data(hit, 'topics') %}
                         <h4 class="progress-label">Topics:</h4>
                         <div class="progress">
@@ -63,7 +63,7 @@
 
                     {% set content_hl = hcontent(hit) %}
                     {% if content_hl %}
-                        <div class="bs-callout bs-callout-info">
+                        <div class="bs-callout bs-callout-{{ macros.colcl('other') }}">
                             {{ content_hl.strip().replace('\n', '<br/>') | safe }}
                         </div>
                     {% endif %}

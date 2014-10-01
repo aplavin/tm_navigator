@@ -91,7 +91,7 @@
                 </div>
 
                 <div class="panel-body">
-                    <div class="bs-callout bs-callout-info">
+                    <div class="bs-callout bs-callout-{{ macros.colcl('docs') }}">
                         <h4 class="progress-label">
                             Documents<br/>
                             <small>Matched only</small>
@@ -102,7 +102,7 @@
                         {% endcall %}
                     </div>
 
-                    <div class="bs-callout bs-callout-info">
+                    <div class="bs-callout bs-callout-{{ macros.colcl('words') }}">
                         <h4 class="progress-label">
                             Words<br/>
                             <small>{{ 'Matched only' if request.args['words_search'] else 'All related' }}</small>

@@ -12,6 +12,9 @@ app.config.from_pyfile('config.cfg')
 assets = Environment(app)
 toolbar = DebugToolbarExtension(app)
 
+app.jinja_env.trim_blocks = True
+app.jinja_env.lstrip_blocks = True
+
 def debug():
     assert app.debug == False, "Don't panic! You're here by request of debug()"
 

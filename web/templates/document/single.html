@@ -26,7 +26,7 @@
         </div>
 
         <div class="panel-body">
-            <div class="bs-callout bs-callout-info">
+            <div class="bs-callout bs-callout-{{ macros.colcl('topics') }}">
                 <h4>Topics:</h4>
                 <div id="plot-topics" style="height:400px;"></div>
 
@@ -37,7 +37,7 @@
                 <div id="plot-topics-flow" style="height:400px;"></div>
             </div>
 
-            <div class="bs-callout bs-callout-info">
+            <div class="bs-callout bs-callout-{{ macros.colcl('words') }}">
                 <h4>Words:</h4>
                 <div id="plot-words" style="height:400px;"></div>
 
@@ -110,7 +110,7 @@
 {% endmacro %}
 
 {% macro similar() %}
-    <div class="bs-callout bs-callout-info list-group">
+    <div class="bs-callout bs-callout-{{ macros.colcl('topics') }} list-group">
         <h3>Similar topics structure</h3>
 
         {% for d in similar_docs['topics'] %}
@@ -137,7 +137,7 @@
         {% endfor %}
     </div>
 
-    <div class="bs-callout bs-callout-info list-group">
+    <div class="bs-callout bs-callout-{{ macros.colcl('other') }} list-group">
         <h3>By same authors</h3>
 
         {% for d in similar_docs['authors'] %}

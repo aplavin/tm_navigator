@@ -27,7 +27,7 @@
             </div>
 
             <div class="panel-body">
-                <div class="bs-callout bs-callout-info">
+                <div class="bs-callout bs-callout-{{ macros.colcl('topics') }}">
                     <h4 class="progress-label">Topics</h4>
 
                     {% call(t) macros.tagcloud(w.topics) %}
@@ -35,7 +35,7 @@
                     {% endcall %}
                 </div>
 
-                <div class="bs-callout bs-callout-info">
+                <div class="bs-callout bs-callout-{{ macros.colcl('docs') }}">
                     <h4 class="progress-label">Documents</h4>
 
                     {% call(d) macros.tagcloud(w.documents, 20) %}

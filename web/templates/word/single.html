@@ -20,7 +20,7 @@
             </div>
 
             <div class="panel-body">
-                <div class="bs-callout bs-callout-info">
+                <div class="bs-callout bs-callout-{{ macros.colcl('topics') }}">
                     <h4>Topics:</h4>
                     <div id="plot-topics" style="height:400px;"></div>
 
@@ -29,7 +29,7 @@
                     {% endcall %}
                 </div>
 
-                <div class="bs-callout bs-callout-info">
+                <div class="bs-callout bs-callout-{{ macros.colcl('docs') }}">
                     <h4>Documents:</h4>
                     <div id="plot-documents" style="height:400px;"></div>
 

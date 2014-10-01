@@ -21,3 +21,17 @@
         {% endif %}
     </ul>
 {% endmacro %}
+
+{% macro colcl(key) %}
+    {% if key == 'topics' -%}
+        info
+    {%- elif key == 'docs' -%}
+        success
+    {%- elif key == 'words' -%}
+        warning
+    {%- elif key == 'other' -%}
+        danger
+    {%- else -%}
+        default
+    {%- endif %}
+{% endmacro %}
