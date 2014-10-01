@@ -6,10 +6,10 @@ import sys
 from data import (get_topics_all, get_documents_all, get_words_all,
                   get_topics_info, get_docs_info, get_words_info,
                   d_by_slug, w_by_word,
-                  get_doc_content,
+                  get_doc_content, get_doc_similar,
                   TopicTuple, DocumentTuple, WordTuple,
                   get as data_get)
-from search import do_search, highlight, vector_data
+from search import do_search, highlight, vector_data, get_similar
 from whoosh import sorting
 import numpy as np
 from app import app
@@ -199,6 +199,8 @@ class DocumentView(EntitiesView):
         doc = get_docs_info([d])[0]
         data = get_doc_content(doc)
         data.update(doc=doc)
+        data.update(similar_docs={'topics': get_doc_similar(d),
+                                  'authors': [DocumentTuple(hit['d'], hit.score, hit) for hit in get_similar('docs', d, 'authors_tags')][:5]})
         return data
 
 

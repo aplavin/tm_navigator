@@ -10,14 +10,12 @@
     <div class="panel panel-default">
         <div class="panel-heading">
             <h3 class="panel-title">
-                <a href="{{ url_for('document', name=doc.meta['slug']) }}">
-                    {{ doc.meta['title'] }}
-                </a>
+                {{ doc.meta['title'] }}
             </h3>
             {{ doc.meta['slug'] }}
             <div>
-                <a href="{{ url_for('documents:search', query='authors:"%s"' % (doc.meta['author'])) }}">
-                    {{ doc.meta['author'] }}
+                <a href="{{ url_for('documents:search', query='authors:"%s"' % doc.meta['authors']) }}">
+                    {{ doc.meta['authors'] }}
                 </a>
             </div>
             <div>
@@ -111,6 +109,62 @@
     </script>
 {% endmacro %}
 
+{% macro similar() %}
+    <div class="bs-callout bs-callout-info list-group">
+        <h3>Similar topics structure</h3>
+
+        {% for d in similar_docs['topics'] %}
+            <div class="list-group-item">
+                <h4 class="list-group-item-heading">
+                    <a href="{{ url_for('document', name=d.meta['slug']) }}">
+                        {{ d.meta['title'] }}
+                    </a>
+                </h4>
+                <div class="list-group-item-text">
+                    <a href="{{ url_for('documents:search', query='authors:"%s"' % d.meta['authors']) }}">
+                        {{ d.meta['authors'] }}
+                    </a>
+                    |
+                    <a href="{{ url_for('documents:search', query='conference:%s AND year:%s' % (d.meta['conference'], d.meta['year'])) }}">
+                        {{ d.meta['conference'] }},&nbsp;{{ d.meta['year'] }}
+                    </a>
+                </div>
+                <div class="progress small" title="Similarity {{ d.np | round(3) }}">
+                    <div class="progress-bar progress-bar-default" style="width: {{ d.np * 100 }}%">
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="bs-callout bs-callout-info list-group">
+        <h3>By same authors</h3>
+
+        {% for d in similar_docs['authors'] %}
+            <div class="list-group-item">
+                <h4 class="list-group-item-heading">
+                    <a href="{{ url_for('document', name=d.meta['slug']) }}">
+                        {{ d.meta['title'] }}
+                    </a>
+                </h4>
+                <div class="list-group-item-text">
+                    <a href="{{ url_for('documents:search', query='authors:"%s"' % d.meta['authors']) }}">
+                        {{ d.meta.highlights('authors_tags') | safe or d.meta['authors'] }}
+                    </a>
+                    |
+                    <a href="{{ url_for('documents:search', query='conference:%s AND year:%s' % (d.meta['conference'], d.meta['year'])) }}">
+                        {{ d.meta['conference'] }},&nbsp;{{ d.meta['year'] }}
+                    </a>
+                </div>
+                <div class="progress small" title="Similarity {{ d.np | round(3) }}">
+                    <div class="progress-bar progress-bar-default" style="width: {{ d.np * 100 }}%">
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endmacro %}
+
 {% macro content() %}
     <div class="container">
         <div class="well sticky-header">
@@ -157,11 +211,15 @@
         <div class="bs-component">
             <ul class="nav nav-pills">
                 <li class="active"><a href="#overview" data-toggle="tab">Overview</a></li>
+                <li><a href="#similar" data-toggle="tab">Similar</a></li>
                 <li><a href="#content" data-toggle="tab">Content</a></li>
             </ul>
             <div class="tab-content" style="padding: 10px;">
                 <div class="tab-pane fade active in" id="overview">
                     {{ overview() }}
+                </div>
+                <div class="tab-pane fade" id="similar">
+                    {{ similar() }}
                 </div>
                 <div class="tab-pane fade" id="content">
                     {{ content() }}
