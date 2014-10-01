@@ -144,7 +144,17 @@ function search_settings_display_from_args(args) {
 $(function () {
     var args = $.parseParams();
     search_settings_display_from_args(args);
-})
+});
+
+var search_timer;
+
+function trigger_search(delay, args) {
+    $('#search-results').fadeOut(500);
+    $('#search-loading').fadeIn(200);
+    $('#search-error').hide();
+    clearTimeout(search_timer);
+    search_timer = setTimeout(function () { search(args); }, delay);
+}
 
 function init_search() {
     $('a[data-switch-name]').each(function () {
@@ -156,7 +166,8 @@ function init_search() {
             $(this).data('switch-selected', !enabled);
             var args = Object();
             args[name] = !enabled;
-            search(args);
+
+            trigger_search(0, args);
         });
     });
     $('div[data-switch-name]').each(function () {
@@ -169,16 +180,12 @@ function init_search() {
             elem.data('switch-selected', selected);
             var args = Object();
             args[name] = selected;
-            search(args);
+
+            trigger_search(0, args);
         });
     });
 
-    var search_timer;
     $('#search-input').on('input', function () {
-        $('#search-results').fadeOut(500);
-        $('#search-loading').fadeIn(200);
-        $('#search-error').hide();
-        clearTimeout(search_timer);
-        search_timer = setTimeout(search, 1000);
+        trigger_search(1000);
     });
 }
