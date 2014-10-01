@@ -29,6 +29,13 @@ def zipnp(*arrs):
     return zip(*lsts)
 
 
+def hellinger_distances_matrix(vectors):
+    vectors = np.sqrt(vectors)
+    dists = vectors.dot(vectors.T)
+    np.sqrt(1 - dists, dists)
+    return dists
+
+
 datasets_cache = {}
 
 
@@ -139,6 +146,16 @@ def get_docs_info(ds, ntop=(-1, -1)):
         enumerate(words))
 
     return list( starmap(DocumentTuple, zipnp(ds, nd, meta, topics, words)) )
+
+
+def get_doc_similar(d):
+    ptd = get('p_td')
+    dists = hellinger_distances_matrix(ptd.T)[d]
+    ds = dists.argsort()[1:6]
+    docs = get_docs_info(ds)
+    for dist, doc in zip(dists[ds], docs):
+        doc.np = 1 - dist
+    return docs
 
 
 def get_doc_content(doc):

@@ -1,5 +1,5 @@
 from lazylist import LazyList
-from whoosh import (analysis, formats, index, qparser, sorting,
+from whoosh import (analysis, formats, index, qparser, sorting, scoring,
                     query as wh_query, highlight as wh_highlight)
 
 
@@ -121,3 +121,30 @@ def do_search(indexname, query, fields, groupby, kwargs=None):
         results=results,
         results_cnt=results_cnt,
         corrected=corrected)
+
+
+def get_similar(indexname, docnum, fieldname):
+    searcher = get_searcher(indexname)
+
+    def weightlen_score_fn(searcher, fieldname, text, matcher):
+        w = matcher.weight()
+        l = searcher.doc_field_length(matcher.id(), fieldname, 0)
+        return (w - (1.0 * l / searcher.max_field_length(fieldname))) / score_max
+
+    wl_weighting = scoring.FunctionWeighting(weightlen_score_fn)
+
+    old_weighting = searcher.weighting
+    searcher.weighting = wl_weighting
+
+    vec = searcher.vector(docnum, fieldname)
+    cur_values = list(vec.all_ids())
+
+    score_max = len(cur_values) * (1 - 1.0 * len(cur_values) / searcher.max_field_length(fieldname))
+
+    query = wh_query.Or([wh_query.Term(fieldname, term) for term in cur_values])
+    results = searcher.search(query, limit=None, mask={docnum})
+    results.highlighter.fragmenter = wh_highlight.WholeFragmenter()
+
+    searcher.weighting = old_weighting
+
+    return results
