@@ -132,11 +132,11 @@ def get_docs_info(ds, ntop=(-1, -1)):
     if ntop[1] >= 0:
         ws = ws[:,:ntop[1]]
     words = get('dictionary')[ws]
-    words = [list( starmap(WordTuple, zipnp(ws_r, nws_r[ws_r], words_r)) )
+    words = [starmap(WordTuple, izip(ws_r, nws_r[ws_r], words_r))
              for ws_r, nws_r, words_r in zip(ws, nws, words)]
     words = map(
-        lambda words_r: filter(lambda w: w.np > 0, words_r),
-        words)
+        lambda (i, words_r): LazyList(ifilter(lambda w: w.np > 0, words_r), np.count_nonzero(nws[i])),
+        enumerate(words))
 
     return list( starmap(DocumentTuple, zipnp(ds, nd, meta, topics, words)) )
 
