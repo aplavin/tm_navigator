@@ -146,7 +146,7 @@
 
 
 {% block head %}
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='docsdata/%s.css' % filename) }}">
+<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='docsdata/%s.css' % doc.meta['filename']) }}">
 {% endblock %}
 
 
