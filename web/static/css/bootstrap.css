@@ -4806,7 +4806,7 @@ a.thumbnail.active {
   /*background-color: #ffffff;*/
   border: 1px solid #dddddd;
 }
-.list-group-item:first-child {
+.list-group-item:first-of-type {
   border-top-right-radius: 4px;
   border-top-left-radius: 4px;
 }
