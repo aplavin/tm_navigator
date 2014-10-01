@@ -64,6 +64,11 @@ function process_data_color(mode) {
 $(process_data_color);
 
 
+$(function () {
+    $('#content h1 br').replaceWith(' ');
+});
+
+
 function process_tagclouds() {
     $('.tagcloud').each(function process_tagcloud() {
         var valprefix = $(this).data('valprefix');
@@ -187,3 +192,7 @@ $(function () {
         });
     });
 });
+
+$(function () {
+    $('[data-toggle=tooltip]').tooltip();
+})

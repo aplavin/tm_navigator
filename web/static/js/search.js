@@ -175,12 +175,3 @@ function init_search() {
     });
     $('#search-input').on('input', function () { search(); });
 }
-
-$(function () {
-    $('[data-toggle=tooltip]').tooltip();
-})
-
-
-$(function () {
-    $('#content h1 br').replaceWith(' ');
-});
