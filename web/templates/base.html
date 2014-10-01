@@ -9,12 +9,13 @@
         {% endassets %}
 
         {% assets filters='jsmin',
-              output='js/packed.js',
-              'js/jquery-2.1.1.min.js',
-              'js/highcharts.js', 'js/drilldown.js',
-              'js/bootstrap.min.js',
-              'js/index.js',
-              'js/sprintf.js', 'js/tinycolor.js', 'js/custom.js' %}
+              output='js/_packed.js',
+              'js/libs/jquery-2.1.1.min.js',
+              'js/libs/highcharts.js', 'js/lib/drilldown.js',
+              'js/libs/bootstrap.min.js',
+              'js/libs/index.js',
+              'js/libs/sprintf.js', 'js/libs/tinycolor.js',
+              'js/common.js', 'js/plots.js', 'js/search.js' %}
             <script src="{{ ASSET_URL }}"></script>
         {% endassets %}
 
