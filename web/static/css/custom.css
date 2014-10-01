@@ -104,7 +104,11 @@ thead th {
     display: block;
     width: 100%;
     color: black;
- }
+}
+
+.progress.small {
+    height: 10px;
+}
 
 .tooltip h4 {
     color: white;
@@ -117,7 +121,7 @@ thead th {
 .bs-callout {
     padding: 10px;
     margin: 0;
-    margin-bottom: 2px;
+    margin-bottom: 8px;
     border: 1px solid #eee;
     border-left-width: 5px;
     border-radius: 3px;
