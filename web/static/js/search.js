@@ -188,4 +188,12 @@ function init_search() {
     $('#search-input').on('input', function () {
         trigger_search(1000);
     });
-}
+
+    $('#search-input').autocomplete({
+        serviceUrl: '../search_completions.json',
+        minChars: 0,
+        delimiter: ' ',
+        maxHeight: 1000,
+        triggerSelectOnValidInput: false
+    });
+};

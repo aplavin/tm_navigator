@@ -148,3 +148,21 @@ def get_similar(indexname, docnum, fieldname):
     searcher.weighting = old_weighting
 
     return results
+
+
+def get_completions(indexname, fields, prefix, as_flat=False):
+    searcher = get_searcher(indexname)
+
+    seen_terms = set()
+    for field in fields:
+        expansions =((term, searcher.frequency(field, term))
+                     for term in searcher.reader().expand_prefix(field, prefix)
+                     if '.' not in term and term not in seen_terms)
+        expansions = sorted(expansions, key=lambda (t, f): f, reverse=True)
+        seen_terms.update(t for t, f in expansions)
+
+        if as_flat:
+            for t, f in expansions:
+                yield field, t, f
+        else:
+            yield (field, expansions)

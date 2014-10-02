@@ -1,15 +1,16 @@
-from flask import render_template, request
+from flask import render_template, request, jsonify
 from flask.ext.classy import FlaskView, route
 from collections import defaultdict
 import traceback
 import sys
+from lazylist import LazyList
 from data import (get_topics_all, get_documents_all, get_words_all,
                   get_topics_info, get_docs_info, get_words_info,
                   d_by_slug, w_by_word,
                   get_doc_content, get_doc_similar,
                   TopicTuple, DocumentTuple, WordTuple,
                   get as data_get)
-from search import do_search, highlight, vector_data, get_similar
+from search import do_search, highlight, vector_data, get_similar, get_completions
 from whoosh import sorting
 import numpy as np
 from app import app
@@ -67,6 +68,13 @@ class EntitiesView(FlaskView):
             settings=self.search_settings,
             results_page=self.search_results(query)
         )
+
+
+    @route('/{name}s/search_completions.json')
+    def search_completions(self):
+        query = request.args['query']
+        completions = LazyList(get_completions('docs', ['authors', 'title', 'content'], query, as_flat=True))
+        return jsonify(suggestions=list(term for field, term, freq in completions[:10]))
 
 
 class TopicView(EntitiesView):

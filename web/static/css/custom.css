@@ -176,3 +176,24 @@ thead th {
     padding: 0;
     margin-bottom: 1px;
 }
+
+.autocomplete-suggestions {
+    border: 1px solid #999;
+    background: #fff;
+    cursor: default;
+}
+
+.autocomplete-suggestion {
+    padding: 5px;
+    /*font-size: 1.2em;*/
+    white-space: nowrap;
+}
+
+.autocomplete-selected {
+    background: #f0f0f0;
+}
+
+.autocomplete-suggestions strong {
+    font-weight: normal;
+    background-color: #ff6;
+}
