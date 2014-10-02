@@ -190,7 +190,7 @@ function init_search() {
     });
 
     $('#search-input').autocomplete({
-        serviceUrl: '../search_completions.json',
+        serviceUrl: $('#search-input').data('search-completions-url'),
         minChars: 0,
         delimiter: ' ',
         maxHeight: 1000,
