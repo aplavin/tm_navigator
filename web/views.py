@@ -7,7 +7,8 @@ from lazylist import LazyList
 from data import (get_topics_all, get_documents_all, get_words_all,
                   get_topics_info, get_docs_info, get_words_info,
                   d_by_slug, w_by_word,
-                  get_doc_content, get_doc_similar, get_topic_similar,
+                  get_doc_content,
+                  get_doc_similar, get_topic_similar, get_word_similar,
                   TopicTuple, DocumentTuple, WordTuple,
                   get as data_get)
 from search import do_search, highlight, vector_data, get_similar, get_completions
@@ -262,9 +263,17 @@ class DocumentView(EntitiesView):
 
 class WordView(EntitiesView):
     ind_by_name = staticmethod(w_by_word)
-    get_data = staticmethod(lambda w: {'word': get_words_info([w])[0]})
     name = 'word'
     search_settings = []
+
+
+    @staticmethod
+    def get_data(w):
+        data = {
+            'word': get_words_info([w])[0],
+            'similar_words': {'topics': get_word_similar(w)}
+        }
+        return data
 
 
     @route('/{name}s/search_results/', endpoint='{name}s:search_results')

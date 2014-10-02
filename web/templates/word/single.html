@@ -6,37 +6,35 @@
     'Word "%s"' % word.word
 ] %}
 
-{% block body %}
-    <div class="container">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">
-                    Word:
-                    <a href="{{ url_for('word', name=word.word) }}">
-                        {{ word.word }}
-                    </a>
-                </h3>
-                Number of occurrences = {{ word.np }}
+{% macro overview() %}
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h3 class="panel-title">
+                Word:
+                <a href="{{ url_for('word', name=word.word) }}">
+                    {{ word.word }}
+                </a>
+            </h3>
+            Number of occurrences = {{ word.np }}
+        </div>
+
+        <div class="panel-body">
+            <div class="bs-callout bs-callout-{{ macros.colcl('topics') }}">
+                <h4>Topics:</h4>
+                <div id="plot-topics" style="height:400px;"></div>
+
+                {% call(t) macros.tagcloud(word.topics) %}
+                    <a href="{{ url_for('topic', name=t.t) }}" title="P(w | t) = {{ t.np | round(4) }}" data-size="{{ t.np }}">{{ t.t }}</a>
+                {% endcall %}
             </div>
 
-            <div class="panel-body">
-                <div class="bs-callout bs-callout-{{ macros.colcl('topics') }}">
-                    <h4>Topics:</h4>
-                    <div id="plot-topics" style="height:400px;"></div>
+            <div class="bs-callout bs-callout-{{ macros.colcl('docs') }}">
+                <h4>Documents:</h4>
+                <div id="plot-documents" style="height:400px;"></div>
 
-                    {% call(t) macros.tagcloud(word.topics) %}
-                        <a href="{{ url_for('topic', name=t.t) }}" title="P(w | t) = {{ t.np | round(4) }}" data-size="{{ t.np }}">{{ t.t }}</a>
-                    {% endcall %}
-                </div>
-
-                <div class="bs-callout bs-callout-{{ macros.colcl('docs') }}">
-                    <h4>Documents:</h4>
-                    <div id="plot-documents" style="height:400px;"></div>
-
-                    {% call(d) macros.tagcloud(word.documents, additional_class='collapsed') %}
-                        {{ macros.document_in_tagcloud(d.meta['slug'], d.np, 'N_wd = %d', d.meta['title'], d.meta['authors']) }}
-                    {% endcall %}
-                </div>
+                {% call(d) macros.tagcloud(word.documents, additional_class='collapsed') %}
+                    {{ macros.document_in_tagcloud(d.meta['slug'], d.np, 'N_wd = %d', d.meta['title'], d.meta['authors']) }}
+                {% endcall %}
             </div>
         </div>
     </div>
@@ -77,4 +75,48 @@
             );
         });
     </script>
+{% endmacro %}
+
+
+{% macro similar() %}
+    <div class="bs-callout bs-callout-{{ macros.colcl('topics') }} list-group">
+        <h3>Used in same topics</h3>
+
+        {% for w in similar_words['topics'] %}
+            <div class="list-group-item">
+                <h4 class="list-group-item-heading">
+                    <a href="{{ url_for('word', name=w.word) }}">
+                        {{ w.word }}
+                    </a>
+                </h4>
+                <div class="progress small" title="Similarity {{ w.np | round(3) }}">
+                    <div class="progress-bar progress-bar-default" style="width: {{ w.np * 100 }}%">
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endmacro %}
+
+
+{% block body %}
+<div class="container">
+    <div>
+        <h3>Word: {{ word.word }}</h3>
+        <div class="bs-component">
+            <ul class="nav nav-pills">
+                <li class="active"><a href="#overview" data-toggle="tab">Overview</a></li>
+                <li><a href="#similar" data-toggle="tab">Similar</a></li>
+            </ul>
+            <div class="tab-content" style="padding: 10px;">
+                <div class="tab-pane fade active in" id="overview">
+                    {{ overview() }}
+                </div>
+                <div class="tab-pane fade" id="similar">
+                    {{ similar() }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
