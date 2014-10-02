@@ -29,9 +29,9 @@ def zipnp(*arrs):
     return zip(*lsts)
 
 
-def hellinger_distances_matrix(vectors):
+def hellinger_distances(vectors, ind):
     vectors = np.sqrt(vectors)
-    dists = vectors.dot(vectors.T)
+    dists = vectors[ind].dot(vectors.T)
     np.sqrt(1 - dists, dists)
     return dists
 
@@ -150,7 +150,7 @@ def get_docs_info(ds, ntop=(-1, -1)):
 
 def get_doc_similar(d):
     ptd = get('p_td')
-    dists = hellinger_distances_matrix(ptd.T)[d]
+    dists = hellinger_distances(ptd.T, d)
     ds = dists.argsort()[1:6]
     docs = get_docs_info(ds)
     for dist, doc in zip(dists[ds], docs):
