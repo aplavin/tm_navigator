@@ -6,35 +6,31 @@
     'Topic'
 ] %}
 
-{% block body %}
-    <div class="container">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">
-                    <a href="{{ url_for('topic', name=topic.t) }}">
-                        Topic #{{ topic.t }}
-                    </a>
-                </h3>
-                P(t) = {{ topic.np | round(3) }}
+{% macro overview() %}
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h3 class="panel-title">
+                Topic #{{ topic.t }}
+            </h3>
+            P(t) = {{ topic.np | round(3) }}
+        </div>
+
+        <div class="panel-body">
+            <div class="bs-callout bs-callout-{{ macros.colcl('docs') }}">
+                <h4>Documents:</h4>
+                <div id="plot-documents" style="height:400px;"></div>
+
+                {% call(d) macros.tagcloud(topic.documents, additional_class='collapsed') %}
+                    {{ macros.document_in_tagcloud(d.meta['slug'], d.np, 'P(t | d) = %.3f', d.meta['title'], d.meta['authors']) }}
+                {% endcall %}
             </div>
 
-            <div class="panel-body">
-                <div class="bs-callout bs-callout-{{ macros.colcl('docs') }}">
-                    <h4>Documents:</h4>
-                    <div id="plot-documents" style="height:400px;"></div>
+            <div class="bs-callout bs-callout-{{ macros.colcl('words') }}">
+                <h4>Words:</h4>
 
-                    {% call(d) macros.tagcloud(topic.documents, additional_class='collapsed') %}
-                        {{ macros.document_in_tagcloud(d.meta['slug'], d.np, 'P(t | d) = %.3f', d.meta['title'], d.meta['authors']) }}
-                    {% endcall %}
-                </div>
-
-                <div class="bs-callout bs-callout-{{ macros.colcl('words') }}">
-                    <h4>Words:</h4>
-
-                    {% call(w) macros.tagcloud(topic.words, additional_class='collapsed') %}
-                        <a href="{{ url_for('word', name=w.word) }}" title="P(w | t) = {{ w.np | round(4) }}" data-size="{{ w.np }}">{{ w.word }}</a>
-                    {% endcall %}
-                </div>
+                {% call(w) macros.tagcloud(topic.words, additional_class='collapsed') %}
+                    <a href="{{ url_for('word', name=w.word) }}" title="P(w | t) = {{ w.np | round(4) }}" data-size="{{ w.np }}">{{ w.word }}</a>
+                {% endcall %}
             </div>
         </div>
     </div>
@@ -57,4 +53,48 @@
             );
         });
     </script>
+{% endmacro %}
+
+
+{% macro similar() %}
+    <div class="bs-callout bs-callout-{{ macros.colcl('words') }} list-group">
+        <h3>Similar words structure</h3>
+
+        {% for t in similar_topics['words'] %}
+            <div class="list-group-item">
+                <h4 class="list-group-item-heading">
+                    <a href="{{ url_for('topic', name=t.t) }}">
+                        Topic #{{ t.t }}
+                    </a>
+                </h4>
+                <div class="progress small" title="Similarity {{ t.np | round(3) }}">
+                    <div class="progress-bar progress-bar-default" style="width: {{ t.np * 100 }}%">
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endmacro %}
+
+
+{% block body %}
+<div class="container">
+    <div>
+        <h3>Topic #{{ topic.t }}</h3>
+        <div class="bs-component">
+            <ul class="nav nav-pills">
+                <li class="active"><a href="#overview" data-toggle="tab">Overview</a></li>
+                <li><a href="#similar" data-toggle="tab">Similar</a></li>
+            </ul>
+            <div class="tab-content" style="padding: 10px;">
+                <div class="tab-pane fade active in" id="overview">
+                    {{ overview() }}
+                </div>
+                <div class="tab-pane fade" id="similar">
+                    {{ similar() }}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

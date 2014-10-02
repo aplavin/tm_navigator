@@ -114,6 +114,16 @@ def get_topics_info(ts, ntop=(-1, -1)):
     return list( starmap(TopicTuple, zip(ts, pt, docs, words)) )
 
 
+def get_topic_similar(t):
+    pwt = get('p_wt')
+    dists = hellinger_distances(pwt.T, t)
+    ts = dists.argsort()[1:6]
+    topics = get_topics_info(ts)
+    for dist, topic in zip(dists[ts], topics):
+        topic.np = 1 - dist
+    return topics
+
+
 def d_by_slug(slug):
     slugs = h5f['metadata']['slug']
     d = np.nonzero(slugs == slug)[0][0]

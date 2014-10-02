@@ -7,7 +7,7 @@ from lazylist import LazyList
 from data import (get_topics_all, get_documents_all, get_words_all,
                   get_topics_info, get_docs_info, get_words_info,
                   d_by_slug, w_by_word,
-                  get_doc_content, get_doc_similar,
+                  get_doc_content, get_doc_similar, get_topic_similar,
                   TopicTuple, DocumentTuple, WordTuple,
                   get as data_get)
 from search import do_search, highlight, vector_data, get_similar, get_completions
@@ -96,6 +96,15 @@ class TopicView(EntitiesView):
         }
     ]
     completions_args = {'indexname': 'docs', 'fields': ['authors', 'title', 'content']}
+
+
+    @staticmethod
+    def get_data(t):
+        data = {
+            'topic': get_topics_info([t])[0],
+            'similar_topics': {'words': get_topic_similar(t)}
+        }
+        return data
 
 
     @route('/{name}s/search_results/', endpoint='{name}s:search_results')
