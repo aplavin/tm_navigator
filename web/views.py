@@ -72,6 +72,8 @@ class EntitiesView(FlaskView):
 
     @route('/{name}s/search_completions.json', endpoint='{name}s:search_completions')
     def search_completions(self):
+        if not hasattr(self, 'completions_args'):
+            return jsonify(suggestions=[])
         query = request.args['query']
         completions = LazyList(get_completions(prefix=query, as_flat=True, **self.completions_args))
         return jsonify(suggestions=list(term for field, term, freq in completions[:10]))
@@ -254,7 +256,6 @@ class WordView(EntitiesView):
     get_data = staticmethod(lambda w: {'word': get_words_info([w])[0]})
     name = 'word'
     search_settings = []
-    completions_args = {'indexname': 'words', 'fields': ['word']}
 
 
     @route('/{name}s/search_results/', endpoint='{name}s:search_results')
