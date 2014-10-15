@@ -267,7 +267,6 @@ def get_word_similar(w):
     dists = hellinger_distances(ptw, w)
     ws = dists.argsort()[1:11]
     words = get_words_info(ws)
-    print dists.min(), dists.max()
     for dist, word in zip(dists[ws], words):
         word.np = 1 - dist
     return words
