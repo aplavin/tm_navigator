@@ -197,3 +197,9 @@ thead th {
     font-weight: normal;
     background-color: #ff6;
 }
+
+.progress-bar-p1 { background-color: #57a9e2; }
+.progress-bar-p2 { background-color: #ffb574; }
+.progress-bar-p3 { background-color: #5fd35f; }
+.progress-bar-p4 { background-color: #e77c7d; }
+.progress-bar-p5 { background-color: #c6aedc; }

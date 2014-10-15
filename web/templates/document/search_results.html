@@ -43,7 +43,7 @@
                         <div class="progress">
                             {% for t in topics[:5] %}
                                 <a href="{{ url_for('topic', name=t.t) }}">
-                                <div class="progress-bar progress-bar-{{ loop.cycle('default', 'info', 'success', 'warning', 'danger') }}" style="width: {{ t.np * 100 }}%"
+                                <div class="progress-bar progress-bar-p{{ loop.index }}" style="width: {{ t.np * 100 }}%"
                                 data-placement="top" data-toggle="tooltip" data-html="true"
                                 title="<h4>Topic #{{ t.t }}</h4>P(t | d) = {{ t.np | round(3) }}">
                                 </div>
