@@ -1,23 +1,4 @@
 function createPieChart(container, title, ttipNames, data) {
-    var cnt = 15;
-    // var threshold = 0.01;
-
-    // var total = data.reduce(function(total, cur) { return total + cur.y; }, 0);
-    // var cntThresh = data.filter(
-    //     function (point) { return point.y / total > threshold; }
-    // ).length;
-    // cnt = Math.min(cnt, cntThresh);
-
-    if (cnt < data.length - 3) {
-        var drilldown = data.slice(cnt);
-        var ddown_item = {
-            name: 'Other',
-            drilldown: 'smaller',
-            y: drilldown.reduce(function(total, cur) { return total + cur.y; }, 0)
-        };
-        data = data.slice(0, cnt).concat([ddown_item]);
-    }
-
     function labelf() {
         var point = this.point;
         if (point.name == 'Other') {
@@ -44,6 +25,7 @@ function createPieChart(container, title, ttipNames, data) {
         },
         series: [
             {
+                innerSize: '100%',
                 data: data
             }
         ],
@@ -53,7 +35,11 @@ function createPieChart(container, title, ttipNames, data) {
                 cursor: 'pointer',
                 dataLabels: {
                     formatter: labelf
-                }
+                },
+                startAngle: -90,
+                endAngle: 90,
+                size: '200%',
+                center: ['50%', '100%']
             },
             series: {
                 point: {
@@ -64,12 +50,6 @@ function createPieChart(container, title, ttipNames, data) {
                     }
                 }
             }
-        },
-        drilldown: {
-            series: [{
-                id: 'smaller',
-                data: drilldown
-            }]
         }
     });
 }

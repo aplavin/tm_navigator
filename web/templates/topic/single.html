@@ -18,7 +18,7 @@
         <div class="panel-body">
             <div class="bs-callout bs-callout-{{ macros.colcl('docs') }}">
                 <h4>Documents:</h4>
-                <div id="plot-documents" style="height:400px;"></div>
+                <div id="plot-documents" style="height:250px;"></div>
 
                 {% call(d) macros.tagcloud(topic.documents, additional_class='collapsed') %}
                     {{ macros.document_in_tagcloud(d.meta['slug'], d.np, 'P(t | d) = %.3f', d.meta['title'], d.meta['authors']) }}

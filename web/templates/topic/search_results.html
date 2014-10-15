@@ -10,7 +10,7 @@
         <h2>Distribution overview</h2>
 
         {% if pmax[0] > 0 %}
-            <div id="plot-topics-docs" style="height:400px;"></div>
+            <div id="plot-topics-docs" style="height:250px;"></div>
             <script type="text/javascript">
                 $(function () {
                     createPieChart(
@@ -32,7 +32,7 @@
         {% endif %}
 
         {% if pmax[1] > 0 %}
-            <div id="plot-topics-words" style="height:400px;"></div>
+            <div id="plot-topics-words" style="height:250px;"></div>
             <script type="text/javascript">
                 {% if pmax[1] > 0 %}
                     $(function () {
