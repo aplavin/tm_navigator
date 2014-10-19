@@ -8,7 +8,7 @@
             <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}">
         {% endassets %}
 
-        {% assets filters='jsmin',
+        {% assets filters='rjsmin',
               output='js/_packed.js',
               'js/libs/jquery-2.1.1.js',
               'js/libs/highcharts.js', 'js/libs/drilldown.js',
