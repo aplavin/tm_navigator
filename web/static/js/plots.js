@@ -214,6 +214,38 @@ Highcharts.SparkLine = function (options, callback) {
     return new Highcharts.Chart(options, callback);
 };
 
+function process_sparklines() {
+    var time = +new Date();
+    chunk($('.sparkline').get(), function () {
+        if ($(this).data('hlite-tag')) {
+            var tagcloud = $(this).next('.tagcloud');
+        }
+        $(this).highcharts('SparkLine', {
+            chart: {
+                type: $(this).data('type')
+            },
+            xAxis: {
+                categories: $(this).attr('data-xvals').split(',')
+            },
+            series: [{
+                data: $(this).attr('data-yvals').split(',').map(parseFloat)
+            }],
+            titles: $(this).data('titles').split(',')
+        });
+        if ($(this).data('hlite-tag')) {
+            var hc = $(this).highcharts();
+            tagcloud.find('li').hover(function () {
+                hc.series[0].data[$(this).index()].select(true);
+            },
+            function () {
+                hc.series[0].data[$(this).index()].select(false);
+            });
+        }
+    });
+}
+
+$(process_sparklines);
+
 $(function () {
     $('.similarity-chart').each(function () {
         var val = parseFloat($(this).data('value'));
