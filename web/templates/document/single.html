@@ -95,6 +95,7 @@
 
         {% for d in similar_docs['topics'] %}
             <div class="list-group-item">
+                <span class="pull-right similarity-chart" data-value="{{ d.np }}"></span>
                 <h4 class="list-group-item-heading">
                     <a href="{{ url_for('document', name=d.meta['slug']) }}">
                         {{ d.meta['title'] }}
@@ -109,10 +110,6 @@
                         {{ d.meta['conference'] }},&nbsp;{{ d.meta['year'] }}
                     </a>
                 </div>
-                <div class="progress small" title="Similarity {{ d.np | round(3) }}">
-                    <div class="progress-bar progress-bar-default" style="width: {{ d.np * 100 }}%">
-                    </div>
-                </div>
             </div>
         {% endfor %}
     </div>
@@ -122,6 +119,7 @@
 
         {% for d in similar_docs['authors'] %}
             <div class="list-group-item">
+                <span class="pull-right similarity-chart" data-value="{{ d.np }}"></span>
                 <h4 class="list-group-item-heading">
                     <a href="{{ url_for('document', name=d.meta['slug']) }}">
                         {{ d.meta['title'] }}
@@ -135,10 +133,6 @@
                     <a href="{{ url_for('documents:search', query='conference:%s AND year:%s' % (d.meta['conference'], d.meta['year'])) }}">
                         {{ d.meta['conference'] }},&nbsp;{{ d.meta['year'] }}
                     </a>
-                </div>
-                <div class="progress small" title="Similarity {{ d.np | round(3) }}">
-                    <div class="progress-bar progress-bar-default" style="width: {{ d.np * 100 }}%">
-                    </div>
                 </div>
             </div>
         {% endfor %}
