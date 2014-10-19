@@ -117,7 +117,7 @@ def get_topics_info(ts, ntop=(-1, -1)):
 def get_topic_similar(t):
     pwt = get('p_wt')
     dists = hellinger_distances(pwt.T, t)
-    ts = dists.argsort()[1:11]
+    ts = dists.argsort()[1:13]
     topics = get_topics_info(ts)
     for dist, topic in zip(dists[ts], topics):
         topic.np = 1 - dist
