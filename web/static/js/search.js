@@ -105,6 +105,9 @@ function search(new_args) {
         $('#search-results').fadeIn(200);
         process_tagclouds();
         process_sparklines();
+        setTimeout(function () {
+            $('.highcharts-container').parent().highcharts().reflow();
+        });
         $('[data-toggle=tooltip]').tooltip({ container: 'body' });
     }).error(function (xhr, type, exception) {
         $('#search-error').show();
