@@ -27,6 +27,7 @@
 
             <div class="bs-callout bs-callout-{{ macros.colcl('words') }}">
                 <h4>Words:</h4>
+                <div id="plot-words" style="height:250px;"></div>
 
                 {% call(w) macros.tagcloud(topic.words, additional_class='collapsed') %}
                     <a href="{{ url_for('word', name=w.word) }}" title="P(w | t) = {{ w.np | round(4) }}" data-size="{{ w.np }}">{{ w.word }}</a>
@@ -47,6 +48,24 @@
                             name: '{{ d.meta['slug'] }}',
                             y: {{ d.np | round(3) }},
                             url: '{{ url_for('document', name=d.meta['slug']) }}'
+                        },
+                    {% endfor %}
+                ],
+                1
+            );
+        });
+
+        $(function () {
+            createPieChart(
+                $('#plot-words'),
+                'Words distribution',
+                ['w', 'P(w | t)'],
+                [
+                    {% for w in topic.words[:500] | sort(attribute='np', reverse=True)  %}
+                        {
+                            name: '{{ w.word }}',
+                            y: {{ w.np | round(3) }},
+                            url: '{{ url_for('word', name=w.word) }}'
                         },
                     {% endfor %}
                 ]

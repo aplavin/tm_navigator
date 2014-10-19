@@ -1,20 +1,12 @@
-function createPieChart(container, title, ttipNames, data) {
-    function labelf() {
-        var point = this.point;
-        if (point.name == 'Other') {
-            return sprintf('Other: %d items', drilldown.length);
-        } else if (!isNaN(point.name)) {
-            return sprintf('<b>%s = %s</b>: %s = %s', ttipNames[0], point.name, ttipNames[1], point.y);
-        } else {
-            return sprintf('<b>%s</b>: %s = %s', point.name, ttipNames[1], point.y);
-        }
-    }
-
+function createPieChart(container, title, ttipNames, data, max, showx) {
     container.highcharts({
         chart: {
-            type: 'pie'
+            type: 'column',
         },
         credits: {
+            enabled: false
+        },
+        legend: {
             enabled: false
         },
         title: {
@@ -22,35 +14,75 @@ function createPieChart(container, title, ttipNames, data) {
         },
         tooltip: {
             enabled: false
+            // formatter: labelf
+        },
+        xAxis: {
+            labels: {
+                enabled: showx || 0
+            },
+            title: {
+                text: ttipNames[0]
+            },
+            categories: data.map(function (it) { return it.name; })
+        },
+        yAxis: {
+            title: {
+                text: ttipNames[1]
+            },
+            max: max || null,
+            min: 0
         },
         series: [
             {
-                innerSize: '100%',
-                data: data
+                data: data,
+                color: '#5bc0de'
             }
         ],
         plotOptions: {
-            pie: {
-                allowPointSelect: true,
-                cursor: 'pointer',
-                dataLabels: {
-                    formatter: labelf
-                },
-                startAngle: -90,
-                endAngle: 90,
-                size: '200%',
-                center: ['50%', '100%']
-            },
             series: {
                 point: {
                     events: {
                         click: function () {
                             location.href = this.options.url;
+                        },
+                        mouseOver: function () {
+                            var name = this.name;
+                            var elem = tagcloud.find('a').filter(function () {
+                                return $(this).text() == name;
+                            });
+                            elem.css('font-weight', 'bold');
+                        },
+                        mouseOut: function () {
+                            var name = this.name;
+                            var elem = tagcloud.find('a').filter(function () {
+                                return $(this).text() == name;
+                            });
+                            elem.css('font-weight', 'normal');
                         }
                     }
+                },
+                states: {
+                    select: {
+                        color: '#eb6864',
+                        borderColor: '#eb6864'
+                    }
                 }
+            },
+            column: {
+                animation: false,
+                turboThreshold: 0
             }
-        }
+        },
+    });
+
+    var tagcloud = container.nextAll('.tagcloud:first');
+
+    var hc = container.highcharts();
+    tagcloud.find('li').hover(function () {
+        hc.series[0].data[$(this).index()].select(true);
+    },
+    function () {
+        hc.series[0].data[$(this).index()].select(false);
     });
 }
 
@@ -180,7 +212,8 @@ Highcharts.SparkLine = function (options, callback) {
                 } else {
                     return sprintf('<b>%s</b>: %s = %.3f', this.x, options.titles[1], this.y);
                 }
-            }
+            },
+            enabled: false
         },
         plotOptions: {
             series: {
@@ -252,7 +285,12 @@ $(function () {
         $(this).highcharts('SparkLine', {
             chart: {
                 type: 'pie',
-                height: 60
+                width: 60,
+                height: 60,
+                style: {
+                    width: 40,
+                    height: 40
+                }
             },
             series: [{
                 data: [val, 1 - val]

@@ -29,6 +29,8 @@
                 <div class="bs-callout bs-callout-{{ macros.colcl('topics') }}">
                     <h4 class="block-label">Topics</h4>
 
+                    <div class="pull-left sparkline" data-type="column" data-xvals="{{ w.topics | join(',', 't') }}" data-yvals="{{ w.topics | join(',', 'np') }}" data-titles="t,p" data-hlite-tag="true"></div>
+
                     {% call(t) macros.tagcloud(w.topics) %}
                         <a href="{{ url_for('topic', name=t.t) }}" title="P(w | t) = {{ t.np | round(5) }}" data-size="{{ t.np }}">{{ t.t }}</a>
                     {% endcall %}
