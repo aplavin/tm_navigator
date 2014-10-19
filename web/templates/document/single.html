@@ -30,7 +30,7 @@
                 <h4>Topics:</h4>
                 <div id="plot-topics" style="height:250px;"></div>
 
-                {% call(t) macros.tagcloud(doc.topics) %}
+                {% call(t) macros.tagcloud(doc.topics, additional_class='text-center') %}
                     <a href="{{ url_for('topic', name=t.t) }}" title="P(t | d) = {{ t.np | round(3) }}" data-size="{{ t.np }}" data-use-size="true">{{ t.t }}</a>
                 {% endcall %}
 
@@ -39,7 +39,7 @@
 
             <div class="bs-callout bs-callout-{{ macros.colcl('words') }}">
                 <h4>Words:</h4>
-                {% call(w) macros.tagcloud(doc.words, additional_class='collapsed') %}
+                {% call(w) macros.tagcloud(doc.words, additional_class='collapsed text-center') %}
                     <a href="{{ url_for('word', name=w.word) }}" title="N_wd = {{ w.np }}" data-size="{{ w.np }}" data-use-size="true">{{ w.word }}</a>
                 {% endcall %}
             </div>
