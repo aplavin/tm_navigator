@@ -1,5 +1,5 @@
 {% macro document_in_tagcloud(slug, np, np_fmt, title, authors) %}
-    <a href="{{ url_for('document', name=slug) }}" data-size="{{ np }}"
+    <a href="{{ url_for('document', name=slug) }}" data-size="{{ np }}" data-use-opacity="true"
     data-placement="top" data-toggle="tooltip" data-html="true"
     title="
     {{ title }}<br/><br/>

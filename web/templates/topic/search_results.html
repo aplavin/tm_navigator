@@ -108,7 +108,7 @@
                         </h4>
 
                         {% call(w) macros.tagcloud(t.words, 30, 'Nothing matched') %}
-                            <a href="{{ url_for('word', name=w.w) }}" title="P(w | t) = {{ w.np | round(3) }}" data-size="{{ w.np }}">{{ w.word | safe }}</a>
+                            <a href="{{ url_for('word', name=w.w) }}" title="P(w | t) = {{ w.np | round(3) }}" data-size="{{ w.np }}" data-use-size="true">{{ w.word | safe }}</a>
                         {% endcall %}
                     </div>
                 </div>
