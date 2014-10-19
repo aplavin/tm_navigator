@@ -31,7 +31,7 @@
                 <div id="plot-topics" style="height:250px;"></div>
 
                 {% call(t) macros.tagcloud(doc.topics) %}
-                    <a href="{{ url_for('topic', name=t.t) }}" title="P(t | d) = {{ t.np | round(3) }}" data-size="{{ t.np }}">{{ t.t }}</a>
+                    <a href="{{ url_for('topic', name=t.t) }}" title="P(t | d) = {{ t.np | round(3) }}" data-size="{{ t.np }}" data-use-size="true">{{ t.t }}</a>
                 {% endcall %}
 
                 <div id="plot-topics-flow" style="height:400px;"></div>
@@ -40,7 +40,7 @@
             <div class="bs-callout bs-callout-{{ macros.colcl('words') }}">
                 <h4>Words:</h4>
                 {% call(w) macros.tagcloud(doc.words, additional_class='collapsed') %}
-                    <a href="{{ url_for('word', name=w.word) }}" title="N_wd = {{ w.np }}" data-size="{{ w.np }}">{{ w.word }}</a>
+                    <a href="{{ url_for('word', name=w.word) }}" title="N_wd = {{ w.np }}" data-size="{{ w.np }}" data-use-size="true">{{ w.word }}</a>
                 {% endcall %}
             </div>
         </div>
