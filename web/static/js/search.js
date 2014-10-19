@@ -104,6 +104,7 @@ function search(new_args) {
         $('#search-results').html(data);
         $('#search-results').fadeIn(200);
         process_tagclouds();
+        process_sparklines();
         $('[data-toggle=tooltip]').tooltip({ container: 'body' });
     }).error(function (xhr, type, exception) {
         $('#search-error').show();
