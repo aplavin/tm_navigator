@@ -1,18 +1,8 @@
-<div class="well well-sm">
-    Showing <samp id="search-count"></samp> of <samp>{{ results_cnt }}</samp> results.
-    Search took <samp>{{ (results.runtime * 1000) | int }}</samp> ms.
-</div>
-
 {% if corrected %}
     <div class="well well-sm">
         Did you mean <a href="{{ url_for(endpoint, query=corrected.string, **request.args) }}">{{ corrected.html|safe }}</a>?
     </div>
 {% endif %}
-
-{% set cnt = [] %}
-{% macro res_cnt_inc() %}
-    {% if cnt.append(1) %} {% endif %}
-{% endmacro %}
 
 {% block body %}
 {% endblock %}

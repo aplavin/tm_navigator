@@ -58,7 +58,6 @@
 
         <h2>{{ 'Matched' if query else 'Top' }} topics</h2>
         {% for t in topics | sort(attribute='np', reverse=True) if t.np|sum > 0 %}
-            {{ res_cnt_inc() }}
             <div class="panel panel-default">
                 <div class="panel-heading">
                     <h3 class="panel-title pull-left col-sm-2 nofloat">

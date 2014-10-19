@@ -8,7 +8,6 @@
 
     <h2>{{ 'Matched' if query else 'Top' }} words</h2>
     {% for w in words | sort(attribute='np', reverse=True) %}
-        {{ res_cnt_inc() }}
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title pull-left col-sm-4 nofloat">
