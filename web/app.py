@@ -5,6 +5,7 @@ from flask_debugtoolbar_lineprofilerpanel.profile import line_profile
 import subprocess
 import datetime
 import inspect
+from slugify import slugify
 
 
 app = Flask(__name__)
@@ -48,6 +49,10 @@ def max_filter(iterable, attribute=None):
     if not iterable:
         return None
     return keyfunc(max(iterable, key=keyfunc))
+
+
+app.template_filter('slug')(slugify)
+
 
 
 
