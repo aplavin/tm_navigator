@@ -6,122 +6,92 @@
 {% set groups_max = 20 %}
 {% set group_elems_max = 40 %}
 
-{% macro show_results(results) %}
+{% macro show_results(results, total_length) %}
     {% for hit in results %}
-        {{ res_cnt_inc() }}
-        {% if format == 'full' %}
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <h3 class="panel-title">
-                        <a href="{{ url_for('document', name=hit['slug']) }}">
-                            {{ highlight(hit, 'whole', ['title', 'title_ngrams'], 'title') | safe }}
-                        </a>
-                    </h3>
-                    <div>
-                        <a href="{{ url_for('documents:search', query='authors:"%s" AND %s' % (hit['authors'], query), **request.args) }}">
-                            {{ highlight(hit, 'whole', ['authors', 'authors_ngrams'], 'authors') | safe }}
-                        </a>
-                        |
-                        <a href="{{ url_for('documents:search', query='conference:%s AND year:%s AND %s' % (hit['conference'], hit['year'], query), **request.args) }}">
-                            {{ hit['conference'] }},&nbsp;{{ hit['year'] }}
-                        </a>
-                    </div>
-                </div>
-
-                <div class="panel-body">
-                    <div class="bs-callout bs-callout-{{ macros.colcl('topics') }}">
-                        {% set topics = vector_data(hit, 'topics') %}
-                        <h4 class="progress-label">Topics:</h4>
-                        <div class="progress">
-                            {% for t in topics[:5] %}
-                                <a href="{{ url_for('topic', name=t.t) }}">
-                                <div class="progress-bar progress-bar-p{{ loop.index }}" style="width: {{ t.np * 100 }}%"
-                                data-placement="top" data-toggle="tooltip" data-html="true"
-                                title="<h4>Topic #{{ t.t }}</h4>P(t | d) = {{ t.np | round(3) }}">
-                                </div>
-                                </a>
-                            {% endfor %}
-                            {% if topics[5] %}
-                                <div class="progress-bar progress-bar-transparent" style="width: {{ topics[5:] | sum('np') * 100 }}%"
-                                data-placement="top" data-toggle="tooltip" data-html="true"
-                                title="<h4>Topics #{{ topics[5:] | join(', #', attribute='t') }}</h4>Total P(t | d) = {{ topics[5:] | sum('np') | round(3) }}"></div>
-                            {% endif %}
-                        </div>
-
-                        {% call(t) macros.tagcloud(topics) %}
-                            <a href="{{ url_for('topic', name=t.t) }}" title="P(t | d) = {{ t.np | round(3) }}" data-size="{{ t.np }}">{{ t.t }}</a>
-                        {% endcall %}
-                    </div>
-
-                    {% set content_hl = hcontent(hit) %}
-                    {% if content_hl %}
-                        <div class="bs-callout bs-callout-{{ macros.colcl('other') }}">
-                            {{ content_hl.strip().replace('\n', '<br/>') | safe }}
-                        </div>
-                    {% endif %}
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    <a href="{{ url_for('document', name=hit['slug']) }}">
+                        {{ highlight(hit, 'whole', ['title', 'title_ngrams'], 'title') | safe }}
+                    </a>
+                </h3>
+                <div>
+                    <a href="{{ url_for('documents:search', query='authors:"%s" AND %s' % (hit['authors'], query), **request.args) }}">
+                        {{ highlight(hit, 'whole', ['authors', 'authors_ngrams'], 'authors') | safe }}
+                    </a>
+                    |
+                    <a href="{{ url_for('documents:search', query='conference:%s AND year:%s AND %s' % (hit['conference'], hit['year'], query), **request.args) }}">
+                        {{ hit['conference'] }},&nbsp;{{ hit['year'] }}
+                    </a>
                 </div>
             </div>
-        {% elif format == 'short' %}
-            <div class="list-group-item">
-                <div class="panel-heading">
-                    <h4 class="list-group-item-heading">
-                        <a href="{{ url_for('document', name=hit['slug']) }}">
-                            {{ highlight(hit, 'whole', ['title', 'title_ngrams'], 'title') | safe }}
-                        </a>
-                    </h4>
-                    <div class="list-group-item-text">
-                        <a href="{{ url_for('documents:search', query='authors:"%s" AND %s' % (hit['authors'], query), **request.args) }}">
-                            {{ highlight(hit, 'whole', ['authors', 'authors_ngrams'], 'authors') | safe }}
-                        </a>
-                        |
-                        <a href="{{ url_for('documents:search', query='conference:%s AND year:%s AND %s' % (hit['conference'], hit['year'], query), **request.args) }}">
-                            {{ hit['conference'] }},&nbsp;{{ hit['year'] }}
-                        </a>
-                    </div>
+
+            <div class="panel-body">
+                <div class="bs-callout bs-callout-{{ macros.colcl('topics') }}">
+                    {% set topics = vector_data(hit, 'topics') %}
+                    <h4 class="progress-label">Topics:</h4>
+
+                    <div class="pull-left sparkline" data-type="column" data-xvals='{{ topics | join(',', 't') }}' data-yvals="{{ topics | join(',', 'np') }}" data-titles="t,p" data-hlite-tag="true"></div>
+
+                    {% call(t) macros.tagcloud(topics) %}
+                        <a href="{{ url_for('topic', name=t.t) }}" title="P(t | d) = {{ t.np | round(3) }}" data-size="{{ t.np }}" data-use-size="true">{{ t.t }}</a>
+                    {% endcall %}
                 </div>
+
+                {% set content_hl = hcontent(hit) %}
+                {% if content_hl %}
+                    <div class="bs-callout bs-callout-{{ macros.colcl('other') }}">
+                        {{ content_hl.strip().replace('\n', '<br/>') | safe }}
+                    </div>
+                {% endif %}
             </div>
-        {% elif format == 'shortest' %}
-            <a href="{{ url_for('document', name=hit['slug']) }}" title="{{ hit['title'] }}&#10;&#10;{{ hit['authors'] }}">
-                {{ hit['slug'] }}
-            </a>
-            {% if not loop.last %}|{% endif %}
-        {% endif %}
+        </div>
     {% endfor %}
+    {% if total_length > results|length %}
+        <div class="text-center panel panel-info">
+            <div class="panel-heading">
+                <h3 class="panel-title">
+                    ... {{ total_length - results|length }} documents more ...
+                </h3>
+            </div>
+        </div>
+    {% endif %}
 {% endmacro %}
 
 {% block body %}
-    <h2>{{ 'Matched documents' if query else 'Documents' }}</h2>
+<div class="row">
     {% if grouped %}
-        {% for gr_name, gr_hits in grouped[:groups_max] %}
-            <div class="text-center">
-                {% if format in ['full', 'shortest'] %}
-                    <div class="bs-callout bs-callout-right bs-callout-default bg-success">
-                        <h4 class="text-right">{{ gr_name }}</h4>
-                    </div>
-                {% elif format == 'short' %}
-                    <div class="list-group-item bg-success">
-                        <h4 class="text-right">{{ gr_name }}</h4>
-                    </div>
+        <div id="sidebar" class="col-sm-3">
+            <h3>Groups</h3>
+            <ul class="nav nav-pills nav-stacked">
+                {% for gr_name, gr_hits in grouped[:groups_max] %}
+                    <li class="{{ 'active' if loop.first else '' }}">
+                        <a href="#{{ gr_name | slug }}" data-toggle="pill">
+                            <span class="badge pull-right">{{ gr_hits | length }}</span>
+                            {{ gr_name }}
+                        </a>
+                    </li>
+                {% endfor %}
+                {% if grouped|length > groups_max %}
+                    <li class="bg-info">... {{ grouped|length - groups_max }} groups more ...</li>
                 {% endif %}
-                {{ show_results(gr_hits[:group_elems_max]) }}
-                {% if gr_hits|length > group_elems_max %}
-                    <div class="bs-callout bs-callout-default bg-info">
-                        {{ gr_hits|length - group_elems_max }} more results from this group are not shown
-                    </div>
-                {% endif %}
-            </div>
-        {% endfor %}
-
-        {% block groups_tail %}
-        {% if grouped|length > groups_max %}
-            <div class="bs-callout bs-callout-default bg-info">
-                {{ grouped|length - groups_max }} more groups are not shown
-            </div>
-        {% endif %}
-        {% endblock %}
-    {% else %}
-        <div class="text-center">
-            {{ show_results(results) }}
+            </ul>
         </div>
     {% endif %}
+
+    <div id="main" class="col-sm-{{ '9' if grouped else '12' }} tab-content">
+        <h2>{{ 'Matched documents' if query else 'Documents' }}</h2>
+        {% if grouped %}
+            {% for gr_name, gr_hits in grouped[:groups_max] %}
+                <div class="tab-pane {{ 'active' if loop.first else '' }}" id="{{ gr_name | slug }}">
+                    {{ show_results(gr_hits[:group_elems_max], gr_hits | length) }}
+                </div>
+            {% endfor %}
+        {% else %}
+            <div>
+                {{ show_results(results[:], results_cnt) }}
+            </div>
+        {% endif %}
+    </div>
+</div>
 {% endblock %}

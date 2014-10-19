@@ -202,3 +202,20 @@ thead th {
 .progress-bar-p3 { background-color: #5fd35f; }
 .progress-bar-p4 { background-color: #e77c7d; }
 .progress-bar-p5 { background-color: #c6aedc; }
+
+#sidebar {
+    height: 600px;
+    overflow-y: auto;
+}
+
+.badge {
+    font-size: 12px;
+}
+
+@media (max-width: 992px) {
+    .container {
+        padding: 10px;
+        margin: 0;
+        width: 100%;
+    }
+}
