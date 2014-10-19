@@ -229,8 +229,6 @@ class DocumentView(EntitiesView):
     @route('/{name}s/search_results/', endpoint='{name}s:search_results')
     @route('/{name}s/search_results/<query>', endpoint='{name}s:search_results')
     def search_results(self, query=''):
-        format = request.args.get('format', 'full')
-
         fields = ['title', 'authors', 'authors_ngrams', 'title_ngrams']
         if request.args.get('content_search', False) == 'true':
             fields.append('content')
@@ -253,8 +251,7 @@ class DocumentView(EntitiesView):
             return highlight(hit, 'pinpoint', ['content'], text=content)
 
         res = do_search('docs', query, fields, groupby)
-        return self.render_template(format=format,
-                                    query=query,
+        return self.render_template(query=query,
                                     highlight=highlight,
                                     hcontent=hcontent,
                                     vector_data=lambda hit, field: vector_data('docs', hit, field).starmap(TopicTuple),
@@ -289,8 +286,7 @@ class WordView(EntitiesView):
         words = [WordTuple(w.w, w.np, w.word, wi.topics, wi.documents)
                  for w, wi in zip(words, word_infos)]
 
-        return self.render_template(format=format,
-                                    highlight=highlight,
+        return self.render_template(highlight=highlight,
                                     words=words,
                                     query=query,
                                     **res)
