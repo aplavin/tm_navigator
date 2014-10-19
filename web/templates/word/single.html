@@ -23,8 +23,8 @@
                 <h4>Topics:</h4>
                 <div id="plot-topics" style="height:250px;"></div>
 
-                {% call(t) macros.tagcloud(word.topics) %}
-                    <a href="{{ url_for('topic', name=t.t) }}" title="P(w | t) = {{ t.np | round(4) }}" data-size="{{ t.np }}">{{ t.t }}</a>
+                {% call(t) macros.tagcloud(word.topics, additional_class='text-center') %}
+                    <a href="{{ url_for('topic', name=t.t) }}" title="P(w | t) = {{ t.np | round(4) }}" data-size="{{ t.np }}" data-use-size="true">{{ t.t }}</a>
                 {% endcall %}
             </div>
 
@@ -32,7 +32,7 @@
                 <h4>Documents:</h4>
                 <div id="plot-documents" style="height:250px;"></div>
 
-                {% call(d) macros.tagcloud(word.documents, additional_class='collapsed') %}
+                {% call(d) macros.tagcloud(word.documents, additional_class='collapsed text-center') %}
                     {{ macros.document_in_tagcloud(d.meta['slug'], d.np, 'N_wd = %d', d.meta['title'], d.meta['authors']) }}
                 {% endcall %}
             </div>
