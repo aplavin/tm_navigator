@@ -80,12 +80,16 @@ function process_tagclouds() {
             if (valprefix) {
                 $(this).attr('title', valprefix + val)
             }
-            var relval = Math.max(Math.sqrt(val / max), 0.3);
-            $(this).css('opacity', relval);
+            var relval = Math.max(Math.pow(val / max, 0.3), 0.4);
+            if ($(this).data('use-opacity')) {
+                $(this).css('opacity', relval);
+            }
             // if (relval > 0.8) {
             //     $(this).css('font-weight', 'bold');
             // }
-            // $(this).css('font-size', relval + 'em');
+            if ($(this).data('use-size')) {
+                $(this).css('font-size', relval * 2 + 'em');
+            }
         });
     });
 }
