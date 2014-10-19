@@ -27,7 +27,7 @@
 
             <div class="panel-body">
                 <div class="bs-callout bs-callout-{{ macros.colcl('topics') }}">
-                    <h4 class="progress-label">Topics</h4>
+                    <h4 class="block-label">Topics</h4>
 
                     {% call(t) macros.tagcloud(w.topics) %}
                         <a href="{{ url_for('topic', name=t.t) }}" title="P(w | t) = {{ t.np | round(5) }}" data-size="{{ t.np }}">{{ t.t }}</a>
@@ -35,7 +35,7 @@
                 </div>
 
                 <div class="bs-callout bs-callout-{{ macros.colcl('docs') }}">
-                    <h4 class="progress-label">Documents</h4>
+                    <h4 class="block-label">Documents</h4>
 
                     {% call(d) macros.tagcloud(w.documents, 20) %}
                         {{ macros.document_in_tagcloud(d.meta['slug'], d.np, 'N(w, d) = %d', d.meta['title'], d.meta['authors']) }}

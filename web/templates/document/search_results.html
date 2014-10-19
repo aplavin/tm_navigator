@@ -29,7 +29,7 @@
             <div class="panel-body">
                 <div class="bs-callout bs-callout-{{ macros.colcl('topics') }}">
                     {% set topics = vector_data(hit, 'topics') %}
-                    <h4 class="progress-label">Topics:</h4>
+                    <h4 class="block-label">Topics:</h4>
 
                     <div class="pull-left sparkline" data-type="column" data-xvals='{{ topics | join(',', 't') }}' data-yvals="{{ topics | join(',', 'np') }}" data-titles="t,p" data-hlite-tag="true"></div>
 
