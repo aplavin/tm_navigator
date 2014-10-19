@@ -1,3 +1,17 @@
+function chunk(array, process, chunksize, timeout) {
+    if (array.length == 0) return;
+    setTimeout(function(){
+        for (var i = 0; i < (chunksize || 1); i++) {
+            var item = array.shift();
+            process.call(item);
+        }
+
+        if (array.length > 0){
+            setTimeout(arguments.callee, timeout || 0);
+        }
+    }, 0);
+}
+
 function unique(array){
     return array.filter(function(el, index, arr) {
         return index == arr.indexOf(el);
@@ -70,7 +84,7 @@ $(function () {
 
 
 function process_tagclouds() {
-    $('.tagcloud').each(function process_tagcloud() {
+    chunk($('.tagcloud').get(), function process_tagcloud() {
         var valprefix = $(this).data('valprefix');
         var elems = $(this).find('a');
         var sizes = elems.map(function get_datasize() { return $(this).data('size'); }).get();
