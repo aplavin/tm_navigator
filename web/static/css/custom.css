@@ -87,6 +87,10 @@ a:hover {
     color: black;
 }
 
+.progress.small {
+    height: 5px;
+}
+
 .tooltip h4 {
     color: white;
 }

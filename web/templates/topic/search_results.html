@@ -61,7 +61,7 @@
         {% for t in topics | sort(attribute='np', reverse=True) if t.np|sum > 0 %}
             <div class="panel panel-default">
                 <div class="panel-heading">
-                    <h3 class="panel-title pull-left col-sm-2 nofloat">
+                    <h3 class="panel-title">
                         <a href="{{ url_for('topic', name=t.t) }}">
                             Topic #{{ t.t }}
                         </a>
@@ -69,22 +69,14 @@
 
                     <div class="nofloat">
                         {% if pmax[0] > 0 %}
-                            <div class="progress col-sm-10 nofloat">
-                                <div class="progress-bar progress-bar-default" style="width: {{ t.np[0]/pmax[0] * 100 }}%">
-                                    <span>
-                                        P({{ 't' if not query else 't | document matches query' }}) = {{ t.np[0] | round(3) }}
-                                    </span>
-                                </div>
+                            <div class="progress small" title="P({{ 't' if not query else 't | document matches query' }}) = {{ t.np[0] | round(3) }}">
+                                <div class="progress-bar progress-bar-default" style="width: {{ t.np[0]/pmax[0] * 100 }}%"></div>
                             </div>
                         {% endif %}
 
                         {% if pmax[1] > 0 %}
-                            <div class="progress col-sm-10 nofloat">
-                                <div class="progress-bar progress-bar-success" style="width: {{ t.np[1]/pmax[1] * 100 }}%">
-                                    <span>
-                                        P(word matches query | t) = {{ t.np[1] | round(5) }}
-                                    </span>
-                                </div>
+                            <div class="progress small" title="P(word matches query | t) = {{ t.np[1] | round(5) }}">
+                                <div class="progress-bar progress-bar-success" style="width: {{ t.np[1]/pmax[1] * 100 }}%"></div>
                             </div>
                         {% endif %}
                     </div>
