@@ -5,12 +5,12 @@
 * Python
 * Pandoc for TeX to HTML conversion: http://johnmacfarlane.net/pandoc/installing.html
 * Packages (can be installed with `pip install <name>`):
- * General numeric data processing: numpy, scipy, h5py
- * My ARTM implementation: py_artm
- * Web interface: Flask, Flask-Classy, Flask-Assets, python-slugify
- * Web interface debugging (currently they are required for normal use too): Flask-DebugToolbar, Flask-DebugToolbar-LineProfilerPanel
- * Search: whoosh
- * Other: ipy-progressbar, pymorphy2, recordtype
+    * General numeric data processing: numpy, scipy, h5py
+    * My ARTM implementation: py_artm
+    * Web interface: Flask, Flask-Classy, Flask-Assets, python-slugify
+    * Web interface debugging (currently they are required for normal use too): Flask-DebugToolbar, Flask-DebugToolbar-LineProfilerPanel
+    * Search: whoosh
+    * Other: ipy-progressbar, pymorphy2, recordtype
 
 ## Components
 
