@@ -16,7 +16,9 @@
             <li>{{ (emptystr or '') | safe }}</li>
         {% endfor %}
 
-        {% if limit is not none and items|length > limit %}
+        {% if limit == -1 %}
+            <li>&hellip;</li>
+        {% elif limit is not none and items|length > limit %}
             <li>&hellip;&nbsp;{{ items|length - limit }}&nbsp;more&nbsp;&hellip;</li>
         {% endif %}
     </ul>

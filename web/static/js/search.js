@@ -193,11 +193,38 @@ function init_search() {
         trigger_search(1000);
     });
 
-    $('#search-input').autocomplete({
-        serviceUrl: $('#search-input').data('search-completions-url'),
-        minChars: 0,
-        delimiter: ' ',
-        maxHeight: 1000,
-        triggerSelectOnValidInput: false
+    // $('#search-input').autocomplete({
+    //     serviceUrl: $('#search-input').data('search-completions-url'),
+    //     minChars: 0,
+    //     delimiter: ' ',
+    //     maxHeight: 1000,
+    //     triggerSelectOnValidInput: false
+    // });
+
+    $(document).on('click', 'a.dynamic', function () {
+        var target = $($(this).data('target'));
+        var url = $(this).data('url');
+
+        target.fadeOut();
+        $('#search-loading').fadeIn();
+
+        $.ajax({
+            url: url,
+            dataType: 'html'
+        }).success(function (data) {
+            target.html(data);
+            target.fadeIn();
+
+            process_tagclouds();
+            process_sparklines();
+            setTimeout(function () {
+                $('.highcharts-container').parent().highcharts().reflow();
+            });
+            $('[data-toggle=tooltip]').tooltip({ container: 'body' });
+        }).error(function (xhr, type, exception) {
+            $('#search-error').show();
+        }).complete(function () {
+            $('#search-loading').fadeOut();
+        });
     });
 };

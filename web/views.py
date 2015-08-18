@@ -1,300 +1,147 @@
 from flask import render_template, request, jsonify
-from flask.ext.classy import FlaskView, route
-from collections import defaultdict
 import traceback
-import sys
-from lazylist import LazyList
-from data import (get_topics_all, get_documents_all, get_words_all,
-                  get_topics_info, get_docs_info, get_words_info,
-                  d_by_slug, w_by_word,
-                  get_doc_content,
-                  get_doc_similar, get_topic_similar, get_word_similar,
-                  TopicTuple, DocumentTuple, WordTuple,
-                  get as data_get)
-from search import do_search, highlight, vector_data, get_similar, get_completions
-from whoosh import sorting
-import numpy as np
-from app import app
+from app import app, db
+import models as m
+import sqlalchemy as sa
+from sqlalchemy.dialects import postgresql as pg_dialect
+import sqlalchemy_searchable as searchable
+from itertools import groupby
 
 
 @app.route('/')
 def overview():
     return render_template(
         'overview.html',
-        words=get_words_all(),
-        docs=get_documents_all(),
-        topics=get_topics_all())
+        words=db.session.query(m.Term).join(m.Modality).filter(m.Modality.name == 'words').order_by(m.Term.count.desc()),
+        docs=db.session.query(m.Document).order_by(m.Document.length.desc()),
+        topics=db.session.query(m.Topic).order_by(m.Topic.probability.desc()),
+        topics_cnts=db.session.query(m.Topic.level, m.func.count()).group_by(m.Topic.level).order_by(m.Topic.level))
 
 
-class EntitiesView(FlaskView):
-    route_base = ''
-
-    @classmethod
-    def postprocess_endpoint(cls, endpoint):
-        return endpoint.format(name=cls.name)
+@app.route('/document/<path:name>')
+def document(name):
+    document = db.session.query(m.Document).filter_by(file_name=name).one()
+    return render_template('document.html', document=document)
 
 
-    @classmethod
-    def build_rule(cls, rule, method=None):
-        return rule.format(name=cls.name)
+@app.route('/term/<modality>/<text>')
+def term(modality, text):
+    term = db.session.query(m.Term)\
+        .join(m.Modality).filter(m.Modality.name == modality)\
+        .filter(m.Term.text == text)\
+        .one()\
+        .options(m.sa.orm.lazyload('topics').joinedload('topic'))\
+        .options(m.sa.orm.lazyload('documents').joinedload('document'))
+    return render_template('term.html', term=term)
 
 
-    @classmethod
-    def render_template(cls, **kwargs):
-        name = '%s/%s.html' % (cls.name, sys._getframe().f_back.f_code.co_name)
-        return render_template(name, **kwargs)
+@app.route('/topic/<int:id>')
+def topic(id):
+    topic = db.session.query(m.Topic).filter_by(id=id).one()
+    return render_template('topic.html', topic=topic)
 
 
-    @route('/{name}/<int:ind>', endpoint='{name}')
-    @route('/{name}/<name>', endpoint='{name}')
-    def single(self, ind=None, name=None):
-        if ind is None:
-            ind = self.ind_by_name(name)
-        data = self.get_data(ind)
-        return self.render_template(**data)
+@app.route('/browse/', endpoint='browse')
+@app.route('/browse/<query>', endpoint='browse')
+def browse(query=''):
+    return render_template('browse.html', **{
+        'query': query,
+        'settings': [
+            {
+                'mode': 'choice',
+                'name': 'present_as',
+                'options': [
+                    {'text': 'Plain list of documents', 'value': ''},
+                    {'text': 'Documents grouped by author', 'value': 'groupby:authors'},
+                    {'text': 'List of topics', 'value': 'topics'},
+                ]
+            }
+        ],
+        'results_page': search_results(query)
+    })
 
 
-    @route('/{name}s/', endpoint='{name}s')
-    def index(self):
-        return self.search()
+@app.route('/_search_results/', endpoint='search_results')
+@app.route('/_search_results/<query>', endpoint='search_results')
+def search_results(query=''):
+    query = searchable.parse_search_query(query)
 
+    present_as = request.args.get('present_as', '')
 
-    @route('/{name}s/search/', endpoint='{name}s:search')
-    @route('/{name}s/search/<query>', endpoint='{name}s:search')
-    def search(self, query=''):
-        return self.render_template(
-            base_ep='{name}s'.format(name=self.name),
-            base_title='{name}s'.format(name=self.name.capitalize()),
-            query=query,
-            settings=self.search_settings,
-            results_page=self.search_results(query)
-        )
+    if present_as.startswith('groupby:'):
+        q = db.session.query(m.Term)\
+            .join(m.Term.modality).filter(m.Modality.name == present_as[len('groupby:'):])\
+            .join(m.Term.documents).join(m.DocumentTerm.document)\
+            .filter(True if not query else m.Document.search_vector.match(query))\
+            .group_by(m.Term)\
+            .add_columns(sa.func.count())\
+            .order_by(sa.desc(sa.func.count()))
+        results = q[:]
+    elif present_as == 'topics':
+        if query:
+            raise Exception('search query not supported in this mode')
 
+        rn_docs = sa.func.row_number().over(partition_by=m.DocumentTopic.topic_id, order_by=m.DocumentTopic.probability.desc())
+        q_docs = db.session.query(m.Topic, m.DocumentTopic, m.Document, rn_docs)\
+            .join(m.Topic.documents).join(m.DocumentTopic.document)\
+            .filter(True if not query else m.Document.search_vector.match(query))\
+            .from_self(m.Topic)\
+            .filter(rn_docs <= 50)\
+            .order_by(m.DocumentTopic.topic_id, m.DocumentTopic.probability.desc())\
+            .options(sa.orm.contains_eager('documents').contains_eager('document'))
 
-    @route('/{name}s/search_completions.json', endpoint='{name}s:search_completions')
-    def search_completions(self):
-        if not hasattr(self, 'completions_args'):
-            return jsonify(suggestions=[])
-        query = request.args['query']
-        completions = LazyList(get_completions(prefix=query, as_flat=True, **self.completions_args))
-        return jsonify(suggestions=list(term for field, term, freq in completions[:10]))
+        rn_terms = sa.func.row_number().over(partition_by=m.TopicTerm.topic_id, order_by=m.TopicTerm.probability.desc())
+        q_terms = db.session.query(m.TopicTerm, m.Modality, rn_terms)\
+            .join(m.TopicTerm.modality).filter(m.Modality.name == 'words')\
+            .from_self(m.TopicTerm)\
+            .filter(rn_terms <= 50)\
+            .join(m.TopicTerm.term)\
+            .order_by(m.TopicTerm.topic_id, m.TopicTerm.probability.desc())\
+            .options(sa.orm.contains_eager('term'))\
+            .options(sa.orm.lazyload('modality'))\
+            .options(sa.orm.lazyload('topic'))
 
+        topics = q_docs.all()
+        q = q_docs
 
-class TopicView(EntitiesView):
-    ind_by_name = staticmethod(int)
-    get_data = staticmethod(lambda t: {'topic': get_topics_info([t])[0]})
-    name = 'topic'
-    search_settings = [
-        {
-            'mode': 'bool',
-            'name': 'content_search',
-            'text': 'In-text search'
-        },
-        {
-            'mode': 'bool',
-            'name': 'words_search',
-            'text': 'Search for words also'
-        }
-    ]
-    completions_args = {'indexname': 'docs', 'fields': ['authors', 'title', 'content']}
+        t_terms = {topic_id: list(xs)
+                   for topic_id, xs in groupby(q_terms, lambda x: x.topic_id)}
+        for t in topics:
+            sa.orm.attributes.set_committed_value(t, 'terms', t_terms.get(t.id, []))
 
+        results = topics
 
-    @staticmethod
-    def get_data(t):
-        data = {
-            'topic': get_topics_info([t])[0],
-            'similar_topics': {'words': get_topic_similar(t)}
-        }
-        return data
+        q_hierarchy = db.session.query(m.Topic)\
+            .filter(m.Topic.level == 0)\
+            .options(sa.orm.joinedload_all(*['children', 'child']*5))
+        results = (results, q_hierarchy.one())
+    else:
+        q = db.session.query(m.Document)\
+            .filter(True if not query else m.Document.search_vector.match(query))\
+            .order_by(sa.desc(sa.func.ts_rank_cd(m.Document.search_vector, sa.func.to_tsquery('russian', query))))\
+            .add_columns(m.Document.highlight('title', query))\
+            .options(sa.orm.subqueryload('topics'))
+        results = [doc
+                   for doc, title_hl in q[:50]
+                   if [setattr(doc, 'title_hl', title_hl)]]
 
+    return render_template('search_results.html',
+        query=query, present_as=present_as,
+        results=results, results_cnt=q.count())
 
-    @route('/{name}s/search_results/', endpoint='{name}s:search_results')
-    @route('/{name}s/search_results/<query>', endpoint='{name}s:search_results')
-    def search_results(self, query=''):
-        fields = ['title', 'authors', 'authors_ngrams', 'title_ngrams']
-        if request.args.get('content_search', False) == 'true':
-            fields.append('content')
-
-        res = do_search('docs',
-                        query,
-                        fields,
-                        [sorting.FieldFacet('topics', allow_overlap=True)])
-
-        gr_weights = defaultdict(float)
-        for (gr_name, gr_nums), (_, hits) in zip(res['groups'], res['grouped']):
-            for (sortkey, value, d), hit in zip(gr_nums, hits):
-                if not hasattr(hit, 'gr_weights'):
-                    hit.gr_weights = {}
-                hit.gr_weights[gr_name] = value
-                gr_weights[gr_name] += value
-
-        topics = [TopicTuple(name,
-                             gr_weights[name] / len(res['results']),
-                             sorted(hits, key=lambda h: h.gr_weights[name], reverse=True))
-                  for name, hits in res['grouped']]
-
-        def _highlight(hit, hl_name, fields, fallback=None):
-            if query and _highlight.cnt < 500:
-                _highlight.cnt += 1
-                return highlight(hit, hl_name, fields, fallback)
-            else:
-                return hit[fallback]
-        _highlight.cnt = 0
-
-        if query and request.args.get('words_search', False) == 'true':
-            words_res = do_search('words',
-                                  query,
-                                  ['word', 'word_ngrams'],
-                                  None,
-                                  kwargs={'limit': None})
-            ws_matched = np.array(sorted(hit.docnum
-                                         for hit in words_res['results']))
-            highlights = {hit.docnum: _highlight(hit, 'whole', ['word', 'word_ngrams'])
-                          for hit in words_res['results']}
-
-            if len(ws_matched) > 0:
-                ptw_matched = data_get('p_wt')[ws_matched].T
-                ts_matched = ptw_matched.sum(1).argsort()[::-1]
-
-                new_topics = []
-                for t, pw in zip(ts_matched, ptw_matched[ts_matched]):
-                    ws = pw.argsort()[::-1]
-                    pw = pw[ws]
-                    ws = ws_matched[ws]
-
-                    words = [WordTuple(w, p, highlights[w]) for w, p in zip(ws, pw)]
-                    words = filter(lambda w: w.np > 0, words)
-                    if pw.sum() > 0:
-                        new_topics.append(TopicTuple(t, pw.sum(), None, words))
-
-                ts = [t.t for t in topics]
-                ts += [unicode(t.t) for t in new_topics if unicode(t.t) not in ts]
-
-                topics = defaultdict(TopicTuple, {t.t: t for t in topics})
-                new_topics = defaultdict(TopicTuple, {unicode(t.t): t for t in new_topics})
-                topics = [TopicTuple(t, (topics[t].np or 0, new_topics[t].np or 0), topics[t].documents or [], new_topics[t].words or [])
-                          for t in ts]
-            else:
-                topics = [TopicTuple(t.t, (t.np, 0), t.documents, [])
-                          for t in topics]
-        else:
-            topics_info = get_topics_info([t.t for t in topics], ntop=(0, -1))
-            topics = [TopicTuple(t.t, (t.np, 0), t.documents, topics_info[i].words)
-                      for i, t in enumerate(topics)]
-
-        res['results_cnt'] = len(topics)
-
-        return self.render_template(highlight=_highlight,
-                                    topics=topics,
-                                    query=query,
-                                    **res)
-
-
-class DocumentView(EntitiesView):
-    ind_by_name = staticmethod(d_by_slug)
-    name = 'document'
-    search_settings = [
-        {
-            'mode': 'choice',
-            'name': 'grouping',
-            'options': [
-                {'text': 'Disable grouping', 'value': ''},
-                {'text': '-'},
-                {'text': 'Group by authors', 'value': 'authors_tags_stored'},
-                {'text': 'Group by individual author', 'value': 'authors_tags'},
-                {'text': 'Group by source', 'value': 'conference,year'},
-            ]
-        },
-        {
-            'mode': 'bool',
-            'name': 'content_search',
-            'text': 'In-text search'
-        }
-    ]
-    vector_mapf = {'topics': TopicTuple}
-    search_kwargs = {}
-    completions_args = {'indexname': 'docs', 'fields': ['authors', 'title', 'content']}
-
-
-    @staticmethod
-    def get_data(d):
-        doc = get_docs_info([d])[0]
-        data = get_doc_content(doc)
-        data.update(doc=doc)
-        data.update(similar_docs={'topics': get_doc_similar(d),
-                                  'authors': [DocumentTuple(hit['d'], hit.score, hit) for hit in get_similar('docs', d, 'authors_tags')][:5]})
-        return data
-
-
-    @route('/{name}s/search_results/', endpoint='{name}s:search_results')
-    @route('/{name}s/search_results/<query>', endpoint='{name}s:search_results')
-    def search_results(self, query=''):
-        fields = ['title', 'authors', 'authors_ngrams', 'title_ngrams']
-        if request.args.get('content_search', False) == 'true':
-            fields.append('content')
-
-        groupby = request.args.get('grouping')
-        if not groupby:
-            groupby = None
-        else:
-            groupby = groupby.split(',')
-            groupby = [sorting.FieldFacet(field, allow_overlap=True) if not field.endswith('_stored') else sorting.StoredFieldFacet(field[:-7])
-                       for field in groupby]
-
-        def hcontent(hit):
-            import codecs, re
-            with codecs.open('static/docsdata/%s.html' % hit['fname'], encoding='utf-8') as f:
-                html = f.read()
-                m = re.search(r'</header>(.*)</body>', html, re.DOTALL)
-                html = m.group(1)
-                content = re.sub('<[^<]+?>', ' ', html)
-            return highlight(hit, 'pinpoint', ['content'], text=content)
-
-        res = do_search('docs', query, fields, groupby)
-        return self.render_template(query=query,
-                                    highlight=highlight,
-                                    hcontent=hcontent,
-                                    vector_data=lambda hit, field: vector_data('docs', hit, field).starmap(TopicTuple),
-                                    **res)
-
-
-class WordView(EntitiesView):
-    ind_by_name = staticmethod(w_by_word)
-    name = 'word'
-    search_settings = []
-
-
-    @staticmethod
-    def get_data(w):
-        data = {
-            'word': get_words_info([w])[0],
-            'similar_words': {'topics': get_word_similar(w)}
-        }
-        return data
-
-
-    @route('/{name}s/search_results/', endpoint='{name}s:search_results')
-    @route('/{name}s/search_results/<query>', endpoint='{name}s:search_results')
-    def search_results(self, query=''):
-        res = do_search('words', query, ['word', 'word_ngrams'], None, {'sortedby': 'n', 'reverse': True})
-        words = [WordTuple(hit['word'], hit['n'], highlight(hit, 'whole', ['word', 'word_ngrams'], 'word'))
-                 for hit in res['results']]
-
-        ws = [hit['w'] for hit in res['results']]
-        word_infos = get_words_info(ws, ntop=(-1, -1))
-
-        words = [WordTuple(w.w, w.np, w.word, wi.topics, wi.documents)
-                 for w, wi in zip(words, word_infos)]
-
-        return self.render_template(highlight=highlight,
-                                    words=words,
-                                    query=query,
-                                    **res)
-
-
-TopicView.register(app)
-DocumentView.register(app)
-WordView.register(app)
+@app.route('/_search_results_group/<int:modality_id>/<int:term_id>/<query>', endpoint='search_results_group')
+@app.route('/_search_results_group/<int:modality_id>/<int:term_id>/', endpoint='search_results_group')
+def search_results_group(modality_id, term_id, query=''):
+    q = db.session.query(m.Document)\
+        .join(m.Document.terms).filter_by(modality_id=modality_id, term_id=term_id)\
+        .filter(True if not query else m.Document.search_vector.match(query))\
+        .order_by(sa.desc(sa.func.ts_rank_cd(m.Document.search_vector, sa.func.to_tsquery('russian', query))))\
+        .add_columns(m.Document.highlight('title', query))\
+        .options(sa.orm.subqueryload('topics'))
+    results = [doc
+               for doc, title_hl in q[:50]
+               if [setattr(doc, 'title_hl', title_hl)]]
+    return render_template('search_results_group.html', results=results, results_cnt=q.count())
 
 
 def error_handler(error):
@@ -315,7 +162,8 @@ def error_handler(error):
 
     return render_template('error.html', **params), error.code
 
+from itertools import chain
 
-for error in range(400, 420) + range(500, 506):
+for error in chain(range(400, 420), range(500, 506)):
     app.errorhandler(error)(error_handler)
 # app.errorhandler(Exception)(error_handler)

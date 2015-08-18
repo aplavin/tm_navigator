@@ -98,11 +98,8 @@ function process_tagclouds() {
             if ($(this).data('use-opacity')) {
                 $(this).css('opacity', relval);
             }
-            // if (relval > 0.8) {
-            //     $(this).css('font-weight', 'bold');
-            // }
             if ($(this).data('use-size')) {
-                $(this).css('font-size', relval * 2 + 'em');
+                $(this).css('font-size', relval * 1.3 + 'em');
             }
         });
     });
@@ -175,10 +172,6 @@ $(function () {
             return;
         }
 
-        collapsed.removeClass('collapsed');
-        var height = collapsed.height();
-        collapsed.addClass('collapsed');
-
         var a = $('<a></a>');
         a.attr('href', '#');
         a.addClass('text-muted');
@@ -202,7 +195,7 @@ $(function () {
                 a_icon.addClass('glyphicon-expand');
                 a_icon.removeClass('glyphicon-collapse-down');
             } else {
-                collapsed.css('max-height', height);
+                collapsed.css('max-height', '10000px');
                 a_text.text('Less');
                 a_icon.removeClass('glyphicon-expand');
                 a_icon.addClass('glyphicon-collapse-down');

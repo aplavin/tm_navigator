@@ -8,7 +8,7 @@
                 <input type="text" name="query" id="search-input" class="form-control"
                        value="{{ query }}" placeholder="enter query here..."
                        data-search-base-url="{{ url_for('%s:search_results' % ep_base, query='%s').replace('%25s', '%s') }}"
-                       data-search-completions-url="{{ url_for('%s:search_completions' % ep_base) }}">
+                       data-search-completions-url="{#{{ url_for('%s:search_completions' % ep_base) }}#}">
                 <span class="form-control-feedback glyphicon glyphicon-search"></span>
             </div>
         </div>

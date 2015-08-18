@@ -3,7 +3,7 @@
 
 {% set breadcrumbs = [
     (url_for('words'), 'Words'),
-    'Word "%s"' % word.word
+    'Word "%s"' % term.text
 ] %}
 
 {% macro overview() %}
@@ -11,11 +11,11 @@
         <div class="panel-heading">
             <h3 class="panel-title">
                 Word:
-                <a href="{{ url_for('word', name=word.word) }}">
-                    {{ word.word }}
+                <a href="{{ url_for('word', text=term.text) }}">
+                    {{ term.text }}
                 </a>
             </h3>
-            Number of occurrences = {{ word.np }}
+            Number of occurrences = {{ term.count }}
         </div>
 
         <div class="panel-body">
@@ -23,8 +23,8 @@
                 <h4>Topics:</h4>
                 <div id="plot-topics" style="height:250px;"></div>
 
-                {% call(t) macros.tagcloud(word.topics, additional_class='text-center') %}
-                    <a href="{{ url_for('topic', name=t.t) }}" title="P(w | t) = {{ t.np | round(4) }}" data-size="{{ t.np }}" data-use-size="true">{{ t.t }}</a>
+                {% call(t) macros.tagcloud(term.topics, additional_class='text-center') %}
+                    <a href="{{ url_for('topic', id=t.topic.id) }}" title="P(w | t) = {{ t.probability | round(4) }}" data-size="{{ t.probability }}" data-use-size="true">{{ t.topic.id }}</a>
                 {% endcall %}
             </div>
 
@@ -32,8 +32,8 @@
                 <h4>Documents:</h4>
                 <div id="plot-documents" style="height:250px;"></div>
 
-                {% call(d) macros.tagcloud(word.documents, additional_class='collapsed text-center') %}
-                    {{ macros.document_in_tagcloud(d.meta['slug'], d.np, 'N_wd = %d', d.meta['title'], d.meta['authors']) }}
+                {% call(d) macros.tagcloud(term.documents, additional_class='collapsed text-center') %}
+                    {{ macros.document_in_tagcloud(d.document.file_name, d.count, 'N_wd = %d', d.document.title, '') }}
                 {% endcall %}
             </div>
         </div>
@@ -46,11 +46,11 @@
                 'Usage in topics',
                 ['t', 'P(w | t)'],
                 [
-                    {% for t in word.topics | sort(attribute='np', reverse=True)  %}
+                    {% for t in term.topics  %}
                         {
-                            name: '{{ t.t }}',
-                            y: {{ t.np | round(4) }},
-                            url: '{{ url_for('topic', name=t.t) }}'
+                            name: '{{ t.topic.id }}',
+                            y: {{ t.probability | round(4) }},
+                            url: '{{ url_for('topic', id=t.topic.id) }}'
                         },
                     {% endfor %}
                 ]
@@ -64,11 +64,11 @@
                 'Usage in documents',
                 ['d', 'N_wd'],
                 [
-                    {% for d in word.documents | sort(attribute='np', reverse=True)  %}
+                    {% for d in term.documents  %}
                         {
-                            name: '{{ d.meta['slug'] }}',
-                            y: {{ d.np }},
-                            url: '{{ url_for('document', name=d.meta['slug']) }}'
+                            name: '{{ d.document.file_name }}',
+                            y: {{ d.count }},
+                            url: '{{ url_for('document', name=d.document.file_name) }}'
                         },
                     {% endfor %}
                 ]
@@ -82,7 +82,7 @@
     <div class="bs-callout bs-callout-{{ macros.colcl('topics') }} list-group">
         <h3>Used in same topics</h3>
 
-        {% for w in similar_words['topics'] %}
+        {#{% for w in similar_words['topics'] %}
             <div class="list-group-item">
                 <h4 class="list-group-item-heading">
                     <a href="{{ url_for('word', name=w.word) }}">
@@ -94,7 +94,7 @@
                     </div>
                 </div>
             </div>
-        {% endfor %}
+        {% endfor %}#}
     </div>
 {% endmacro %}
 
@@ -102,7 +102,7 @@
 {% block body %}
 <div class="container">
     <div>
-        <h3>Word: {{ word.word }}</h3>
+        <h3>Word: {{ term.text }}</h3>
         <div class="bs-component">
             <ul class="nav nav-pills">
                 <li class="active"><a href="#overview" data-toggle="tab">Overview</a></li>

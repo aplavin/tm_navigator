@@ -10,17 +10,20 @@
     <div class="panel panel-default">
         <div class="panel-heading">
             <h3 class="panel-title">
-                {{ doc.meta['title'] }}
+                {{ document.title }}
             </h3>
-            {{ doc.meta['slug'] }}
+            {{ document.file_name }}
             <div>
-                <a href="{{ url_for('documents:search', query='authors:"%s"' % doc.meta['authors']) }}">
-                    {{ doc.meta['authors'] }}
-                </a>
+                {% for term in document.modality(name='authors').terms %}
+                    <a href="{#{{ url_for('documents:search', query='authors:"%s"' % doc.meta['authors']) }}#}">
+                        {{ term.term.text -}}
+                    </a>
+                    {{- ',' if not loop.last }}
+                {% endfor %}
             </div>
             <div>
-                <a href="{{ url_for('documents:search', query='conference:%s AND year:%s' % (doc.meta['conference'], doc.meta['year'])) }}">
-                    {{ doc.meta['conference'] }},&nbsp;{{ doc.meta['year'] }}
+                <a href="{#{{ url_for('documents:search', query='conference:%s AND year:%s' % (doc.meta['conference'], doc.meta['year'])) }}#}">
+                    {{ document.conference }}
                 </a>
             </div>
         </div>
@@ -30,8 +33,8 @@
                 <h4>Topics:</h4>
                 <div id="plot-topics" style="height:250px;"></div>
 
-                {% call(t) macros.tagcloud(doc.topics, additional_class='text-center') %}
-                    <a href="{{ url_for('topic', name=t.t) }}" title="P(t | d) = {{ t.np | round(3) }}" data-size="{{ t.np }}" data-use-size="true">{{ t.t }}</a>
+                {% call(t) macros.tagcloud(document.topics, additional_class='text-center') %}
+                    <a href="{{ url_for('topic', id=t.topic.id) }}" title="P(t | d) = {{ t.probability | round(3) }}" data-size="{{ t.probability }}" data-use-size="true">{{ t.topic.id }}</a>
                 {% endcall %}
 
                 <div id="plot-topics-flow" style="height:400px;"></div>
@@ -41,8 +44,8 @@
                 <h4>Words:</h4>
                 <div id="plot-words" style="height:250px;"></div>
 
-                {% call(w) macros.tagcloud(doc.words, additional_class='collapsed text-center') %}
-                    <a href="{{ url_for('word', name=w.word) }}" title="N_wd = {{ w.np }}" data-size="{{ w.np }}" data-use-size="true">{{ w.word }}</a>
+                {% call(w) macros.tagcloud(document.modality(name='words').terms, additional_class='collapsed text-center') %}
+                    <a href="{{ url_for('word', text=w.term.text) }}" title="N_wd = {{ w.count }}" data-size="{{ w.count }}" data-use-size="true">{{ w.term.text }}</a>
                 {% endcall %}
             </div>
         </div>
@@ -55,18 +58,18 @@
                 'Topics distribution',
                 ['t', 'P(t | d)'],
                 [
-                    {% for t in doc.topics | sort(attribute='np', reverse=True)  %}
+                    {% for t in document.topics %}
                         {
-                            name: '{{ t.t }}',
-                            y: {{ t.np | round(3) }},
-                            url: '{{ url_for('topic', name=t.t) }}'
+                            name: '{{ t.topic.id }}',
+                            y: {{ t.probability | round(3) }},
+                            url: '{{ url_for('topic', id=t.topic.id) }}'
                         },
                     {% endfor %}
                 ]
             );
         });
 
-        $(function () {
+        {#$(function () {
             createLineChart(
                 $('#plot-topics-flow'),
                 'Topics flow',
@@ -87,7 +90,7 @@
                     {% endfor %}
                 ]
             );
-        });
+        });#}
 
         $(function () {
             createPieChart(
@@ -95,11 +98,11 @@
                 'Words distribution',
                 ['w', 'N_wd'],
                 [
-                    {% for w in doc.words | sort(attribute='np', reverse=True)  %}
+                    {% for w in document.modality(name='words').terms %}
                         {
-                            name: '{{ w.word }}',
-                            y: {{ w.np | round(3) }},
-                            url: '{{ url_for('word', name=w.word) }}'
+                            name: '{{ w.term.text }}',
+                            y: {{ w.count | round(3) }},
+                            url: '{{ url_for('word', text=w.term.text) }}'
                         },
                     {% endfor %}
                 ]
@@ -160,7 +163,11 @@
 
 {% macro content() %}
     <div class="container">
-        <div class="well sticky-header">
+        <object data="{{ url_for('static', filename='documents_files/%s.pdf' % document.file_name) }}" type="application/pdf" style="width: 100%; height: 800px;">
+            <a href="{{ url_for('static', filename='documents_files/%s.pdf' % document.file_name) }}">Download PDF</a>
+        </object>
+
+        {#<div class="well sticky-header">
             <h4 style="padding: 10px;">
                 Topics:
                 <div class="dropdown pull-right">
@@ -187,20 +194,20 @@
             </ul>
         </div>
 
-        {{ html | safe }}
+        {{ html | safe }}#}
     </div>
 {% endmacro %}
 
 
 {% block head %}
-<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='docsdata/%s.css' % doc.meta['filename']) }}">
+{#<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='docsdata/%s.css' % doc.meta['filename']) }}">#}
 {% endblock %}
 
 
 {% block body %}
 <div class="container">
     <div>
-        <h3>{{ doc.meta['title'] }}</h3>
+        <h3>{{ document.title }}</h3>
         <div class="bs-component">
             <ul class="nav nav-pills">
                 <li class="active"><a href="#overview" data-toggle="tab">Overview</a></li>
@@ -211,9 +218,9 @@
                 <div class="tab-pane fade active in" id="overview">
                     {{ overview() }}
                 </div>
-                <div class="tab-pane fade" id="similar">
+                {#<div class="tab-pane fade" id="similar">
                     {{ similar() }}
-                </div>
+                </div>#}
                 <div class="tab-pane fade" id="content">
                     {{ content() }}
                 </div>

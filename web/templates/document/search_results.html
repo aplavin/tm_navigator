@@ -1,97 +1,41 @@
 {% extends "search_results_base.html" %}
 {% import "macros.html" as macros %}
 
-{% set endpoint = 'documents:search' %}
-
-{% set groups_max = 20 %}
-{% set group_elems_max = 40 %}
-
-{% macro show_results(results, total_length) %}
-    {% for hit in results %}
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">
-                    <a href="{{ url_for('document', name=hit['slug']) }}">
-                        {{ highlight(hit, 'whole', ['title', 'title_ngrams'], 'title') | safe }}
-                    </a>
-                </h3>
-                <div>
-                    <a href="{{ url_for('documents:search', query='authors:"%s" AND %s' % (hit['authors'], query), **request.args) }}">
-                        {{ highlight(hit, 'whole', ['authors', 'authors_ngrams'], 'authors') | safe }}
-                    </a>
-                    |
-                    <a href="{{ url_for('documents:search', query='conference:%s AND year:%s AND %s' % (hit['conference'], hit['year'], query), **request.args) }}">
-                        {{ hit['conference'] }},&nbsp;{{ hit['year'] }}
-                    </a>
-                </div>
-            </div>
-
-            <div class="panel-body">
-                <div class="bs-callout bs-callout-{{ macros.colcl('topics') }}">
-                    {% set topics = vector_data(hit, 'topics') %}
-                    <h4 class="block-label">Topics:</h4>
-
-                    <div class="pull-left sparkline" data-type="column" data-xvals='{{ topics | join(',', 't') }}' data-yvals="{{ topics | join(',', 'np') }}" data-titles="t,p" data-hlite-tag="true"></div>
-
-                    {% call(t) macros.tagcloud(topics) %}
-                        <a href="{{ url_for('topic', name=t.t) }}" title="P(t | d) = {{ t.np | round(3) }}" data-size="{{ t.np }}" data-use-size="true">{{ t.t }}</a>
-                    {% endcall %}
-                </div>
-
-                {% set content_hl = hcontent(hit) %}
-                {% if content_hl %}
-                    <div class="bs-callout bs-callout-{{ macros.colcl('other') }}">
-                        {{ content_hl.strip().replace('\n', '<br/>') | safe }}
-                    </div>
-                {% endif %}
-            </div>
-        </div>
-    {% endfor %}
-    {% if total_length > results|length %}
-        <div class="text-center panel panel-info">
-            <div class="panel-heading">
-                <h3 class="panel-title">
-                    ... {{ total_length - results|length }} documents more ...
-                </h3>
-            </div>
-        </div>
-    {% endif %}
-{% endmacro %}
+{% set groups_max = 100 %}
 
 {% block body %}
 <div class="row">
-    {% if grouped %}
+    {% if present_as.startswith('groupby:') %}
         <div id="sidebar" class="col-sm-3">
             <h3>Groups</h3>
             <ul class="nav nav-pills nav-stacked">
-                {% for gr_name, gr_hits in grouped[:groups_max] %}
+                {% for term, cnt in results[:groups_max] %}
                     <li class="{{ 'active' if loop.first else '' }}">
-                        <a href="#{{ gr_name | slug }}" data-toggle="pill">
-                            <span class="badge pull-right">{{ gr_hits | length }}</span>
-                            {{ gr_name }}
+                        <a href="#{{ term.text | slug }}" class="dynamic" data-url="{{ url_for('documents:search_results_group', query=query, modality_id=term.modality_id, term_id=term.id) }}" data-target="#group-content" data-toggle="pill">
+                            <span class="badge pull-right">{{ cnt }}</span>
+                            {{ term.text }}
                         </a>
                     </li>
                 {% endfor %}
-                {% if grouped|length > groups_max %}
-                    <li class="bg-info">... {{ grouped|length - groups_max }} groups more ...</li>
+
+                <script>
+                    $(document).ready(function() {$('a.dynamic').first().click();});
+                </script>
+
+                {% if results|length > groups_max %}
+                    <li class="bg-info">... {{ results|length - groups_max }} groups more ...</li>
                 {% endif %}
             </ul>
         </div>
     {% endif %}
 
-    <div id="main" class="col-sm-{{ '9' if grouped else '12' }} tab-content">
-        <h2>{{ 'Matched documents' if query else 'Documents' }}</h2>
-        {% if grouped %}
-            {% for gr_name, gr_hits in grouped[:groups_max] %}
-                <div class="tab-pane {{ 'active' if loop.first else '' }}" id="{{ gr_name | slug }}">
-                    {{ show_results(gr_hits[:group_elems_max], gr_hits | length) }}
-                </div>
-            {% endfor %}
-        {% else %}
-            <div>
-                {{ show_results(results[:], results_cnt) }}
-            </div>
-        {% endif %}
+    <div id="main" class="col-sm-{{ '9' if present_as.startswith('groupby:') else '12' }} tab-content">
+        <h2>{{ 'Topics' if as_topics else 'Matched documents' if query else 'Documents' }}</h2>
+        <div id='group-content'>
+            {% if not present_as.startswith('groupby:') %}
+                {% include 'document/search_results_group.html' %}
+            {% endif %}
+        </div>
     </div>
 </div>
 {% endblock %}
