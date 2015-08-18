@@ -2,7 +2,6 @@
 {% import "macros.html" as macros %}
 
 {% set breadcrumbs = [
-    (url_for('topics'), 'Topics'),
     'Topic'
 ] %}
 
@@ -10,7 +9,7 @@
     <div class="panel panel-default">
         <div class="panel-heading">
             <h3 class="panel-title">
-                Topic #{{ topic.id }}
+                Topic {{ topic.text }}
             </h3>
             P(t) = {{ topic.probability | round(3) }}
         </div>
@@ -29,8 +28,8 @@
                 <h4>Words:</h4>
                 <div id="plot-words" style="height:250px;"></div>
 
-                {% call(w) macros.tagcloud(topic.modality(name='words').terms.limit(500), additional_class='collapsed text-center') %}
-                    <a href="{{ url_for('word', text=w.term.text) }}" title="P(w | t) = {{ w.probability | round(4) }}" data-size="{{ w.probability }}" data-use-size="true">{{ w.term.text }}</a>
+                {% call(w) macros.tagcloud(topic.modality(name='words').terms_d.limit(500), additional_class='collapsed text-center') %}
+                    <a href="{{ url_for('term', modality='words', text=w.term.text) }}" title="P(w | t) = {{ w.probability | round(4) }}" data-size="{{ w.probability }}" data-use-size="true">{{ w.term.text }}</a>
                 {% endcall %}
             </div>
         </div>
@@ -61,11 +60,11 @@
                 'Words distribution',
                 ['w', 'P(w | t)'],
                 [
-                    {% for w in topic.modality(name='words').terms.limit(500) %}
+                    {% for w in topic.modality(name='words').terms_d.limit(500) %}
                         {
                             name: '{{ w.term.text }}',
                             y: {{ w.probability | round(3) }},
-                            url: '{{ url_for('word', text=w.term.text) }}'
+                            url: '{{ url_for('term', modality='words', text=w.term.text) }}'
                         },
                     {% endfor %}
                 ]
@@ -98,7 +97,7 @@
 {% block body %}
 <div class="container">
     <div>
-        <h3>Topic #{{ topic.id }}</h3>
+        <h3>Topic {{ topic.text }}</h3>
         <div class="bs-component">
             <ul class="nav nav-pills">
                 <li class="active"><a href="#overview" data-toggle="tab">Overview</a></li>

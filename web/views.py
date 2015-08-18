@@ -29,9 +29,9 @@ def term(modality, text):
     term = db.session.query(m.Term)\
         .join(m.Modality).filter(m.Modality.name == modality)\
         .filter(m.Term.text == text)\
-        .one()\
         .options(sa.orm.lazyload('topics').joinedload('topic'))\
-        .options(sa.orm.lazyload('documents').joinedload('document'))
+        .options(sa.orm.lazyload('documents').joinedload('document'))\
+        .one()
     return render_template('term.html', term=term)
 
 

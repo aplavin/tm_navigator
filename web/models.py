@@ -86,6 +86,8 @@ class Topic(Base, ModalityFilterMixin):
     name = sa.Column(sa.types.Text, unique=True)
     probability = sa.Column(sa.types.Float, nullable=False)
 
+    terms_d = sa.orm.relationship('TopicTerm', order_by='desc(TopicTerm.probability)', lazy='dynamic')
+
     @sa.ext.hybrid.hybrid_property
     def level(self):
         return int(self.id / 1000)

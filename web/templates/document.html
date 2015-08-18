@@ -2,7 +2,6 @@
 {% import "macros.html" as macros %}
 
 {% set breadcrumbs = [
-    (url_for('documents'), 'Documents'),
     'Document'
 ] %}
 
@@ -34,7 +33,7 @@
                 <div id="plot-topics" style="height:250px;"></div>
 
                 {% call(t) macros.tagcloud(document.topics, additional_class='text-center') %}
-                    <a href="{{ url_for('topic', id=t.topic.id) }}" title="P(t | d) = {{ t.probability | round(3) }}" data-size="{{ t.probability }}" data-use-size="true">{{ t.topic.id }}</a>
+                    <a href="{{ url_for('topic', id=t.topic.id) }}" title="P(t | d) = {{ t.probability | round(3) }}" data-size="{{ t.probability }}" data-use-size="true">{{ t.topic.text }}</a>
                 {% endcall %}
 
                 <div id="plot-topics-flow" style="height:400px;"></div>
@@ -45,7 +44,7 @@
                 <div id="plot-words" style="height:250px;"></div>
 
                 {% call(w) macros.tagcloud(document.modality(name='words').terms, additional_class='collapsed text-center') %}
-                    <a href="{{ url_for('word', text=w.term.text) }}" title="N_wd = {{ w.count }}" data-size="{{ w.count }}" data-use-size="true">{{ w.term.text }}</a>
+                    <a href="{{ url_for('term', modality='words', text=w.term.text) }}" title="N_wd = {{ w.count }}" data-size="{{ w.count }}" data-use-size="true">{{ w.term.text }}</a>
                 {% endcall %}
             </div>
         </div>
@@ -60,7 +59,7 @@
                 [
                     {% for t in document.topics %}
                         {
-                            name: '{{ t.topic.id }}',
+                            name: '{{ t.topic.text }}',
                             y: {{ t.probability | round(3) }},
                             url: '{{ url_for('topic', id=t.topic.id) }}'
                         },
@@ -102,7 +101,7 @@
                         {
                             name: '{{ w.term.text }}',
                             y: {{ w.count | round(3) }},
-                            url: '{{ url_for('word', text=w.term.text) }}'
+                            url: '{{ url_for('term', modality='words', text=w.term.text) }}'
                         },
                     {% endfor %}
                 ]

@@ -2,7 +2,6 @@
 {% import "macros.html" as macros %}
 
 {% set breadcrumbs = [
-    (url_for('words'), 'Words'),
     'Word "%s"' % term.text
 ] %}
 
@@ -11,7 +10,7 @@
         <div class="panel-heading">
             <h3 class="panel-title">
                 Word:
-                <a href="{{ url_for('word', text=term.text) }}">
+                <a href="{{ url_for('term', modality=term.modality.name, text=term.text) }}">
                     {{ term.text }}
                 </a>
             </h3>
@@ -24,7 +23,7 @@
                 <div id="plot-topics" style="height:250px;"></div>
 
                 {% call(t) macros.tagcloud(term.topics, additional_class='text-center') %}
-                    <a href="{{ url_for('topic', id=t.topic.id) }}" title="P(w | t) = {{ t.probability | round(4) }}" data-size="{{ t.probability }}" data-use-size="true">{{ t.topic.id }}</a>
+                    <a href="{{ url_for('topic', id=t.topic.id) }}" title="P(w | t) = {{ t.probability | round(4) }}" data-size="{{ t.probability }}" data-use-size="true">{{ t.topic.text }}</a>
                 {% endcall %}
             </div>
 
@@ -48,7 +47,7 @@
                 [
                     {% for t in term.topics  %}
                         {
-                            name: '{{ t.topic.id }}',
+                            name: '{{ t.topic.text }}',
                             y: {{ t.probability | round(4) }},
                             url: '{{ url_for('topic', id=t.topic.id) }}'
                         },

@@ -76,10 +76,10 @@
                     {% set topics = doc.topics %}
                     <h4 class="block-label">Topics:</h4>
 
-                    <div class="pull-left sparkline" data-type="column" data-xvals='{{ topics | join(',', 'topic.id') }}' data-yvals="{{ topics | join(',', 'probability') }}" data-titles="t,p" data-hlite-tag="true"></div>
+                    <div class="pull-left sparkline" data-type="column" data-xvals='{{ topics | join(',', 'topic.text') }}' data-yvals="{{ topics | join(',', 'probability') }}" data-titles="t,p" data-hlite-tag="true"></div>
 
                     {% call(t) macros.tagcloud(topics) %}
-                        <a href="{{ url_for('topic', id=t.topic.id) }}" title="P(t | d) = {{ t.probability | round(3) }}" data-size="{{ t.probability }}" data-use-size="true">{{ t.topic.id }}</a>
+                        <a href="{{ url_for('topic', id=t.topic.id) }}" title="P(t | d) = {{ t.probability | round(3) }}" data-size="{{ t.probability }}" data-use-size="true">{{ t.topic.text }}</a>
                     {% endcall %}
                 </div>
 
