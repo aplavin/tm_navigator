@@ -248,7 +248,6 @@ Highcharts.SparkLine = function (options, callback) {
 };
 
 function process_sparklines() {
-    var time = +new Date();
     chunk($('.sparkline').get(), function () {
         if ($(this).data('hlite-tag')) {
             var tagcloud = $(this).next('.tagcloud');
@@ -317,7 +316,7 @@ $(function () {
         });
         $(this).attr('title', sprintf('Similarity: %d%%', val * 100));
     });
-})
+});
 
 Highcharts.setOptions({
     lang: {

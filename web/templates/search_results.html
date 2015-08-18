@@ -30,10 +30,10 @@
     {% endif %}
 
     <div id="main" class="col-sm-{{ '9' if present_as.startswith('groupby:') else '12' }} tab-content">
-        <h2>{{ 'Topics' if as_topics else 'Matched documents' if query else 'Documents' }}</h2>
+        <h2>{{ 'Topics' if as_topics else ('Matched documents' if query else 'Documents') }}</h2>
         <div id='group-content'>
             {% if not present_as.startswith('groupby:') %}
-                {% include 'document/search_results_group.html' %}
+                {% include 'search_results_group.html' %}
             {% endif %}
         </div>
     </div>

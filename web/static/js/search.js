@@ -37,7 +37,7 @@
                 key = list[0];
                 // extract the index of the array
                 var list = list[1].split(']');
-                var index = list[0]
+                var index = list[0];
                 // if index is empty, just push the value at the end of the array
                 if (index == '') {
                     if (!params) params = {};
@@ -227,4 +227,4 @@ function init_search() {
             $('#search-loading').fadeOut();
         });
     });
-};
+}

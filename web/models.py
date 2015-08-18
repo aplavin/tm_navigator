@@ -1,6 +1,6 @@
 import re
 import sqlalchemy as sa
-from sqlalchemy import func
+from sqlalchemy import func, types
 import sqlalchemy.ext.hybrid
 import sqlalchemy.ext.declarative as sa_dec
 from sqlalchemy_searchable import make_searchable
@@ -20,8 +20,8 @@ class Base(object):
             self.__class__.__name__,
             ', '.join(
                 ["{}={}".format(k, repr(self.__dict__[k]))
-                    for k in sorted(self.__dict__.keys())
-                    if k[0] != '_']
+                 for k in sorted(self.__dict__.keys())
+                 if k[0] != '_']
             )
         )
 
@@ -50,7 +50,6 @@ class ModalityFilterMixin(object):
         return ModalityFiltered()
 
 
-
 class Document(Base, ModalityFilterMixin):
     id = sa.Column(sa.types.Integer, primary_key=True)
     title = sa.Column(sa.types.Text, nullable=False)
@@ -71,6 +70,7 @@ class Document(Base, ModalityFilterMixin):
     @property
     def conference(self):
         return re.sub(r'^([a-z]+)(\d+)-pdfs/.+', r'\1-\2', self.file_name).upper()
+
 
 class Term(Base):
     id = sa.Column(sa.types.Integer, primary_key=True)
@@ -121,8 +121,8 @@ class TopicEdge(Base):
     probability = sa.Column(sa.types.Float, nullable=False)
 
     parent = sa.orm.relationship('Topic', lazy='joined',
-        backref=sa.orm.backref('children', order_by='desc(Topic.probability)'),
-        foreign_keys=parent_id)
+                                 backref=sa.orm.backref('children', order_by='desc(Topic.probability)'),
+                                 foreign_keys=parent_id)
     child = sa.orm.relationship('Topic', lazy='joined', backref='parents', foreign_keys=child_id)
 
 
@@ -133,11 +133,11 @@ class DocumentTerm(Base):
     count = sa.Column(sa.types.Integer, nullable=False)
 
     document = sa.orm.relationship('Document', lazy='joined',
-        backref=sa.orm.backref('terms', order_by='desc(DocumentTerm.count)', lazy='dynamic'))
+                                   backref=sa.orm.backref('terms', order_by='desc(DocumentTerm.count)', lazy='dynamic'))
     term = sa.orm.relationship('Term', lazy='joined',
-        backref=sa.orm.backref('documents', order_by='desc(DocumentTerm.count)'))
+                               backref=sa.orm.backref('documents', order_by='desc(DocumentTerm.count)'))
     modality = sa.orm.relationship('Modality', viewonly=True, lazy='joined',
-        backref=sa.orm.backref('documents', viewonly=True))
+                                   backref=sa.orm.backref('documents', viewonly=True))
 
     __table_args__ = (
         sa.ForeignKeyConstraint(['modality_id', 'term_id'], ['terms.modality_id', 'terms.id']),
@@ -150,9 +150,9 @@ class DocumentTopic(Base):
     probability = sa.Column(sa.types.Float, nullable=False)
 
     document = sa.orm.relationship('Document', lazy='joined',
-        backref=sa.orm.backref('topics', order_by='desc(DocumentTopic.probability)'))
+                                   backref=sa.orm.backref('topics', order_by='desc(DocumentTopic.probability)'))
     topic = sa.orm.relationship('Topic', lazy='joined',
-        backref=sa.orm.backref('documents', order_by='desc(DocumentTopic.probability)'))
+                                backref=sa.orm.backref('documents', order_by='desc(DocumentTopic.probability)'))
 
 
 class TopicTerm(Base):
@@ -162,11 +162,11 @@ class TopicTerm(Base):
     probability = sa.Column(sa.types.Float)
 
     topic = sa.orm.relationship('Topic', lazy='joined',
-        backref=sa.orm.backref('terms', order_by='desc(TopicTerm.probability)'))
+                                backref=sa.orm.backref('terms', order_by='desc(TopicTerm.probability)'))
     term = sa.orm.relationship('Term', lazy='joined',
-        backref=sa.orm.backref('topics', order_by='desc(TopicTerm.probability)'))
+                               backref=sa.orm.backref('topics', order_by='desc(TopicTerm.probability)'))
     modality = sa.orm.relationship('Modality', viewonly=True, lazy='joined',
-        backref=sa.orm.backref('topics', viewonly=True))
+                                   backref=sa.orm.backref('topics', viewonly=True))
 
     __table_args__ = (
         sa.ForeignKeyConstraint(['modality_id', 'term_id'], ['terms.modality_id', 'terms.id']),

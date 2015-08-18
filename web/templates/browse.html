@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% set breadcrumbs = [
+    'Browse'
+] %}
+
 {% block body %}
     <form class="container form-horizontal" onsubmit="return false;">
         <div class="form-group">
@@ -7,7 +11,7 @@
             <div class="col-sm-11 has-feedback">
                 <input type="text" name="query" id="search-input" class="form-control"
                        value="{{ query }}" placeholder="enter query here..."
-                       data-search-base-url="{{ url_for('%s:search_results' % ep_base, query='%s').replace('%25s', '%s') }}"
+                       data-search-base-url="{{ url_for('search_results', query='%s').replace('%25s', '%s') }}"
                        data-search-completions-url="{#{{ url_for('%s:search_completions' % ep_base) }}#}">
                 <span class="form-control-feedback glyphicon glyphicon-search"></span>
             </div>
@@ -58,3 +62,4 @@
         init_search();
     </script>
 {% endblock %}
+

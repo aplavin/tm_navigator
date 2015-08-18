@@ -82,7 +82,7 @@ with docs_ix.writer() as writer, h5py.File(args.hdf5, mode='r') as h5f:
             html = f.read()
             m = re.search(r'</header>(.*)</body>', html, re.DOTALL)
             if m is None:
-                print fname
+                print(fname)
                 continue
             html = m.group(1)
             content = re.sub('<[^<]+?>', ' ', html)

@@ -30,8 +30,8 @@ def term(modality, text):
         .join(m.Modality).filter(m.Modality.name == modality)\
         .filter(m.Term.text == text)\
         .one()\
-        .options(m.sa.orm.lazyload('topics').joinedload('topic'))\
-        .options(m.sa.orm.lazyload('documents').joinedload('document'))
+        .options(sa.orm.lazyload('topics').joinedload('topic'))\
+        .options(sa.orm.lazyload('documents').joinedload('document'))
     return render_template('term.html', term=term)
 
 
@@ -81,7 +81,8 @@ def search_results(query=''):
         if query:
             raise Exception('search query not supported in this mode')
 
-        rn_docs = sa.func.row_number().over(partition_by=m.DocumentTopic.topic_id, order_by=m.DocumentTopic.probability.desc())
+        rn_docs = sa.func.row_number().over(partition_by=m.DocumentTopic.topic_id,
+                                            order_by=m.DocumentTopic.probability.desc())
         q_docs = db.session.query(m.Topic, m.DocumentTopic, m.Document, rn_docs)\
             .join(m.Topic.documents).join(m.DocumentTopic.document)\
             .filter(True if not query else m.Document.search_vector.match(query))\
@@ -90,7 +91,8 @@ def search_results(query=''):
             .order_by(m.DocumentTopic.topic_id, m.DocumentTopic.probability.desc())\
             .options(sa.orm.contains_eager('documents').contains_eager('document'))
 
-        rn_terms = sa.func.row_number().over(partition_by=m.TopicTerm.topic_id, order_by=m.TopicTerm.probability.desc())
+        rn_terms = sa.func.row_number().over(partition_by=m.TopicTerm.topic_id,
+                                             order_by=m.TopicTerm.probability.desc())
         q_terms = db.session.query(m.TopicTerm, m.Modality, rn_terms)\
             .join(m.TopicTerm.modality).filter(m.Modality.name == 'words')\
             .from_self(m.TopicTerm)\
@@ -126,8 +128,9 @@ def search_results(query=''):
                    if [setattr(doc, 'title_hl', title_hl)]]
 
     return render_template('search_results.html',
-        query=query, present_as=present_as,
-        results=results, results_cnt=q.count())
+                           query=query, present_as=present_as,
+                           results=results, results_cnt=q.count())
+
 
 @app.route('/_search_results_group/<int:modality_id>/<int:term_id>/<query>', endpoint='search_results_group')
 @app.route('/_search_results_group/<int:modality_id>/<int:term_id>/', endpoint='search_results_group')

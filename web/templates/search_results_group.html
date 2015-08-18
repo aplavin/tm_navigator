@@ -65,7 +65,7 @@
                         {% endfor %}
                     </span>
                     |
-                    <a href="{{ url_for('documents:search', query='conference:%s AND year:%s AND %s' % (doc['conference'], doc['year'], query), **request.args) }}">
+                    <a href="{{ url_for('browse', query='conference:%s AND year:%s AND %s' % (doc['conference'], doc['year'], query), **request.args) }}">
                         {{ doc.conference }}
                     </a>
                 </div>
