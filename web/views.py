@@ -1,4 +1,5 @@
-from flask import render_template, request, jsonify
+from flask import request, jsonify
+from flask.ext.mako import render_template
 import traceback
 from app import app, db
 import models as m
@@ -56,8 +57,7 @@ def browse(query=''):
                     {'text': 'List of topics', 'value': 'topics'},
                 ]
             }
-        ],
-        'results_page': search_results(query)
+        ]
     })
 
 

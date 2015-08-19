@@ -1,41 +1,44 @@
-{% extends "search_results_base.html" %}
-{% import "macros.html" as macros %}
+<%namespace name="macros" file="macros.html"/>
 
-{% set groups_max = 100 %}
+<% groups_max = 100 %>
 
-{% block body %}
+% if corrected:
+    <div class="well well-sm">
+        Did you mean <a href="${ url_for(endpoint, query=corrected.string, **request.args) }">${ corrected.html }</a>?
+    </div>
+% endif
+
 <div class="row">
-    {% if present_as.startswith('groupby:') %}
+    % if present_as.startswith('groupby:'):
         <div id="sidebar" class="col-sm-3">
             <h3>Groups</h3>
             <ul class="nav nav-pills nav-stacked">
-                {% for term, cnt in results[:groups_max] %}
-                    <li class="{{ 'active' if loop.first else '' }}">
-                        <a href="#{{ term.text | slug }}" class="dynamic" data-url="{{ url_for('documents:search_results_group', query=query, modality_id=term.modality_id, term_id=term.id) }}" data-target="#group-content" data-toggle="pill">
-                            <span class="badge pull-right">{{ cnt }}</span>
-                            {{ term.text }}
+                % for term, cnt in results[:groups_max]:
+                    <li class="${ 'active' if loop.first else '' }">
+                        <a href="#${ term.id }" class="dynamic" data-url="${ url_for('search_results_group', query=query, modality_id=term.modality_id, term_id=term.id) }" data-target="#group-content" data-toggle="pill">
+                            <span class="badge pull-right">${ cnt }</span>
+                            ${ term.text }
                         </a>
                     </li>
-                {% endfor %}
+                % endfor
 
                 <script>
                     $(document).ready(function() {$('a.dynamic').first().click();});
                 </script>
 
-                {% if results|length > groups_max %}
-                    <li class="bg-info">... {{ results|length - groups_max }} groups more ...</li>
-                {% endif %}
+                % if len(results) > groups_max:
+                    <li class="bg-info">... ${ len(results) - groups_max } groups more ...</li>
+                % endif
             </ul>
         </div>
-    {% endif %}
+    % endif
 
-    <div id="main" class="col-sm-{{ '9' if present_as.startswith('groupby:') else '12' }} tab-content">
-        <h2>{{ 'Topics' if as_topics else ('Matched documents' if query else 'Documents') }}</h2>
+    <div id="main" class="col-sm-${ '9' if present_as.startswith('groupby:') else '12' } tab-content">
+        <h2>${ 'Topics' if present_as == 'topics' else ('Matched documents' if query else 'Documents') }</h2>
         <div id='group-content'>
-            {% if not present_as.startswith('groupby:') %}
-                {% include 'search_results_group.html' %}
-            {% endif %}
+            % if not present_as.startswith('groupby:'):
+                <%include file='search_results_group.html'/>
+            % endif
         </div>
     </div>
 </div>
-{% endblock %}

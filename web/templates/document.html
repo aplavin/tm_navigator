@@ -1,51 +1,49 @@
-{% extends "base.html" %}
-{% import "macros.html" as macros %}
+<%inherit file="base.html"/>
+<%namespace name="macros" file="macros.html"/>
 
-{% set breadcrumbs = [
-    'Document'
-] %}
+<%block name="title">Document ${ document.title }</%block>
 
-{% macro overview() %}
+<%def name="overview()">
     <div class="panel panel-default">
         <div class="panel-heading">
             <h3 class="panel-title">
-                {{ document.title }}
+                ${ document.title }
             </h3>
-            {{ document.file_name }}
+            ${ document.file_name }
             <div>
-                {% for term in document.modality(name='authors').terms %}
-                    <a href="{#{{ url_for('documents:search', query='authors:"%s"' % doc.meta['authors']) }}#}">
-                        {{ term.term.text -}}
+                % for term in document.modality(name='authors').terms[:]:
+                    <a href="">
+                        ${ term.term.text }
                     </a>
-                    {{- ',' if not loop.last }}
-                {% endfor %}
+                    ${ ',' if not loop.last else '' }
+                % endfor
             </div>
             <div>
-                <a href="{#{{ url_for('documents:search', query='conference:%s AND year:%s' % (doc.meta['conference'], doc.meta['year'])) }}#}">
-                    {{ document.conference }}
+                <a href="">
+                    ${ document.conference }
                 </a>
             </div>
         </div>
 
         <div class="panel-body">
-            <div class="bs-callout bs-callout-{{ macros.colcl('topics') }}">
+            <div class="bs-callout bs-callout-${ macros.colcl('topics') }">
                 <h4>Topics:</h4>
                 <div id="plot-topics" style="height:250px;"></div>
 
-                {% call(t) macros.tagcloud(document.topics, additional_class='text-center') %}
-                    <a href="{{ url_for('topic', id=t.topic.id) }}" title="P(t | d) = {{ t.probability | round(3) }}" data-size="{{ t.probability }}" data-use-size="true">{{ t.topic.text }}</a>
-                {% endcall %}
+                <%macros:tagcloud items="${document.topics}" additional_class="text-center" args="t">
+                    <a href="${ url_for('topic', id=t.topic.id) }" title="P(t | d) = ${ '%.3f' % t.probability }" data-size="${ t.probability }" data-use-size="true">${ t.topic.text }</a>
+                </%macros:tagcloud>
 
                 <div id="plot-topics-flow" style="height:400px;"></div>
             </div>
 
-            <div class="bs-callout bs-callout-{{ macros.colcl('words') }}">
+            <div class="bs-callout bs-callout-${ macros.colcl('words') }">
                 <h4>Words:</h4>
                 <div id="plot-words" style="height:250px;"></div>
 
-                {% call(w) macros.tagcloud(document.modality(name='words').terms, additional_class='collapsed text-center') %}
-                    <a href="{{ url_for('term', modality='words', text=w.term.text) }}" title="N_wd = {{ w.count }}" data-size="{{ w.count }}" data-use-size="true">{{ w.term.text }}</a>
-                {% endcall %}
+                <%macros:tagcloud items="${document.modality(name='words').terms}" additional_class="collapsed text-center" args="w">
+                    <a href="${ url_for('term', modality='words', text=w.term.text) }" title="N_wd = ${ w.count }" data-size="${ w.count }" data-use-size="true">${ w.term.text }</a>
+                </%macros:tagcloud>
             </div>
         </div>
     </div>
@@ -57,39 +55,16 @@
                 'Topics distribution',
                 ['t', 'P(t | d)'],
                 [
-                    {% for t in document.topics %}
+                    % for t in document.topics:
                         {
-                            name: '{{ t.topic.text }}',
-                            y: {{ t.probability | round(3) }},
-                            url: '{{ url_for('topic', id=t.topic.id) }}'
+                            name: '${ t.topic.text }',
+                            y: ${ '%.3f' % t.probability },
+                            url: '${ url_for('topic', id=t.topic.id) }'
                         },
-                    {% endfor %}
+                    % endfor
                 ]
             );
         });
-
-        {#$(function () {
-            createLineChart(
-                $('#plot-topics-flow'),
-                'Topics flow',
-                ['Word #', 'P'],
-                [
-                    {% for tf in topics_flow %}
-                        {
-                            name: "Topic {{ tf.t }}",
-                            data: [
-                                {% for p in tf.np %}
-                                    [
-                                        {{ loop.index }},
-                                        {{ p }}
-                                    ],
-                                {% endfor %}
-                            ]
-                        },
-                    {% endfor %}
-                ]
-            );
-        });#}
 
         $(function () {
             createPieChart(
@@ -97,116 +72,43 @@
                 'Words distribution',
                 ['w', 'N_wd'],
                 [
-                    {% for w in document.modality(name='words').terms %}
+                    % for w in document.modality(name='words').terms:
                         {
-                            name: '{{ w.term.text }}',
-                            y: {{ w.count | round(3) }},
-                            url: '{{ url_for('term', modality='words', text=w.term.text) }}'
+                            name: '${ w.term.text }',
+                            y: ${ w.count },
+                            url: '${ url_for('term', modality='words', text=w.term.text) }'
                         },
-                    {% endfor %}
+                    % endfor
                 ]
             );
         });
     </script>
-{% endmacro %}
+</%def>
 
-{% macro similar() %}
-    <div class="bs-callout bs-callout-{{ macros.colcl('topics') }} list-group">
+<%def name="similar()">
+    <div class="bs-callout bs-callout-${ macros.colcl('topics') } list-group">
         <h3>Similar topics structure</h3>
 
-        {% for d in similar_docs['topics'] %}
-            <div class="list-group-item">
-                <span class="pull-right similarity-chart" data-value="{{ d.np }}"></span>
-                <h4 class="list-group-item-heading">
-                    <a href="{{ url_for('document', name=d.meta['slug']) }}">
-                        {{ d.meta['title'] }}
-                    </a>
-                </h4>
-                <div class="list-group-item-text">
-                    <a href="{{ url_for('documents:search', query='authors:"%s"' % d.meta['authors']) }}">
-                        {{ d.meta['authors'] }}
-                    </a>
-                    |
-                    <a href="{{ url_for('documents:search', query='conference:%s AND year:%s' % (d.meta['conference'], d.meta['year'])) }}">
-                        {{ d.meta['conference'] }},&nbsp;{{ d.meta['year'] }}
-                    </a>
-                </div>
-            </div>
-        {% endfor %}
     </div>
 
-    <div class="bs-callout bs-callout-{{ macros.colcl('other') }} list-group">
+    <div class="bs-callout bs-callout-${ macros.colcl('other') } list-group">
         <h3>By same authors</h3>
 
-        {% for d in similar_docs['authors'] %}
-            <div class="list-group-item">
-                <span class="pull-right similarity-chart" data-value="{{ d.np }}"></span>
-                <h4 class="list-group-item-heading">
-                    <a href="{{ url_for('document', name=d.meta['slug']) }}">
-                        {{ d.meta['title'] }}
-                    </a>
-                </h4>
-                <div class="list-group-item-text">
-                    <a href="{{ url_for('documents:search', query='authors:"%s"' % d.meta['authors']) }}">
-                        {{ d.meta.highlights('authors_tags') | safe or d.meta['authors'] }}
-                    </a>
-                    |
-                    <a href="{{ url_for('documents:search', query='conference:%s AND year:%s' % (d.meta['conference'], d.meta['year'])) }}">
-                        {{ d.meta['conference'] }},&nbsp;{{ d.meta['year'] }}
-                    </a>
-                </div>
-            </div>
-        {% endfor %}
     </div>
-{% endmacro %}
+</%def>
 
-{% macro content() %}
+<%def name="content()">
     <div class="container">
-        <object data="{{ url_for('static', filename='documents_files/%s.pdf' % document.file_name) }}" type="application/pdf" style="width: 100%; height: 800px;">
-            <a href="{{ url_for('static', filename='documents_files/%s.pdf' % document.file_name) }}">Download PDF</a>
+        <object data="${ url_for('static', filename='documents_files/%s.pdf' % document.file_name) }" type="application/pdf" style="width: 100%; height: 800px;">
+            <a href="${ url_for('static', filename='documents_files/%s.pdf' % document.file_name) }">Download PDF</a>
         </object>
-
-        {#<div class="well sticky-header">
-            <h4 style="padding: 10px;">
-                Topics:
-                <div class="dropdown pull-right">
-                    <a class="dropdown-toggle" data-toggle="dropdown" href="#">
-                        Highlight
-                        <span class="caret"></span>
-                    </a>
-                    <ul class="dropdown-menu" role="menu" style="margin-left: 20px;">
-                        <li><a href="#" onclick="process_data_color('active'); return false;">Active</a></li>
-                        <li><a href="#" onclick="process_data_color('passive'); return false;">Passive</a></li>
-                        <li><a href="#" onclick="process_data_color('disabled'); return false;">Disabled</a></li>
-                    </ul>
-                </div>
-            </h4>
-
-            <ul class="nav nav-pills">
-                {% for t in topics_in_content %}
-                    <li data-color="{{ t.t }}">
-                        <a style="border: 1px solid grey" href="{{ url_for('topic', name=t.t) }}" title="P(t | d) = {{ t.np[0] | round(3) }}&#10;# of words here: {{ t.np[1] }}">
-                            {{ t.t }} <!-- <span class="badge">{{ p }}</span> -->
-                        </a>
-                    </li>
-                {% endfor %}
-            </ul>
-        </div>
-
-        {{ html | safe }}#}
     </div>
-{% endmacro %}
+</%def>
 
 
-{% block head %}
-{#<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='docsdata/%s.css' % doc.meta['filename']) }}">#}
-{% endblock %}
-
-
-{% block body %}
 <div class="container">
     <div>
-        <h3>{{ document.title }}</h3>
+        <h3>${ document.title }</h3>
         <div class="bs-component">
             <ul class="nav nav-pills">
                 <li class="active"><a href="#overview" data-toggle="tab">Overview</a></li>
@@ -215,16 +117,15 @@
             </ul>
             <div class="tab-content" style="padding: 10px;">
                 <div class="tab-pane fade active in" id="overview">
-                    {{ overview() }}
+                    ${ self.overview() }
                 </div>
-                {#<div class="tab-pane fade" id="similar">
-                    {{ similar() }}
-                </div>#}
+                <div class="tab-pane fade" id="similar">
+                    ${ self.similar() }
+                </div>
                 <div class="tab-pane fade" id="content">
-                    {{ content() }}
+                    ${ self.content() }
                 </div>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}

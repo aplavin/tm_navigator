@@ -1,36 +1,34 @@
-{% extends "base.html" %}
-{% import "macros.html" as macros %}
+<%inherit file="base.html"/>
+<%namespace name="macros" file="macros.html"/>
 
-{% set breadcrumbs = [
-    'Topic'
-] %}
+<%block name="title">Topic ${ topic.text }</%block>
 
-{% macro overview() %}
+<%def name="overview()">
     <div class="panel panel-default">
         <div class="panel-heading">
             <h3 class="panel-title">
-                Topic {{ topic.text }}
+                Topic ${ topic.text }
             </h3>
-            P(t) = {{ topic.probability | round(3) }}
+            P(t) = ${ '%.3f' % topic.probability }
         </div>
 
         <div class="panel-body">
-            <div class="bs-callout bs-callout-{{ macros.colcl('docs') }}">
+            <div class="bs-callout bs-callout-${ macros.colcl('docs') }">
                 <h4>Documents:</h4>
                 <div id="plot-documents" style="height:250px;"></div>
 
-                {% call(d) macros.tagcloud(topic.documents, additional_class='collapsed text-center') %}
-                    {{ macros.document_in_tagcloud(d.document.file_name, d.probability, 'P(t | d) = %.3f', d.document.title, '') }}
-                {% endcall %}
+                <%macros:tagcloud items="${topic.documents}" additional_class="collapsed text-center" args="d">
+                    ${ macros.document_in_tagcloud(d.document.file_name, d.probability, 'P(t | d) = %.3f', d.document.title, '') }
+                </%macros:tagcloud>
             </div>
 
-            <div class="bs-callout bs-callout-{{ macros.colcl('words') }}">
+            <div class="bs-callout bs-callout-${ macros.colcl('words') }">
                 <h4>Words:</h4>
                 <div id="plot-words" style="height:250px;"></div>
 
-                {% call(w) macros.tagcloud(topic.modality(name='words').terms_d.limit(500), additional_class='collapsed text-center') %}
-                    <a href="{{ url_for('term', modality='words', text=w.term.text) }}" title="P(w | t) = {{ w.probability | round(4) }}" data-size="{{ w.probability }}" data-use-size="true">{{ w.term.text }}</a>
-                {% endcall %}
+                <%macros:tagcloud items="${topic.modality(name='words').terms_d.limit(500)}" additional_class="collapsed text-center" args="w">
+                    <a href="${ url_for('term', modality='words', text=w.term.text) }" title="P(w | t) = ${ '%.4f' % w.probability }" data-size="${ w.probability }" data-use-size="true">${ w.term.text }</a>
+                </%macros:tagcloud>
             </div>
         </div>
     </div>
@@ -42,13 +40,13 @@
                 'Usage in documents',
                 ['d', 'P(t | d)'],
                 [
-                    {% for d in topic.documents %}
+                    % for d in topic.documents:
                         {
-                            name: '{{ d.document.file_name }}',
-                            y: {{ d.probability | round(3) }},
-                            url: '{{ url_for('document', name=d.document.file_name) }}'
+                            name: '${ d.document.file_name }',
+                            y: ${ '%.3f' % d.probability },
+                            url: '${ url_for('document', name=d.document.file_name) }'
                         },
-                    {% endfor %}
+                    % endfor
                 ],
                 1
             );
@@ -60,44 +58,33 @@
                 'Words distribution',
                 ['w', 'P(w | t)'],
                 [
-                    {% for w in topic.modality(name='words').terms_d.limit(500) %}
+                    % for w in topic.modality(name='words').terms_d.limit(500):
                         {
-                            name: '{{ w.term.text }}',
-                            y: {{ w.probability | round(3) }},
-                            url: '{{ url_for('term', modality='words', text=w.term.text) }}'
+                            name: '${ w.term.text }',
+                            y: ${ '%.3f' % w.probability },
+                            url: '${ url_for('term', modality='words', text=w.term.text) }'
                         },
-                    {% endfor %}
+                    % endfor
                 ]
             );
         });
     </script>
-{% endmacro %}
+</%def>
 
 
-{% macro similar() %}
-    <div class="bs-callout bs-callout-{{ macros.colcl('words') }}">
+<%def name="similar()">
+    <div class="bs-callout bs-callout-${ macros.colcl('words') }">
         <h3>Similar words structure</h3>
 
         <div class="list-group row" style="margin-left: 0; margin-right: 0">
-            {#{% for t in similar_topics['words'] %}
-                <div class="list-group-item col-sm-3" style="white-space: nowrap">
-                    <h4 class="list-group-item-heading" style="display: inline-block">
-                        <a href="{{ url_for('topic', name=t.t) }}">
-                            Topic #{{ t.t }}
-                        </a>
-                        <div class="similarity-chart" data-value="{{ t.np }}" style="display: inline-block"></div>
-                    </h4>
-                </div>
-            {% endfor %}#}
         </div>
     </div>
-{% endmacro %}
+</%def>
 
 
-{% block body %}
 <div class="container">
     <div>
-        <h3>Topic {{ topic.text }}</h3>
+        <h3>Topic ${ topic.text }</h3>
         <div class="bs-component">
             <ul class="nav nav-pills">
                 <li class="active"><a href="#overview" data-toggle="tab">Overview</a></li>
@@ -105,13 +92,12 @@
             </ul>
             <div class="tab-content" style="padding: 10px;">
                 <div class="tab-pane fade active in" id="overview">
-                    {{ overview() }}
+                    ${ self.overview() }
                 </div>
                 <div class="tab-pane fade" id="similar">
-                    {{ similar() }}
+                    ${ self.similar() }
                 </div>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}

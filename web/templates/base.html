@@ -1,50 +1,54 @@
+<%!
+from webassets import Environment, Bundle
+from webassets.env import RegisterError
+
+assets_env = Environment('static', '/static')
+assets_env.debug = True
+
+def assets_urls(name, files, filters, output):
+    asset = Bundle(*files, filters=filters, output=output)
+    try:
+        assets_env.register(name, asset)
+    except RegisterError:
+        pass
+    return assets_env[name].urls()
+%>
+
 <!doctype html>
 <html>
     <head>
-        <title>{% block title %}{{ breadcrumbs[-1] }}{% endblock %} - TM Vis</title>
+        <title>
+            <%block name="title"/>
+            - TM Vis
+        </title>
 
-        {% assets filters='cssmin', output='css/packed.css',
-                  'css/bootstrap.css', 'css/custom.css' %}
-            <link rel="stylesheet" type="text/css" href="{{ ASSET_URL }}">
-        {% endassets %}
+        % for url in assets_urls('css', ['css/bootstrap.css', 'css/custom.css'], 'cssmin', 'css/_packed.css'):
+            <link rel="stylesheet" type="text/css" href="${url}">
+        % endfor
 
-        {% assets filters='rjsmin',
-              output='js/_packed.js',
-              'js/libs/jquery-2.1.1.js',
-              'js/libs/highcharts.js', 'js/libs/drilldown.js',
-              'js/libs/bootstrap.js', 'js/libs/jquery.autocomplete.js',
-              'js/libs/index.js',
-              'js/libs/sprintf.js', 'js/libs/tinycolor.js',
-              'js/common.js', 'js/plots.js', 'js/search.js' %}
-            <script src="{{ ASSET_URL }}"></script>
-        {% endassets %}
+        % for url in assets_urls('js', ['js/libs/jquery-2.1.1.js', 'js/libs/highcharts.js', 'js/libs/drilldown.js', 'js/libs/bootstrap.js', 'js/libs/jquery.autocomplete.js', 'js/libs/index.js', 'js/libs/sprintf.js', 'js/libs/tinycolor.js', 'js/common.js', 'js/plots.js', 'js/search.js'], 'rjsmin', 'js/_packed.js'):
+            <script src="${url}"></script>
+        % endfor
 
-        {% block head %}{% endblock %}
+        <%block name="head"/>
     </head>
 
     <body>
-
         <header>
             <div class="container">
-                <h1><a href="{{ url_for('overview') }}">TM Vis</a></h1>
+                <h1><a href="${ url_for('overview') }">TM Vis</a></h1>
 
                 <ul class="lead breadcrumb">
-                    <li><a href="{{ url_for('overview') }}">Collection</a></li>
-                    {% if breadcrumbs %}
-                        {% for href, caption in breadcrumbs[:-1] %}
-                            <li><a href="{{ href }}">{{ caption }}</a></li>
-                        {% endfor %}
-                        <li>{{ breadcrumbs[-1] }}</li>
-                    {% endif %}
+                    <li><a href="${ url_for('overview') }">Collection</a></li>
+                    <li>${ self.title() }</li>
                 </ul>
             </div>
         </header>
         <hr>
 
         <section>
-            {% block body %}{% endblock %}
+            ${self.body()}
         </section>
-
 
         <hr>
         <footer>
@@ -52,6 +56,5 @@
                 <p>&copy; 2014-2015</p>
             </div>
         </footer>
-
     </body>
 </html>

@@ -1,104 +1,108 @@
-{% import "macros.html" as macros %}
+<%namespace name="macros" file="macros.html"/>
 
-{% if present_as == 'topics' %}
-    {% for t in results[1].children recursive %}
-        {% set topic = t.child %}
+% if present_as == 'topics':
+    <%def name="show_topic(t)">
+        <% topic = t.child %>
 
-        <div class="panel panel-default col-xs-offset-{{ topic.level - 1 }}">
+        <div class="panel panel-default col-xs-offset-${ topic.level - 1 }">
             <div class="panel-heading">
                 <h3 class="panel-title">
-                    <a href="{{ url_for('topic', id=topic.id) }}">
-                        Topic {{ topic.text }}
+                    <a href="${ url_for('topic', id=topic.id) }">
+                        Topic ${ topic.text }
                     </a>
                 </h3>
 
                 <div class="nofloat">
-                    <div class="progress small" title="P({{ 't' if not query else 't | document matches query' }}) = {{ topic.probability | round(3) }}">
-                        <div class="progress-bar progress-bar-default" style="width: {{ topic.probability * 100 }}%"></div>
+                    <div class="progress small" title="P(${ 't' if not query else 't | document matches query' }) = ${ '%.3f' % topic.probability }">
+                        <div class="progress-bar progress-bar-default" style="width: ${ topic.probability * 100 }%"></div>
                     </div>
                 </div>
             </div>
 
             <div class="panel-body">
-                <div class="bs-callout bs-callout-{{ macros.colcl('docs') }}">
+                <div class="bs-callout bs-callout-${ macros.colcl('docs') }">
                     <h4 class="block-label">
                         Documents<br/>
-                        <small>{{ 'Matched only' if query }}</small>
+                        <small>${ 'Matched only' if query else '' }</small>
                     </h4>
 
-                    {% call(d) macros.tagcloud(topic.documents, limit=-1, emptystr='Nothing matched', additional_class='collapsed collapsed-small') %}
-                        {{ macros.document_in_tagcloud(d.document.file_name, d.probability, 'P(t | d) = %.3f', d.document.title | safe, '') }}
-                    {% endcall %}
+                    <%macros:tagcloud items="${topic.documents}" limit="${-1}" emptystr='Nothing matched' additional_class='collapsed collapsed-small' args="d">
+                        ${ macros.document_in_tagcloud(d.document.file_name, d.probability, 'P(t | d) = %.3f', d.document.title, '') }
+                    </%macros:tagcloud>
                 </div>
 
-                <div class="bs-callout bs-callout-{{ macros.colcl('words') }}">
+                <div class="bs-callout bs-callout-${ macros.colcl('words') }">
                     <h4 class="block-label">
                         Words<br/>
-                        <small>{{ 'Matched only' if request.args['words_search'] }}</small>
+                        <small>${ 'Matched only' if request.args.get('words_search', None) else '' }</small>
                     </h4>
 
-                    {% call(w) macros.tagcloud(topic.terms, limit=-1, emptystr='Nothing matched', additional_class='collapsed collapsed-small') %}
-                        <a href="{{ url_for('word', text=w.term.text) }}" title="P(w | t) = {{ w.probability | round(3) }}" data-size="{{ w.probability }}" data-use-size="true">{{ w.term.text | safe }}</a>
-                    {% endcall %}
+                    <%macros:tagcloud items="${topic.terms}" limit="${-1}" emptystr='Nothing matched' additional_class='collapsed collapsed-small' args="w">
+                        <a href="${ url_for('term', modality='words', text=w.term.text) }" title="P(w | t) = ${ '%.3f' % w.probability }" data-size="${ w.probability }" data-use-size="true">${ w.term.text }</a>
+                    </%macros:tagcloud>
                 </div>
             </div>
         </div>
 
-        {{ loop(topic.children) }}
-    {% endfor %}
-{% else %}
-    {% for doc in results %}
+        % for t in topic.children:
+            ${ show_topic(t) }
+        % endfor
+    </%def>
+
+    % for t in results[1].children:
+        ${ show_topic(t) }
+    % endfor
+% else:
+    % for doc in results:
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">
-                    <a href="{{ url_for('document', name=doc.file_name) }}">
-                        {{ doc.title_hl | safe }}
+                    <a href="${ url_for('document', name=doc.file_name) }">
+                        ${ doc.title_hl }
                     </a>
                 </h3>
                 <div>
                     <span>
-                        {% for term in doc.modality(name='authors').terms %}
-                            <a href="{#{{ url_for('documents:search', query='authors:"%s"' % doc.meta['authors']) }}#}">
-                                {{ term.term.text -}}
+                        % for term in doc.modality(name='authors').terms[:]:
+                            <a href="">
+                                ${ term.term.text }
                             </a>
-                            {{- ',' if not loop.last }}
-                        {% endfor %}
+                            ${ ',' if not loop.last else '' }
+                        % endfor
                     </span>
                     |
-                    <a href="{{ url_for('browse', query='conference:%s AND year:%s AND %s' % (doc['conference'], doc['year'], query), **request.args) }}">
-                        {{ doc.conference }}
+                    <a href="">
+                        ${ doc.conference }
                     </a>
                 </div>
             </div>
 
             <div class="panel-body">
-                <div class="bs-callout bs-callout-{{ macros.colcl('topics') }}">
-                    {% set topics = doc.topics %}
+                <div class="bs-callout bs-callout-${ macros.colcl('topics') }">
+                    <% topics = doc.topics %>
                     <h4 class="block-label">Topics:</h4>
 
-                    <div class="pull-left sparkline" data-type="column" data-xvals='{{ topics | join(',', 'topic.text') }}' data-yvals="{{ topics | join(',', 'probability') }}" data-titles="t,p" data-hlite-tag="true"></div>
-
-                    {% call(t) macros.tagcloud(topics) %}
-                        <a href="{{ url_for('topic', id=t.topic.id) }}" title="P(t | d) = {{ t.probability | round(3) }}" data-size="{{ t.probability }}" data-use-size="true">{{ t.topic.text }}</a>
-                    {% endcall %}
-                </div>
-
-                {#{% set content_hl = hcontent(doc) %}
-                {% if content_hl %}
-                    <div class="bs-callout bs-callout-{{ macros.colcl('other') }}">
-                        {{ content_hl.strip().replace('\n', '<br/>') | safe }}
+                    <div class="pull-left sparkline" data-type="column"
+                         data-xvals="${ ','.join(t.topic.text for t in topics) }"
+                         data-yvals="${ ','.join(str(t.probability) for t in topics) }"
+                         data-titles="t,p" data-hlite-tag="true">
                     </div>
-                {% endif %}#}
+
+                    <%macros:tagcloud items="${topics}" args="t">
+                        <a href="${ url_for('topic', id=t.topic.id) }" title="P(t | d) = ${ '%.3f' % t.probability }" data-size="${ t.probability }" data-use-size="true">${ t.topic.text }</a>
+                    </%macros:tagcloud>
+                </div>
             </div>
         </div>
-    {% endfor %}
-    {% if results_cnt > results|length %}
+    % endfor
+
+    % if results_cnt > len(results):
         <div class="text-center panel panel-info">
             <div class="panel-heading">
                 <h3 class="panel-title">
-                    ... {{ results_cnt - results|length }} documents more ...
+                    ... ${ results_cnt - len(results) } documents more ...
                 </h3>
             </div>
         </div>
-    {% endif %}
-{% endif %}
+    % endif
+% endif

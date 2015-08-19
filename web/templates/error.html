@@ -1,21 +1,17 @@
-{% extends "base.html" %}
+<%inherit file="base.html"/>
 
-{% set breadcrumbs = [
-    'Error occurred :('
-] %}
+<%block name="title">Error occurred :(</%block>
 
-{% block body %}
-    <div class="container">
-        {% if code != 500 %}
-            <h2>Oops... {{ code }}&nbsp;&mdash;&nbsp;{{ name }}!</h2>
-            <p class="lead">{{ desc }}</p>
-        {% else %}
-            <h2>Oops... 500&nbsp;&mdash;&nbsp;ApplicationError!</h2>
-            <p class="lead">Send it to the web-site administrator along with the current URL: {{ request.url }}.</p>
-        {% endif %}
-        <p class="lead">
-            Meanwhile you can try visiting other pages over here :)
-        </p>
-        <div class="bor"></div>
-    </div>
-{% endblock %}
+<div class="container">
+    % if code != 500:
+        <h2>Oops... ${ code }&nbsp;&mdash;&nbsp;${ name }!</h2>
+        <p class="lead">${ desc }</p>
+    % else:
+        <h2>Oops... 500&nbsp;&mdash;&nbsp;ApplicationError!</h2>
+        <p class="lead">Send it to the web-site administrator along with the current URL: ${ request.url }.</p>
+    % endif:
+    <p class="lead">
+        Meanwhile you can try visiting other pages over here :)
+    </p>
+    <div class="bor"></div>
+</div>
