@@ -27,7 +27,20 @@
         <div id="plot-words" style="height:250px;"></div>
 
         <%macros:tagcloud items="${topic.modality(name='words').terms_d.limit(500)}" additional_class="collapsed text-center" args="w">
-          <a href="${ url_for('term', modality='words', text=w.term.text) }" title="P(w | t) = ${ '%.4f' % w.probability }" data-size="${ w.probability }" data-use-size="true">${ w.term.text }</a>
+          <a href="${ url_for('term', modality='words', text=w.term.text) }"
+             title="P(w | t) = ${ '%.4f' % w.probability }"
+             data-size="${ w.probability }" data-use-size="true">
+            ${ w.term.text }
+          </a>
+
+          <small class="text-muted">
+            <button type="button" class="btn btn-link btn-xs" title="'${ w.term.text }' fits well in this topic">
+              <span class="glyphicon glyphicon-ok"></span>
+            </button>
+            <button type="button" class="btn btn-link btn-xs" title="'${ w.term.text }' doesn't belong here">
+              <span class="glyphicon glyphicon-remove"></span>
+            </button>
+          </small>
         </%macros:tagcloud>
       </div>
     </div>

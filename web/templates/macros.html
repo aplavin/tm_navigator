@@ -1,7 +1,7 @@
 <%def name="document_in_tagcloud(slug, np, np_fmt, title, authors)">
-    <a href="${ url_for('document', name=slug) }" data-size="${ np }" data-use-opacity="true"
-    data-placement="top" data-toggle="tooltip" data-html="true"
-    title="
+  <a href="${ url_for('document', name=slug) }" data-size="${ np }" data-use-opacity="true"
+     data-placement="top" data-toggle="tooltip" data-html="true"
+     title="
     ${ title }<br/><br/>
     ${ authors }<hr/>
     ${ np_fmt % np }
@@ -9,28 +9,28 @@
 </%def>
 
 <%def name="tagcloud(items, limit=None, emptystr=None, additional_class='')">
-    <ul class="tagcloud ${ additional_class }">
-        % for it in (items[:limit] if limit is not none else items):
-            <li>${ caller.body(it) }</li>
-        % endfor
+  <ul class="tagcloud ${ additional_class }">
+    % for it in (items[:limit] if limit is not none else items):
+      <li>${ caller.body(it) }</li>
+    % endfor
 
-        % if not items:
-            <li>${ (emptystr or '') | safe }</li>
-        % endif
+    % if not items:
+      <li>${ (emptystr or '') | safe }</li>
+    % endif
 
-        % if limit == -1:
-            <li>&hellip;</li>
-        % elif limit is not None and len(items) > limit:
-            <li>&hellip;&nbsp;${ len(items) - limit }&nbsp;more&nbsp;&hellip;</li>
-        % endif
-    </ul>
+    % if limit == -1:
+      <li>&hellip;</li>
+    % elif limit is not None and len(items) > limit:
+      <li>&hellip;&nbsp;${ len(items) - limit }&nbsp;more&nbsp;&hellip;</li>
+    % endif
+  </ul>
 </%def>
 
 <%def name="colcl(key)">\
 ${ {
-    'topics': 'info',
-    'docs': 'success',
-    'words': 'warning',
-    'other': 'danger'
+'topics': 'info',
+'docs': 'success',
+'words': 'warning',
+'other': 'danger'
 }.get(key, 'default') }\
 </%def>

@@ -36,6 +36,16 @@
                 <a href="${ url_for('topic', id=topic.id) }">
                   Topic ${ topic.text }
                 </a>
+
+                <small class="pull-right text-muted">
+                  Does the topic suit this document?
+                  <button type="button" class="btn btn-link btn-xs" title="Yes, it's a good fit">
+                    <span class="glyphicon glyphicon-ok"></span>
+                  </button>
+                  <button type="button" class="btn btn-link btn-xs" title="No, it doesn't belong here">
+                    <span class="glyphicon glyphicon-remove"></span>
+                  </button>
+                </small>
               </h4>
               <p class="list-group-item-text">
               <div class="nofloat">
@@ -66,7 +76,7 @@
         </ul>
 
         ##                 <div id="plot-topics-flow" style="height:400px;"></div>
-                    </div>
+      </div>
 
       <div class="bs-callout bs-callout-${ macros.colcl('words') }">
         <h4>Words:</h4>
@@ -123,6 +133,18 @@
           <a href="">
             ${ doc.conference }
           </a>
+
+          <div class="text-right">
+            <small class="text-muted">
+              Is the document really similar?
+              <button type="button" class="btn btn-link btn-xs" title="Yes, it's close in topic">
+                <span class="glyphicon glyphicon-ok"></span>
+              </button>
+              <button type="button" class="btn btn-link btn-xs" title="No, it's very different">
+                <span class="glyphicon glyphicon-remove"></span>
+              </button>
+            </small>
+          </div>
         </div>
       </div>
     % endfor
