@@ -28,54 +28,44 @@
         <div class="panel-body">
             <div class="bs-callout bs-callout-${ macros.colcl('topics') }">
                 <h4>Topics:</h4>
-                <div id="plot-topics" style="height:250px;"></div>
 
                 <%def name="show_topic(topic)">
-                    % if topic is not None and topic.level <= 3:
-                        <div class="panel panel-default col-xs-offset-${ topic.level - 1 }">
-                            <div class="panel-heading">
-                                <h3 class="panel-title">
-                                    <a href="${ url_for('topic', id=topic.id) }">
-                                        Topic ${ topic.text }
-                                    </a>
-                                </h3>
-
+                    % if topic is not None:
+                        <li class="list-group-item" style="border-width: 2px; border-color: rgba(92, 184, 92, ${ topic.level / 3 })">
+                            <h4 class="list-group-item-heading">
+                                <a href="${ url_for('topic', id=topic.id) }">
+                                    Topic ${ topic.text }
+                                </a>
+                            </h4>
+                            <p class="list-group-item-text">
                                 <div class="nofloat">
                                     <% probability = topic.documents[0].probability if topic.documents else 0 %>
                                     <div class="progress small" title="P(t | d) = ${ '%.3f' % probability }">
                                         <div class="progress-bar progress-bar-default" style="width: ${ probability * 100 }%"></div>
                                     </div>
                                 </div>
-                            </div>
 
-                            <div class="panel-body">
-                                <div class="bs-callout bs-callout-${ macros.colcl('words') }">
-                                    <h4 class="block-label">
-                                        Words
-                                    </h4>
+                                <%macros:tagcloud items="${topic.terms_d[:7]}" limit="${-1}" additional_class='' args="w">
+                                    <a href="${ url_for('term', modality='words', text=w.term.text) }" title="P(w | t) = ${ '%.3f' % w.probability }" data-size="${ w.probability }" data-use-size="true">${ w.term.text }</a>
+                                </%macros:tagcloud>
+                            </p>
 
-                                    <%macros:tagcloud items="${topic.terms_d[:50]}" limit="${-1}" additional_class='collapsed collapsed-small' args="w">
-                                        <a href="${ url_for('term', modality='words', text=w.term.text) }" title="P(w | t) = ${ '%.3f' % w.probability }" data-size="${ w.probability }" data-use-size="true">${ w.term.text }</a>
-                                    </%macros:tagcloud>
-                                </div>
-                            </div>
-                        </div>
-
-                        % for t in topic.children:
-                            ${ show_topic(t.child) }
-                        % endfor
+                            <ul class="list-group" style="margin-bottom: 0">
+                                % for t in topic.children:
+                                    ${ show_topic(t.child) }
+                                % endfor
+                            </ul>
+                        </li>
                     % endif
                 </%def>
 
-                % for t in root_topic.children:
-                    ${show_topic(t.child)}
-                % endfor
+                <ul class="list-group">
+                    % for t in root_topic.children:
+                        ${show_topic(t.child)}
+                    % endfor
+                </ul>
 
-##                 <%macros:tagcloud items="${document.topics}" additional_class="text-center" args="t">
-##                     <a href="${ url_for('topic', id=t.topic.id) }" title="P(t | d) = ${ '%.3f' % t.probability }" data-size="${ t.probability }" data-use-size="true">${ t.topic.text }</a>
-##                 </%macros:tagcloud>
-
-                <div id="plot-topics-flow" style="height:400px;"></div>
+##                 <div id="plot-topics-flow" style="height:400px;"></div>
             </div>
 
             <div class="bs-callout bs-callout-${ macros.colcl('words') }">
