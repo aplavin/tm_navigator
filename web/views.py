@@ -22,8 +22,10 @@ def overview():
 
 @app.route('/document/<path:name>')
 def document(name):
+    # the document itself
     document = db.session.query(m.Document).filter_by(file_name=name).one()
 
+    # topics hierarchy, including only those with non-zero probability in this document and their parents
     doctopics = db.session.query(m.DocumentTopic).filter_by(document_id=document.id).cte('doctopics')
 
     all_child_probs = db.session.query(doctopics.c.topic_id.label('id'),
@@ -52,7 +54,7 @@ def document(name):
     dt_a = []
 
     # start with the topic #0
-    q = db.session.query(t_a[-1]).filter(t_a[-1].level == 0)
+    hierarchy_q = db.session.query(t_a[-1]).filter(t_a[-1].level == 0)
 
     max_level = db.session.query(sa.func.max(m.Topic.level)).scalar()
     for _ in range(max_level):
@@ -60,7 +62,7 @@ def document(name):
         t_a.append(sa.orm.aliased(m.Topic, max_subtree_probs.alias()))
         dt_a.append(sa.orm.aliased(m.DocumentTopic, doctopics.alias()))
 
-        q = q \
+        hierarchy_q = hierarchy_q \
             .outerjoin(te_a[-1], t_a[-2].children).outerjoin(t_a[-1], te_a[-1].child) \
             .outerjoin(dt_a[-1], t_a[-1].documents) \
             .order_by(t_a[-1].level, dt_a[-1].probability.desc())
@@ -68,10 +70,27 @@ def document(name):
         q_options = q_options.contains_eager('children', alias=te_a[-1]).contains_eager('child', alias=t_a[-1])
         q_o.append(q_options.contains_eager('documents', alias=dt_a[-1]).lazyload('document'))
 
-    q = q.options(q_options.noload('children')).options(*q_o)
-    root_topic = q.one()
+    hierarchy_q = hierarchy_q.options(q_options.noload('children')).options(*q_o)
+    root_topic = hierarchy_q.one()
 
-    return render_template('document.html', document=document, root_topic=root_topic)
+    # similar documents
+    target = db.session.query(sa.func.array_agg(sa.func.coalesce(m.DocumentTopic.probability, 0), order_by=m.Topic.id)) \
+        .select_from(m.Topic) \
+        .outerjoin(m.DocumentTopic, sa.and_(m.Topic.documents, m.DocumentTopic.document_id == 0)) \
+        .scalar()
+
+    similar = db.session.query(m.Document,
+                               sa.func.distance(list(target),
+                                                sa.func.array_agg(sa.func.coalesce(m.DocumentTopic.probability, 0),
+                                                                  order_by=m.Topic.id)
+                                                ).label('distance')) \
+        .filter(m.Document.id != 0) \
+        .join(m.Topic, sa.literal(True)) \
+        .outerjoin(m.DocumentTopic, sa.and_(m.Document.topics, m.Topic.documents)) \
+        .group_by(m.Document.id) \
+        .order_by('distance')
+
+    return render_template('document.html', document=document, root_topic=root_topic, similar_bytopic=similar)
 
 
 @app.route('/term/<modality>/<text>')

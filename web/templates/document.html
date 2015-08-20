@@ -102,12 +102,30 @@
 <%def name="similar()">
     <div class="bs-callout bs-callout-${ macros.colcl('topics') } list-group">
         <h3>Similar topics structure</h3>
+        <small class="text-muted">Using cosine distance between p(t|d) vectors.</small>
 
-    </div>
-
-    <div class="bs-callout bs-callout-${ macros.colcl('other') } list-group">
-        <h3>By same authors</h3>
-
+        % for doc, dist in similar_bytopic[:20]:
+            <div class="list-group-item">
+                <span class="pull-right similarity-chart" data-value="${ 1 - dist }"></span>
+                <h4 class="list-group-item-heading">
+                    <a href="${ url_for('document', name=doc.file_name) }">
+                        ${ doc.title }
+                    </a>
+                </h4>
+                <div class="list-group-item-text">
+                    % for term in doc.modality(name='authors').terms[:]:
+                        <a href="">
+                            ${ term.term.text }
+                        </a>
+                        ${ ',' if not loop.last else '' }
+                    % endfor
+                    |
+                    <a href="">
+                        ${ doc.conference }
+                    </a>
+                </div>
+            </div>
+        % endfor
     </div>
 </%def>
 

@@ -173,3 +173,27 @@ class TopicTerm(Base):
     __table_args__ = (
         sa.ForeignKeyConstraint(['modality_id', 'term_id'], ['terms.modality_id', 'terms.id']),
     )
+
+
+from sqlalchemy.ext.compiler import compiles
+from sqlalchemy.sql.expression import ColumnElement
+from sqlalchemy.types import Text
+from sqlalchemy.dialects import postgresql as pg_dialect
+
+
+class array_agg(ColumnElement):
+    type = pg_dialect.ARRAY(sa.Integer, as_tuple=True)
+
+    def __init__(self, expr, order_by=None):
+        self.expr = expr
+        self.order_by = order_by
+
+
+@compiles(array_agg)
+def compile_array_agg(element, compiler, **kw):
+    if element.order_by is not None:
+        return "ARRAY_AGG({0} ORDER BY {1})".format(compiler.process(element.expr), compiler.process(element.order_by))
+    return "ARRAY_AGG({0})".format(compiler.process(element.expr))
+
+
+sa.func.array_agg = array_agg
