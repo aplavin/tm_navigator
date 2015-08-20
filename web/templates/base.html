@@ -1,11 +1,11 @@
 <%!
-from webassets import Environment, Bundle
-from webassets.env import RegisterError
+  from webassets import Environment, Bundle
+  from webassets.env import RegisterError
 
-assets_env = Environment('static', '/static')
-assets_env.debug = True
+  assets_env = Environment('static', '/static')
+  assets_env.debug = True
 
-def assets_urls(name, files, filters, output):
+  def assets_urls(name, files, filters, output):
     asset = Bundle(*files, filters=filters, output=output)
     try:
         assets_env.register(name, asset)
@@ -16,45 +16,63 @@ def assets_urls(name, files, filters, output):
 
 <!doctype html>
 <html>
-    <head>
-        <title>
-            <%block name="title"/>
-            - TM Vis
-        </title>
+<head>
+  <title>
+    <%block name="title"/>
+    - TM Vis
+  </title>
 
-        % for url in assets_urls('css', ['css/bootstrap.css', 'css/custom.css'], 'cssmin', 'css/_packed.css'):
-            <link rel="stylesheet" type="text/css" href="${url}">
-        % endfor
+  % for url in assets_urls('css', ['css/bootstrap.css', 'css/custom.css'], 'cssmin', 'css/_packed.css'):
+    <link rel="stylesheet" type="text/css" href="${url}">
+  % endfor
 
-        % for url in assets_urls('js', ['js/libs/jquery-2.1.1.js', 'js/libs/highcharts.js', 'js/libs/drilldown.js', 'js/libs/bootstrap.js', 'js/libs/jquery.autocomplete.js', 'js/libs/index.js', 'js/libs/sprintf.js', 'js/libs/tinycolor.js', 'js/common.js', 'js/plots.js', 'js/search.js'], 'rjsmin', 'js/_packed.js'):
-            <script src="${url}"></script>
-        % endfor
+  % for url in assets_urls('js', ['js/libs/jquery-2.1.1.js', 'js/libs/highcharts.js', 'js/libs/drilldown.js', 'js/libs/bootstrap.js', 'js/libs/jquery.autocomplete.js', 'js/libs/index.js', 'js/libs/sprintf.js', 'js/libs/tinycolor.js', 'js/common.js', 'js/plots.js', 'js/search.js'], 'rjsmin', 'js/_packed.js'):
+    <script src="${url}"></script>
+  % endfor
 
-        <%block name="head"/>
-    </head>
+  <%block name="head"/>
+</head>
 
-    <body>
-        <header>
-            <div class="container">
-                <h1><a href="${ url_for('overview') }">TM Vis</a></h1>
+<body>
+<header>
+  <div class="container">
+    % if 'username' in session:
+      <div class="pull-right">
+        Logged in as <strong>${ session['username'] }</strong>
+        <a href="${ url_for('login') }" class="btn btn-default">Log out</a>
+      </div>
+    % else:
+      <form class="form-inline pull-right" action="${ url_for('login') }" method="POST">
+        <div class="input-group">
+          <input type="text" class="form-control" name="username" placeholder="Any name">
+          <span class="input-group-btn">
+            <button type="submit" class="btn btn-default">
+              Log in
+            </button>
+          </span>
+        </div>
+      </form>
+    % endif
 
-                <ul class="lead breadcrumb">
-                    <li><a href="${ url_for('overview') }">Collection</a></li>
-                    <li>${ self.title() }</li>
-                </ul>
-            </div>
-        </header>
-        <hr>
+    <h1><a href="${ url_for('overview') }">TM Vis</a></h1>
 
-        <section>
-            ${self.body()}
-        </section>
+    <ul class="lead breadcrumb">
+      <li><a href="${ url_for('overview') }">Collection</a></li>
+      <li>${ self.title() }</li>
+    </ul>
+  </div>
+</header>
+<hr>
 
-        <hr>
-        <footer>
-            <div class="container">
-                <p>&copy; 2014-2015</p>
-            </div>
-        </footer>
-    </body>
+<section>
+  ${self.body()}
+</section>
+
+<hr>
+<footer>
+  <div class="container">
+    <p>&copy; 2014-2015</p>
+  </div>
+</footer>
+</body>
 </html>

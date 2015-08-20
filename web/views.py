@@ -1,4 +1,4 @@
-from flask import request, jsonify
+from flask import request, session, redirect
 from flask.ext.mako import render_template
 import traceback
 from app import app, db
@@ -213,6 +213,17 @@ def search_results_group(modality_id, term_id, query=''):
                for doc, title_hl in q[:50]
                if [setattr(doc, 'title_hl', title_hl)]]
     return render_template('search_results_group.html', results=results, results_cnt=q.count())
+
+
+@app.route('/login', methods=['GET'])
+@app.route('/login', methods=['POST'])
+def login():
+    if request.method == 'GET':
+        if 'username' in session:
+            del session['username']
+    elif request.method == 'POST':
+        session['username'] = request.form['username']
+    return redirect(request.referrer)
 
 
 def error_handler(error):
