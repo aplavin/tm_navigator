@@ -35,7 +35,7 @@
 
             <p>To start browsing the texts collection just click <a href="${ url_for('browse') }" class="btn btn-primary btn-sm">Browse</a> here or above! This will direct you to the documents listing with a lot of metadata, great search and grouping controls.</p>
 
-            <p>Complete information about any single document is available by click on its name. Try it here: <a href="${ url_for('document', name=docs[0].title) }" class="btn btn-primary btn-sm">example document</a>. The available information includes topic structure and dynamic, similar documents, and content colored by topic. You can browse the collection further from this point by cross-links.</p>
+            <p>Complete information about any single document is available by click on its name. Try it here: <a href="${ url_for('document', name=docs[0].file_name) }" class="btn btn-primary btn-sm">example document</a>. The available information includes topic structure and dynamic, similar documents, and content colored by topic. You can browse the collection further from this point by cross-links.</p>
 
             <p>In the same way, topics and words are clickable almost everywhere. A click on them shows corresponding information and allows for deeper exploration: <a href="${ url_for('topic', id=topics[0].id) }" class="btn btn-primary btn-sm">example topic</a>, <a href="${ url_for('term', modality='words', text=words[0].text) }" class="btn btn-primary btn-sm">example word</a>.</p>
 

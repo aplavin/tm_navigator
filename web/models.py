@@ -94,7 +94,7 @@ class Topic(Base, ModalityFilterMixin):
 
     @level.expression
     def level(self):
-        return sa.func.div(self.id, 1000)
+        return self.id / 1000
 
     @level.setter
     def level(self, level):
