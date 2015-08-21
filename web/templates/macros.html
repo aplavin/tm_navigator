@@ -15,7 +15,7 @@
     % endfor
 
     % if not items:
-      <li>${ (emptystr or '') | safe }</li>
+      <li>${ emptystr or '' }</li>
     % endif
 
     % if limit == -1:

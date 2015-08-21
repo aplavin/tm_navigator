@@ -12,7 +12,7 @@
       ${ document.slug }
       <div>
         % for term in document.modality(name='authors').terms[:]:
-          <a href="">
+          <a href="${ url_for('term', modality='authors', text=term.term.text) }">
             ${ term.term.text }
           </a>
         ${ ',' if not loop.last else '' }
@@ -122,7 +122,7 @@
         </h4>
         <div class="list-group-item-text">
           % for term in d.b.modality(name='authors').terms[:]:
-            <a href="">
+            <a href="${ url_for('term', modality='authors', text=term.term.text) }">
               ${ term.term.text }
             </a>
           ${ ',' if not loop.last else '' }

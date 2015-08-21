@@ -64,7 +64,7 @@
                 <div>
                     <span>
                         % for term in doc.modality(name='authors').terms[:]:
-                            <a href="">
+                            <a href="${ url_for('term', modality='authors', text=term.term.text) }">
                                 ${ term.term.text }
                             </a>
                             ${ ',' if not loop.last else '' }
