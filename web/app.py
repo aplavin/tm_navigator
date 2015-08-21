@@ -42,6 +42,7 @@ flask.helpers.url_for = url_for_cached
 
 
 from views import *
+from assessment_rest import *
 
 if __name__ == '__main__':
     app.run(use_reloader=app.config['DEBUG'], port=5000, host='0.0.0.0')

@@ -18,7 +18,7 @@
         <div id="plot-documents" style="height:250px;"></div>
 
         <%macros:tagcloud items="${topic.documents}" additional_class="collapsed text-center" args="d">
-          ${ macros.document_in_tagcloud(d.document.file_name, d.probability, 'P(t | d) = %.3f', d.document.title, '') }
+          ${ macros.document_in_tagcloud(d.document.slug, d.probability, 'P(t | d) = %.3f', d.document.title, '') }
         </%macros:tagcloud>
       </div>
 
@@ -33,14 +33,10 @@
             ${ w.term.text }
           </a>
 
-          <small class="text-muted">
-            <button type="button" class="btn btn-link btn-xs" title="'${ w.term.text }' fits well in this topic">
-              <span class="glyphicon glyphicon-ok"></span>
-            </button>
-            <button type="button" class="btn btn-link btn-xs" title="'${ w.term.text }' doesn't belong here">
-              <span class="glyphicon glyphicon-remove"></span>
-            </button>
-          </small>
+          ${ macros.assess_yesno(
+          "",
+          "'%s' fits well in this topic" % w.term.text,
+          "'%s' doesn't belong here" % w.term.text) }
         </%macros:tagcloud>
       </div>
     </div>
@@ -55,9 +51,9 @@
           [
             % for d in topic.documents:
               {
-                name: '${ d.document.file_name }',
+                name: '${ d.document.slug }',
                 y: ${ '%.3f' % d.probability },
-                url: '${ url_for('document', name=d.document.file_name) }'
+                url: '${ url_for('document', slug=d.document.slug) }'
               },
             % endfor
           ],

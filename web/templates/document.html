@@ -9,7 +9,7 @@
       <h3 class="panel-title">
         ${ document.title }
       </h3>
-      ${ document.file_name }
+      ${ document.slug }
       <div>
         % for term in document.modality(name='authors').terms[:]:
           <a href="">
@@ -37,15 +37,11 @@
                   Topic ${ topic.text }
                 </a>
 
-                <small class="pull-right text-muted">
-                  Does the topic suit this document?
-                  <button type="button" class="btn btn-link btn-xs" title="Yes, it's a good fit">
-                    <span class="glyphicon glyphicon-ok"></span>
-                  </button>
-                  <button type="button" class="btn btn-link btn-xs" title="No, it doesn't belong here">
-                    <span class="glyphicon glyphicon-remove"></span>
-                  </button>
-                </small>
+                ${ macros.assess_yesno(
+                "Does the topic suit this document?",
+                "Yes, it's a good fit",
+                "No, it doesn't belong here",
+                "pull-right") }
               </h4>
               <p class="list-group-item-text">
               <div class="nofloat">
@@ -114,16 +110,16 @@
     <h3>Similar topics structure</h3>
     <small class="text-muted">Using cosine distance between p(t|d) vectors.</small>
 
-    % for doc, dist in similar_bytopic[:20]:
+    % for d in document.similar:
       <div class="list-group-item">
-        <span class="pull-right similarity-chart" data-value="${ 1 - dist }"></span>
+        <span class="pull-right similarity-chart" data-value="${ d.similarity }"></span>
         <h4 class="list-group-item-heading">
-          <a href="${ url_for('document', name=doc.file_name) }">
-            ${ doc.title }
+          <a href="${ url_for('document', slug=d.b.slug) }">
+            ${ d.b.title }
           </a>
         </h4>
         <div class="list-group-item-text">
-          % for term in doc.modality(name='authors').terms[:]:
+          % for term in d.b.modality(name='authors').terms[:]:
             <a href="">
               ${ term.term.text }
             </a>
@@ -131,19 +127,14 @@
           % endfor
           |
           <a href="">
-            ${ doc.conference }
+            ${ d.b.conference }
           </a>
 
           <div class="text-right">
-            <small class="text-muted">
-              Is the document really similar?
-              <button type="button" class="btn btn-link btn-xs" title="Yes, it's close in topic">
-                <span class="glyphicon glyphicon-ok"></span>
-              </button>
-              <button type="button" class="btn btn-link btn-xs" title="No, it's very different">
-                <span class="glyphicon glyphicon-remove"></span>
-              </button>
-            </small>
+            ${ macros.assess_yesno(
+            "Is the document really similar?",
+            "Yes, it's close in topic",
+            "No, it's very different") }
           </div>
         </div>
       </div>

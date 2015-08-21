@@ -1,10 +1,11 @@
 import re
 import sqlalchemy as sa
-from sqlalchemy import func, types
 import sqlalchemy.ext.hybrid
 import sqlalchemy.ext.declarative as sa_dec
 from sqlalchemy_searchable import make_searchable
 from sqlalchemy_utils.types import TSVectorType
+from sqlalchemy_utils import aggregated
+from db_helpers import *
 
 
 class Base(object):
@@ -12,7 +13,7 @@ class Base(object):
     def __tablename__(cls):
         return '_'.join(
             w.lower()
-            for w in re.findall('[A-Z][a-z]+', cls.__name__)
+            for w in re.findall('[A-Z][a-z]*', cls.__name__)
         ) + 's'
 
     def __repr__(self):
@@ -31,10 +32,13 @@ make_searchable()
 
 
 class Modality(Base):
-    __tablename__ = 'modalities'
+    id = sa.Column(sa.Integer, primary_key=True)
+    name = sa.Column(sa.Text, nullable=False, unique=True)
 
-    id = sa.Column(sa.types.Integer, primary_key=True)
-    name = sa.Column(sa.types.Text, nullable=False, unique=True)
+    @aggregated('terms',
+                sa.Column(sa.Integer, nullable=False, server_default=sa.literal(0)))
+    def count(self):
+        return sa.func.count()
 
 
 class ModalityFilterMixin(object):
@@ -51,10 +55,10 @@ class ModalityFilterMixin(object):
 
 
 class Document(Base, ModalityFilterMixin):
-    id = sa.Column(sa.types.Integer, primary_key=True)
-    title = sa.Column(sa.types.Text, nullable=False)
-    file_name = sa.Column(sa.types.Text, nullable=False, unique=True)
-    length = sa.Column(sa.types.Integer, nullable=False)
+    id = sa.Column(sa.Integer, primary_key=True)
+    title = sa.Column(sa.Text, nullable=False)
+    file_name = sa.Column(sa.Text, nullable=False, unique=True)
+    slug = sa.Column(sa.Text, nullable=False, unique=True)
 
     search_vector = sa.orm.deferred(sa.Column(TSVectorType('title', regconfig='russian')))
 
@@ -72,21 +76,35 @@ class Document(Base, ModalityFilterMixin):
         return re.sub(r'^([a-z]+)(\d+)-pdfs/.+', r'\1-\2', self.file_name).upper()
 
 
-class Term(Base):
-    id = sa.Column(sa.types.Integer, primary_key=True)
-    modality_id = sa.Column(sa.types.Integer, sa.ForeignKey('modalities.id'), primary_key=True)
-    text = sa.Column(sa.types.Text, nullable=False)
-    count = sa.Column(sa.types.Integer, nullable=False)
+class DocumentSimilarity(Base):
+    a_id = sa.Column(sa.Integer, sa.ForeignKey(Document.id), primary_key=True)
+    b_id = sa.Column(sa.Integer, sa.ForeignKey(Document.id), primary_key=True)
+    similarity = sa.Column(sa.Float, nullable=False)
 
-    modality = sa.orm.relationship('Modality', backref='terms')
+    a = sa.orm.relationship(Document, lazy='joined',
+                            backref=sa.orm.backref('similar', order_by=similarity.desc()),
+                            foreign_keys=a_id)
+    b = sa.orm.relationship(Document, lazy='joined', foreign_keys=b_id)
+
+
+class Term(Base):
+    id = sa.Column(sa.Integer, primary_key=True)
+    modality_id = sa.Column(sa.Integer, sa.ForeignKey(Modality.id), primary_key=True)
+    text = sa.Column(sa.Text, nullable=False)
+
+    modality = sa.orm.relationship(Modality, backref='terms')
+
+    @aggregated('documents',
+                sa.Column(sa.Integer, nullable=False, server_default=sa.literal(0)))
+    def count(self):
+        return sa.func.coalesce(sa.func.sum(DocumentTerm.count), 0)
 
 
 class Topic(Base, ModalityFilterMixin):
-    id = sa.Column(sa.types.Integer, primary_key=True)
-    name = sa.Column(sa.types.Text, unique=True)
-    probability = sa.Column(sa.types.Float, nullable=False)
+    id = sa.Column(sa.Integer, primary_key=True)
+    name = sa.Column(sa.Text, unique=True)
 
-    terms_d = sa.orm.relationship('TopicTerm', order_by='desc(TopicTerm.probability)', lazy='dynamic')
+    terms_d = sa.orm.relationship(lambda: TopicTerm, order_by=lambda: TopicTerm.probability.desc(), lazy='dynamic')
 
     @sa.ext.hybrid.hybrid_property
     def level(self):
@@ -116,84 +134,68 @@ class Topic(Base, ModalityFilterMixin):
     def text(self):
         return '%s-%s' % (self.level, self.name or '%02d' % self.id_in_level)
 
+    @aggregated('documents',
+                sa.Column(sa.Float, nullable=False, server_default=sa.literal(0)))
+    def probability(self):
+        # TODO: correct computation!
+        return sa.func.coalesce(sa.func.sum(DocumentTopic.probability), 0)
+
 
 class TopicEdge(Base):
-    parent_id = sa.Column(sa.types.Integer, sa.ForeignKey('topics.id'), primary_key=True)
-    child_id = sa.Column(sa.types.Integer, sa.ForeignKey('topics.id'), primary_key=True)
-    probability = sa.Column(sa.types.Float, nullable=False)
+    parent_id = sa.Column(sa.Integer, sa.ForeignKey(Topic.id), primary_key=True)
+    child_id = sa.Column(sa.Integer, sa.ForeignKey(Topic.id), primary_key=True)
+    probability = sa.Column(sa.Float, nullable=False)
 
-    parent = sa.orm.relationship('Topic', lazy='joined',
-                                 backref=sa.orm.backref('children', order_by='desc(Topic.probability)'),
+    parent = sa.orm.relationship(Topic, lazy='joined',
+                                 backref=sa.orm.backref('children', order_by=Topic.probability.desc()),
                                  foreign_keys=parent_id)
-    child = sa.orm.relationship('Topic', lazy='joined', backref='parents', foreign_keys=child_id)
+    child = sa.orm.relationship(Topic, lazy='joined', backref='parents', foreign_keys=child_id)
 
 
 class DocumentTerm(Base):
-    document_id = sa.Column(sa.types.Integer, sa.ForeignKey('documents.id'), primary_key=True)
-    modality_id = sa.Column(sa.types.Integer, sa.ForeignKey('modalities.id'), primary_key=True)
-    term_id = sa.Column(sa.types.Integer, primary_key=True)
-    count = sa.Column(sa.types.Integer, nullable=False)
+    document_id = sa.Column(sa.Integer, sa.ForeignKey(Document.id), primary_key=True)
+    modality_id = sa.Column(sa.Integer, sa.ForeignKey(Modality.id), primary_key=True)
+    term_id = sa.Column(sa.Integer, primary_key=True)
+    count = sa.Column(sa.Integer, nullable=False)
 
-    document = sa.orm.relationship('Document', lazy='joined',
-                                   backref=sa.orm.backref('terms', order_by='desc(DocumentTerm.count)', lazy='dynamic'))
-    term = sa.orm.relationship('Term', lazy='joined',
-                               backref=sa.orm.backref('documents', order_by='desc(DocumentTerm.count)'))
-    modality = sa.orm.relationship('Modality', viewonly=True, lazy='joined',
+    document = sa.orm.relationship(Document, lazy='joined',
+                                   backref=sa.orm.backref('terms', order_by=count.desc(), lazy='dynamic'))
+    term = sa.orm.relationship(Term, lazy='joined',
+                               backref=sa.orm.backref('documents', order_by=count.desc()))
+    modality = sa.orm.relationship(Modality, viewonly=True, lazy='joined',
                                    backref=sa.orm.backref('documents', viewonly=True))
 
     __table_args__ = (
-        sa.ForeignKeyConstraint(['modality_id', 'term_id'], ['terms.modality_id', 'terms.id']),
+        sa.ForeignKeyConstraint([modality_id, term_id], [Term.modality_id, Term.id]),
+        sa.Index('dt_term_ix', modality_id, term_id),
+        sa.Index('dt_doc_ix', document_id),
     )
 
 
 class DocumentTopic(Base):
-    document_id = sa.Column(sa.types.Integer, sa.ForeignKey('documents.id'), primary_key=True)
-    topic_id = sa.Column(sa.types.Integer, sa.ForeignKey('topics.id'), primary_key=True)
-    probability = sa.Column(sa.types.Float, nullable=False)
+    document_id = sa.Column(sa.Integer, sa.ForeignKey(Document.id), primary_key=True)
+    topic_id = sa.Column(sa.Integer, sa.ForeignKey(Topic.id), primary_key=True)
+    probability = sa.Column(sa.Float, nullable=False)
 
-    document = sa.orm.relationship('Document', lazy='joined',
-                                   backref=sa.orm.backref('topics', order_by='desc(DocumentTopic.probability)'))
-    topic = sa.orm.relationship('Topic', lazy='joined',
-                                backref=sa.orm.backref('documents', order_by='desc(DocumentTopic.probability)'))
+    document = sa.orm.relationship(Document, lazy='joined',
+                                   backref=sa.orm.backref('topics', order_by=probability.desc()))
+    topic = sa.orm.relationship(Topic, lazy='joined',
+                                backref=sa.orm.backref('documents', order_by=probability.desc()))
 
 
 class TopicTerm(Base):
-    topic_id = sa.Column(sa.types.Integer, sa.ForeignKey('topics.id'), primary_key=True)
-    modality_id = sa.Column(sa.types.Integer, sa.ForeignKey('modalities.id'), primary_key=True)
-    term_id = sa.Column(sa.types.Integer, primary_key=True)
-    probability = sa.Column(sa.types.Float)
+    topic_id = sa.Column(sa.Integer, sa.ForeignKey(Topic.id), primary_key=True)
+    modality_id = sa.Column(sa.Integer, sa.ForeignKey(Modality.id), primary_key=True)
+    term_id = sa.Column(sa.Integer, primary_key=True)
+    probability = sa.Column(sa.Float)
 
-    topic = sa.orm.relationship('Topic', lazy='joined',
-                                backref=sa.orm.backref('terms', order_by='desc(TopicTerm.probability)'))
-    term = sa.orm.relationship('Term', lazy='joined',
-                               backref=sa.orm.backref('topics', order_by='desc(TopicTerm.probability)'))
-    modality = sa.orm.relationship('Modality', viewonly=True, lazy='joined',
+    topic = sa.orm.relationship(Topic, lazy='joined',
+                                backref=sa.orm.backref('terms', order_by=probability.desc()))
+    term = sa.orm.relationship(Term, lazy='joined',
+                               backref=sa.orm.backref('topics', order_by=probability.desc()))
+    modality = sa.orm.relationship(Modality, viewonly=True, lazy='joined',
                                    backref=sa.orm.backref('topics', viewonly=True))
 
     __table_args__ = (
-        sa.ForeignKeyConstraint(['modality_id', 'term_id'], ['terms.modality_id', 'terms.id']),
+        sa.ForeignKeyConstraint([modality_id, term_id], [Term.modality_id, Term.id]),
     )
-
-
-from sqlalchemy.ext.compiler import compiles
-from sqlalchemy.sql.expression import ColumnElement
-from sqlalchemy.types import Text
-from sqlalchemy.dialects import postgresql as pg_dialect
-
-
-class array_agg(ColumnElement):
-    type = pg_dialect.ARRAY(sa.Integer, as_tuple=True)
-
-    def __init__(self, expr, order_by=None):
-        self.expr = expr
-        self.order_by = order_by
-
-
-@compiles(array_agg)
-def compile_array_agg(element, compiler, **kw):
-    if element.order_by is not None:
-        return "ARRAY_AGG({0} ORDER BY {1})".format(compiler.process(element.expr), compiler.process(element.order_by))
-    return "ARRAY_AGG({0})".format(compiler.process(element.expr))
-
-
-sa.func.array_agg = array_agg

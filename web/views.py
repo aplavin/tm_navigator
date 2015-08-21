@@ -15,15 +15,15 @@ def overview():
         'overview.html',
         words=db.session.query(m.Term).join(m.Modality).filter(m.Modality.name == 'words').order_by(
             m.Term.count.desc()),
-        docs=db.session.query(m.Document).order_by(m.Document.length.desc()),
+        docs=db.session.query(m.Document),
         topics=db.session.query(m.Topic).order_by(m.Topic.probability.desc()),
         topics_cnts=db.session.query(m.Topic.level, m.func.count()).group_by(m.Topic.level).order_by(m.Topic.level))
 
 
-@app.route('/document/<path:name>')
-def document(name):
+@app.route('/document/<slug>')
+def document(slug):
     # the document itself
-    document = db.session.query(m.Document).filter_by(file_name=name).one()
+    document = db.session.query(m.Document).filter_by(slug=slug).one()
 
     # topics hierarchy, including only those with non-zero probability in this document and their parents
     doctopics = db.session.query(m.DocumentTopic).filter_by(document_id=document.id).cte('doctopics')
@@ -73,24 +73,7 @@ def document(name):
     hierarchy_q = hierarchy_q.options(q_options.noload('children')).options(*q_o)
     root_topic = hierarchy_q.one()
 
-    # similar documents
-    target = db.session.query(sa.func.array_agg(sa.func.coalesce(m.DocumentTopic.probability, 0), order_by=m.Topic.id)) \
-        .select_from(m.Topic) \
-        .outerjoin(m.DocumentTopic, sa.and_(m.Topic.documents, m.DocumentTopic.document_id == 0)) \
-        .scalar()
-
-    similar = db.session.query(m.Document,
-                               sa.func.distance(list(target),
-                                                sa.func.array_agg(sa.func.coalesce(m.DocumentTopic.probability, 0),
-                                                                  order_by=m.Topic.id)
-                                                ).label('distance')) \
-        .filter(m.Document.id != 0) \
-        .join(m.Topic, sa.literal(True)) \
-        .outerjoin(m.DocumentTopic, sa.and_(m.Document.topics, m.Topic.documents)) \
-        .group_by(m.Document.id) \
-        .order_by('distance')
-
-    return render_template('document.html', document=document, root_topic=root_topic, similar_bytopic=similar)
+    return render_template('document.html', document=document, root_topic=root_topic)
 
 
 @app.route('/term/<modality>/<text>')

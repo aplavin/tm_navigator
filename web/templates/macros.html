@@ -1,5 +1,5 @@
 <%def name="document_in_tagcloud(slug, np, np_fmt, title, authors)">
-  <a href="${ url_for('document', name=slug) }" data-size="${ np }" data-use-opacity="true"
+  <a href="${ url_for('document', slug=slug) }" data-size="${ np }" data-use-opacity="true"
      data-placement="top" data-toggle="tooltip" data-html="true"
      title="
     ${ title }<br/><br/>
@@ -24,6 +24,18 @@
       <li>&hellip;&nbsp;${ len(items) - limit }&nbsp;more&nbsp;&hellip;</li>
     % endif
   </ul>
+</%def>
+
+<%def name="assess_yesno(question, yes_text, no_text, additional_classes='')">
+  <small class="text-muted ${ additional_classes }">
+    ${ question }
+    <button type="button" class="btn btn-link btn-xs" title="${ yes_text }">
+      <span class="glyphicon glyphicon-ok"></span>
+    </button>
+    <button type="button" class="btn btn-link btn-xs" title="${ no_text }">
+      <span class="glyphicon glyphicon-remove"></span>
+    </button>
+  </small>
 </%def>
 
 <%def name="colcl(key)">\

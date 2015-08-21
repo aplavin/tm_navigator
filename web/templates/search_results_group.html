@@ -27,7 +27,7 @@
                     </h4>
 
                     <%macros:tagcloud items="${topic.documents}" limit="${-1}" emptystr='Nothing matched' additional_class='collapsed collapsed-small' args="d">
-                        ${ macros.document_in_tagcloud(d.document.file_name, d.probability, 'P(t | d) = %.3f', d.document.title, '') }
+                        ${ macros.document_in_tagcloud(d.document.slug, d.probability, 'P(t | d) = %.3f', d.document.title, '') }
                     </%macros:tagcloud>
                 </div>
 
@@ -57,7 +57,7 @@
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">
-                    <a href="${ url_for('document', name=doc.file_name) }">
+                    <a href="${ url_for('document', slug=doc.slug) }">
                         ${ doc.title_hl }
                     </a>
                 </h3>

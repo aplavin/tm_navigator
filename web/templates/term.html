@@ -30,7 +30,7 @@
                 <div id="plot-documents" style="height:250px;"></div>
 
                 <%macros:tagcloud items="${term.documents}" additional_class="collapsed text-center" args="d">
-                    ${ macros.document_in_tagcloud(d.document.file_name, d.count, 'N_wd = %d', d.document.title, '') }
+                    ${ macros.document_in_tagcloud(d.document.slug, d.count, 'N_wd = %d', d.document.title, '') }
                 </%macros:tagcloud>
             </div>
         </div>
@@ -63,9 +63,9 @@
                 [
                     % for d in term.documents:
                         {
-                            name: '${ d.document.file_name }',
+                            name: '${ d.document.slug }',
                             y: ${ d.count },
-                            url: '${ url_for('document', name=d.document.file_name) }'
+                            url: '${ url_for('document', slug=d.document.slug) }'
                         },
                     % endfor
                 ]
