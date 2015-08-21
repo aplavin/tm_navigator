@@ -1,7 +1,7 @@
 <%inherit file="base.html"/>
 <%namespace name="macros" file="macros.html"/>
 
-<%block name="title">Document ${ document.title }</%block>
+<%block name="title">Document ${ document.slug }</%block>
 
 <%def name="overview()">
   <div class="panel panel-default">
@@ -38,6 +38,8 @@
                 </a>
 
                 ${ macros.assess_yesno(
+                am.ADocumentTopic,
+                {'document_id': document.id, 'topic_id': topic.id, 'child_type': 'topic'},
                 "Does the topic suit this document?",
                 "Yes, it's a good fit",
                 "No, it doesn't belong here",
@@ -58,7 +60,7 @@
 
               <ul class="list-group" style="margin-bottom: 0">
                 % for t in topic.children:
-                                    ${ show_topic(t.child) }
+                  ${ show_topic(t.child) }
                 % endfor
               </ul>
             </li>
@@ -67,7 +69,7 @@
 
         <ul class="list-group">
           % for t in root_topic.children:
-                        ${show_topic(t.child)}
+            ${show_topic(t.child)}
           % endfor
         </ul>
 
@@ -132,6 +134,8 @@
 
           <div class="text-right">
             ${ macros.assess_yesno(
+            am.ADocumentSimilarity,
+            {'a_id': d.a_id, 'b_id': d.b_id},
             "Is the document really similar?",
             "Yes, it's close in topic",
             "No, it's very different") }

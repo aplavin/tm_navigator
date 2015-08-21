@@ -1,8 +1,9 @@
 from flask import request, session, redirect
 from flask.ext.mako import render_template
 import traceback
-from app import app, db
+from app import app, db, restless
 import models as m
+import assessment_models as am
 import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql as pg_dialect
 import sqlalchemy_searchable as searchable
@@ -17,7 +18,7 @@ def overview():
             m.Term.count.desc()),
         docs=db.session.query(m.Document),
         topics=db.session.query(m.Topic).order_by(m.Topic.probability.desc()),
-        topics_cnts=db.session.query(m.Topic.level, m.func.count()).group_by(m.Topic.level).order_by(m.Topic.level))
+        topics_cnts=db.session.query(m.Topic.level, sa.func.count()).group_by(m.Topic.level).order_by(m.Topic.level))
 
 
 @app.route('/document/<slug>')

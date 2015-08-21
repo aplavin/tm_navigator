@@ -3,6 +3,7 @@ import flask
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.mako import MakoTemplates
+import flask.ext.restless
 from flask_debugtoolbar import DebugToolbarExtension
 
 
@@ -10,6 +11,7 @@ app = Flask(__name__)
 app.config.from_pyfile('config.cfg')
 db = SQLAlchemy(app)
 mako = MakoTemplates(app)
+restless = flask.ext.restless.APIManager(app, flask_sqlalchemy_db=db)
 toolbar = DebugToolbarExtension(app)
 
 
@@ -44,5 +46,10 @@ flask.helpers.url_for = url_for_cached
 from views import *
 from assessment_rest import *
 
+@app.context_processor
+def inject_am():
+    import assessment_models
+    return dict(am=assessment_models)
+
 if __name__ == '__main__':
-    app.run(use_reloader=app.config['DEBUG'], port=5000, host='0.0.0.0')
+    app.run(use_reloader=app.config['DEBUG'], port=3033)

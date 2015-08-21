@@ -10,6 +10,14 @@
         Topic ${ topic.text }
       </h3>
       P(t) = ${ '%.3f' % topic.probability }
+
+      ${ macros.assess_yesno(
+      am.ATopic,
+      {'topic_id': topic.id},
+      "Is this a good topic overall?",
+      "Yes",
+      "No",
+      "pull-right") }
     </div>
 
     <div class="panel-body">
@@ -34,6 +42,8 @@
           </a>
 
           ${ macros.assess_yesno(
+          am.ATopicTerm,
+          {'topic_id': w.topic_id, 'modality_id': w.modality_id, 'term_id': w.term_id, 'child_type': 'term'},
           "",
           "'%s' fits well in this topic" % w.term.text,
           "'%s' doesn't belong here" % w.term.text) }
