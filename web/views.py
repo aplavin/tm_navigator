@@ -221,7 +221,7 @@ def error_handler(error):
         error.code = 500
         params = {
             'code': error.code,
-            'desc': error.message,
+            'desc': getattr(error, 'message', ''),
             'tech_desc': traceback.format_exc(),
             'name': error.__class__.__name__,
         }
