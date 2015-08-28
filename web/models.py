@@ -5,16 +5,14 @@ import sqlalchemy.ext.declarative as sa_dec
 from sqlalchemy_searchable import make_searchable
 from sqlalchemy_utils.types import TSVectorType
 from sqlalchemy_utils import aggregated
+import inflection
 from db_helpers import *
 
 
 class Base(object):
     @sa_dec.declared_attr
     def __tablename__(cls):
-        return '_'.join(
-            w.lower()
-            for w in re.findall('[A-Z][a-z]*', cls.__name__)
-        ) + 's'
+        return inflection.tableize(cls.__name__)
 
     def __repr__(self):
         return "<{}({})>".format(

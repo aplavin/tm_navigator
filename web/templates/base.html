@@ -3,7 +3,7 @@
   from webassets.env import RegisterError
 
   assets_env = Environment('static', '/static')
-  assets_env.debug = True
+##   assets_env.debug = True
 
   def assets_urls(name, files, filters, output):
     asset = Bundle(*files, filters=filters, output=output)
