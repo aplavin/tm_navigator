@@ -90,7 +90,7 @@ class Term(Base):
     modality_id = sa.Column(sa.Integer, sa.ForeignKey(Modality.id), primary_key=True)
     text = sa.Column(sa.Text, nullable=False)
 
-    modality = sa.orm.relationship(Modality, backref='terms')
+    modality = sa.orm.relationship(Modality, backref='terms', lazy='joined')
 
     @aggregated('documents',
                 sa.Column(sa.Integer, nullable=False, server_default=sa.literal(0)))
@@ -145,7 +145,7 @@ class TopicEdge(Base):
     probability = sa.Column(sa.Float, nullable=False)
 
     parent = sa.orm.relationship(Topic, lazy='joined',
-                                 backref=sa.orm.backref('children', order_by=Topic.probability.desc()),
+                                 backref=sa.orm.backref('children', order_by=probability.desc()),
                                  foreign_keys=parent_id)
     child = sa.orm.relationship(Topic, lazy='joined', backref='parents', foreign_keys=child_id)
 
