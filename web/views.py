@@ -26,55 +26,32 @@ def document(slug):
     # the document itself
     document = db.session.query(m.Document).filter_by(slug=slug).one()
 
-    # topics hierarchy, including only those with non-zero probability in this document and their parents
-    doctopics = db.session.query(m.DocumentTopic).filter_by(document_id=document.id).cte('doctopics')
+    doctopics = db.session.query(m.DocumentTopic) \
+        .filter(m.DocumentTopic.document_id == document.id) \
+        .filter(m.DocumentTopic.probability > 0.01) \
+        .cte('doctopics')
 
-    all_child_probs = db.session.query(doctopics.c.topic_id.label('id'),
-                                       doctopics.c.probability) \
-        .cte('all_child_probs', recursive=True)
-    all_child_probs = all_child_probs.union_all(
-        db.session.query(m.Topic.id,
-                         all_child_probs.c.probability)
+    topics_filtered = db.session.query(m.Topic) \
+        .select_from(doctopics).join(m.Topic) \
+        .cte('topics_filtered', recursive=True)
+    topics_filtered = topics_filtered.union(
+        db.session.query(m.Topic)
             .join(m.Topic.children)
-            .join(all_child_probs, m.TopicEdge.child_id == all_child_probs.c.id)
+            .join(topics_filtered, m.TopicEdge.child_id == topics_filtered.c.id)
     )
 
-    max_subtree_probs = db.session.query(m.Topic) \
-        .join(all_child_probs) \
-        .group_by(m.Topic) \
-        .having(sa.func.max(all_child_probs.c.probability) > 0.01) \
-        .cte('max_subtree_probs')
+    ta = sa.orm.aliased(topics_filtered)
+    topics = db.session.query(m.Topic).select_entity_from(topics_filtered) \
+        .outerjoin(doctopics) \
+        .outerjoin(m.Topic.children) \
+        .outerjoin(ta, m.TopicEdge.child) \
+        .options(sa.orm.contains_eager(m.Topic.children).
+                 contains_eager(m.TopicEdge.child, alias=ta)) \
+        .options(sa.orm.contains_eager(m.Topic.documents, alias=doctopics).noload(m.DocumentTopic.document)) \
+        .order_by(m.Topic.level, doctopics.c.probability.desc())
+    topics = topics.all()
 
-    # start building eager load options
-    q_options = sa.orm
-    q_o = []
-
-    # store all aliases for convenience
-    t_a = [sa.orm.aliased(m.Topic, max_subtree_probs.alias())]
-    te_a = []
-    dt_a = []
-
-    # start with the topic #0
-    hierarchy_q = db.session.query(t_a[-1]).filter(t_a[-1].level == 0)
-
-    max_level = db.session.query(sa.func.max(m.Topic.level)).scalar()
-    for _ in range(max_level):
-        te_a.append(sa.orm.aliased(m.TopicEdge))
-        t_a.append(sa.orm.aliased(m.Topic, max_subtree_probs.alias()))
-        dt_a.append(sa.orm.aliased(m.DocumentTopic, doctopics.alias()))
-
-        hierarchy_q = hierarchy_q \
-            .outerjoin(te_a[-1], t_a[-2].children).outerjoin(t_a[-1], te_a[-1].child) \
-            .outerjoin(dt_a[-1], t_a[-1].documents) \
-            .order_by(t_a[-1].level, dt_a[-1].probability.desc())
-
-        q_options = q_options.contains_eager('children', alias=te_a[-1]).contains_eager('child', alias=t_a[-1])
-        q_o.append(q_options.contains_eager('documents', alias=dt_a[-1]).lazyload('document'))
-
-    hierarchy_q = hierarchy_q.options(q_options.noload('children')).options(*q_o)
-    root_topic = hierarchy_q.one()
-
-    return render_template('document.html', document=document, root_topic=root_topic)
+    return render_template('document.html', document=document, root_topic=topics[0])
 
 
 @app.route('/term/<modality>/<text>')
@@ -127,48 +104,43 @@ def search_results(query=''):
             .filter(True if not query else m.Document.search_vector.match(query)) \
             .group_by(m.Term) \
             .add_columns(sa.func.count()) \
-            .order_by(sa.desc(sa.func.count()))
+            .order_by(sa.desc(sa.func.count())) \
+            .options(sa.orm.noload(m.Term.modality))
         results = q[:]
     elif present_as == 'topics':
         if query:
             raise Exception('search query not supported in this mode')
 
+        db.session.execute('set work_mem = "100MB"')  # ~30 MB used for sort in terms query
+
+        topics = db.session.query(m.Topic) \
+            .outerjoin(m.Topic.children) \
+            .options(sa.orm.contains_eager(m.Topic.children)) \
+            .all()
+
+        limit = 10
+
         rn_docs = sa.func.row_number().over(partition_by=m.DocumentTopic.topic_id,
                                             order_by=m.DocumentTopic.probability.desc())
-        q_docs = db.session.query(m.Topic, m.DocumentTopic, m.Document, rn_docs) \
-            .join(m.Topic.documents).join(m.DocumentTopic.document) \
-            .filter(True if not query else m.Document.search_vector.match(query)) \
+        db.session.query(m.Topic, m.DocumentTopic, rn_docs) \
+            .outerjoin(m.Topic.documents) \
             .from_self(m.Topic) \
-            .filter(rn_docs <= 50) \
-            .order_by(m.DocumentTopic.topic_id, m.DocumentTopic.probability.desc()) \
-            .options(sa.orm.contains_eager('documents').contains_eager('document'))
+            .filter(rn_docs <= limit) \
+            .order_by(m.Topic.id, m.DocumentTopic.probability.desc()) \
+            .options(sa.orm.contains_eager(m.Topic.documents)) \
+            .all()  # this fills Topic.documents for all topics
 
-        rn_terms = sa.func.row_number().over(partition_by=m.TopicTerm.topic_id,
+        rn_terms = sa.func.row_number().over(partition_by=(m.TopicTerm.topic_id, m.TopicTerm.modality_id),
                                              order_by=m.TopicTerm.probability.desc())
-        q_terms = db.session.query(m.TopicTerm, m.Modality, rn_terms) \
-            .join(m.TopicTerm.modality).filter(m.Modality.name == 'words') \
-            .from_self(m.TopicTerm) \
-            .filter(rn_terms <= 50) \
-            .join(m.TopicTerm.term) \
-            .order_by(m.TopicTerm.topic_id, m.TopicTerm.probability.desc()) \
-            .options(sa.orm.contains_eager('term')) \
-            .options(sa.orm.lazyload('modality')) \
-            .options(sa.orm.lazyload('topic'))
+        db.session.query(m.Topic, m.TopicTerm, rn_terms) \
+            .outerjoin(m.Topic.terms) \
+            .from_self(m.Topic) \
+            .filter(rn_terms <= limit) \
+            .order_by(m.Topic.id, m.TopicTerm.modality_id, m.TopicTerm.probability.desc()) \
+            .options(sa.orm.contains_eager(m.Topic.terms)) \
+            .all()  # this fills Topic.terms for all topics
 
-        topics = q_docs.all()
-        q = q_docs
-
-        t_terms = {topic_id: list(xs)
-                   for topic_id, xs in groupby(q_terms, lambda x: x.topic_id)}
-        for t in topics:
-            sa.orm.attributes.set_committed_value(t, 'terms', t_terms.get(t.id, []))
-
-        results = topics
-
-        q_hierarchy = db.session.query(m.Topic) \
-            .filter(m.Topic.level == 0) \
-            .options(sa.orm.joinedload_all(*['children', 'child'] * 5))
-        results = (results, q_hierarchy.one())
+        results = topics[0]  # the root topic
     else:
         q = db.session.query(m.Document) \
             .filter(True if not query else m.Document.search_vector.match(query)) \
@@ -181,7 +153,7 @@ def search_results(query=''):
 
     return render_template('search_results.html',
                            query=query, present_as=present_as,
-                           results=results, results_cnt=q.count())
+                           results=results, results_cnt=q.count() if present_as != 'topics' else None)
 
 
 @app.route('/_search_results_group/<int:modality_id>/<int:term_id>/<query>', endpoint='search_results_group')
