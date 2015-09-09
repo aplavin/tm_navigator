@@ -5,16 +5,16 @@ function send_value(element, url, value) {
         data: {value: value},
         contentType: "application/x-www-form-urlencoded",
         complete: function (xhr, status) {
-            var categories = {
-                success: 'success',
-                notmodified: 'info',
-                nocontent: 'info',
-                error: 'error',
-                timeout: 'warning',
-                abort: 'error',
-                parsererror: 'error',
+            var texts = {
+                success: 'Your assessment was successfully saved.',
+                notmodified: 'Unknown situation, please report it!',
+                nocontent: 'Unknown situation, please report it!',
+                error: 'An error occurred, assessment is not saved!',
+                timeout: 'An error occurred, assessment is not saved!',
+                abort: 'An error occurred, assessment is not saved!',
+                parsererror: 'An error occurred, assessment is not saved!',
             };
-            element.notify(status, categories[status]);
+            bootbox.alert(sprintf('<h4>%s</h4>Server responded: %s' ,texts[status], status));
         }
     });
 }
@@ -25,9 +25,13 @@ function yesno_handler(flag) {
         var url = block.data('url');
         var value = flag ? +1 : -1;
 
-        if (confirm('Send assessment?')) {
-            send_value(block, url, value);
-        }
+        var question = $(this).siblings('span').eq(0).text();
+        var answer = $(this).attr('title');
+        bootbox.confirm(sprintf('<h4>Send assessment?</h4>%s - %s', question, answer), function (response) {
+            if (response) {
+                send_value(block, url, value);
+            }
+        });
     }
 
     return click_handler;

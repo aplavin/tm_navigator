@@ -26,7 +26,7 @@
     <link rel="stylesheet" type="text/css" href="${url}">
   % endfor
 
-  % for url in assets_urls('js', ['js/libs/jquery-2.1.1.js', 'js/libs/highcharts.js', 'js/libs/drilldown.js', 'js/libs/bootstrap.js', 'js/libs/jquery.autocomplete.js', 'js/libs/index.js', 'js/libs/sprintf.js', 'js/libs/tinycolor.js', 'js/libs/notify-combined.js', 'js/common.js', 'js/plots.js', 'js/search.js', 'js/assessments.js'], 'rjsmin', 'js/_packed.js'):
+  % for url in assets_urls('js', ['js/libs/jquery-2.1.1.js', 'js/libs/highcharts.js', 'js/libs/drilldown.js', 'js/libs/bootstrap.js', 'js/libs/bootbox.js', 'js/libs/jquery.autocomplete.js', 'js/libs/index.js', 'js/libs/sprintf.js', 'js/libs/tinycolor.js', 'js/common.js', 'js/plots.js', 'js/search.js', 'js/assessments.js'], 'rjsmin', 'js/_packed.js'):
     <script src="${url}"></script>
   % endfor
 
