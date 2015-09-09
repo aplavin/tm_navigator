@@ -1,11 +1,25 @@
-from distutils.core import setup
+from setuptools import setup, find_packages
 
 setup(
     name='tm_navigator',
     version='1.0',
-    packages=['tm_navigator'],
+    packages=find_packages(),
     install_requires=[
-        'morepath',
+        'flask',
+        'watchdog',
+        'flask-sqlalchemy',
+        'flask-mako',
+        'flask-debugtoolbar',
+        'flask-debugtoolbar-lineprofilerpanel',
+        'flask',
+        'sqlalchemy',
+        'sqlalchemy-searchable',
+        'inflection',
+        'psycopg2',
+        'webassets',
+        'flask-assets',
+        'cssmin',
+        'cached-property',
     ],
     url='',
     license='MIT',

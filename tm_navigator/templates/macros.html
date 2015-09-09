@@ -1,16 +1,16 @@
-<%def name="document_in_tagcloud(slug, np, np_fmt, title, authors)">
-  <a href="${ url_for('document', slug=slug) }" data-size="${ np }" data-use-opacity="true"
+<%def name="document_in_tagcloud(document, np, np_fmt, authors)">
+  <a href="${ url_for(document) }" data-size="${ np }" data-use-opacity="true"
      data-placement="top" data-toggle="tooltip" data-html="true"
      title="
-    ${ title }<br/><br/>
+    ${ document.title }<br/><br/>
     ${ authors }<hr/>
     ${ np_fmt % np }
-    ">${ slug }</a>
+    ">${ document.slug }</a>
 </%def>
 
 <%def name="tagcloud(items, limit=None, emptystr=None, additional_class='')">
   <ul class="tagcloud ${ additional_class }">
-    % for it in (items[:limit] if limit is not none else items):
+    % for it in (items[:limit] if limit is not None else items):
       <li>${ caller.body(it) }</li>
     % endfor
 
@@ -26,8 +26,8 @@
   </ul>
 </%def>
 
-<%def name="assess_yesno(model, parameters, question, yes_text, no_text, additional_classes='')">
-  <small class="text-muted assess-yesno ${ additional_classes }" data-url="${ model.url }" data-parameters="${ parameters }">
+<%def name="assess_yesno(model, question, yes_text, no_text, additional_classes='')">
+  <small class="text-muted assess-yesno ${ additional_classes }" data-url="${ url_for(model) }">
     ${ question }
     <button type="button" class="btn btn-link btn-xs" title="${ yes_text }">
       <span class="glyphicon glyphicon-ok"></span>

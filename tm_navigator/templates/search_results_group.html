@@ -1,19 +1,19 @@
 <%namespace name="macros" file="macros.html"/>
 
-% if present_as == 'topics':
+% if s.present_as == 'topics':
     <%def name="show_topic(t)">
         <% topic = t.child %>
 
         <div class="panel panel-default col-xs-offset-${ topic.level - 1 }">
             <div class="panel-heading">
                 <h3 class="panel-title">
-                    <a href="${ url_for('topic', id=topic.id) }">
+                    <a href="${ url_for(topic) }">
                         Topic ${ topic.text }
                     </a>
                 </h3>
 
                 <div class="nofloat">
-                    <div class="progress small" title="P(${ 't' if not query else 't | document matches query' }) = ${ '%.3f' % topic.probability }">
+                    <div class="progress small" title="P(${ 't' if not s.query else 't | document matches query' }) = ${ topic.probability }">
                         <div class="progress-bar progress-bar-default" style="width: ${ topic.probability * 100 }%"></div>
                     </div>
                 </div>
@@ -23,11 +23,11 @@
                 <div class="bs-callout bs-callout-${ macros.colcl('docs') }">
                     <h4 class="block-label">
                         Documents<br/>
-                        <small>${ 'Matched only' if query else '' }</small>
+                        <small>${ 'Matched only' if s.query else '' }</small>
                     </h4>
 
                     <%macros:tagcloud items="${topic.documents}" limit="${-1}" emptystr='Nothing matched' additional_class='collapsed collapsed-small' args="d">
-                        ${ macros.document_in_tagcloud(d.document.slug, d.probability, 'P(t | d) = %.3f', d.document.title, '') }
+                        ${ macros.document_in_tagcloud(d.document, d.probability, 'P(t | d) = %f', '') }
                     </%macros:tagcloud>
                 </div>
 
@@ -38,7 +38,7 @@
                     </h4>
 
                     <%macros:tagcloud items="${topic.terms}" limit="${-1}" emptystr='Nothing matched' additional_class='collapsed collapsed-small' args="w">
-                        <a href="${ url_for('term', modality='words', text=w.term.text) }" title="P(w | t) = ${ '%.3f' % w.probability }" data-size="${ w.probability }" data-use-size="true">${ w.term.text }</a>
+                        <a href="${ url_for(w.term) }" title="P(w | t) = ${ w.probability }" data-size="${ w.probability }" data-use-size="true">${ w.term.text }</a>
                     </%macros:tagcloud>
                 </div>
             </div>
@@ -49,22 +49,22 @@
         % endfor
     </%def>
 
-    % for t in results.children:
+    % for t in s.results.children:
         ${ show_topic(t) }
     % endfor
 % else:
-    % for doc in results:
+    % for doc in s.results:
         <div class="panel panel-default">
             <div class="panel-heading">
                 <h3 class="panel-title">
-                    <a href="${ url_for('document', slug=doc.slug) }">
-                        ${ doc.title_hl }
+                    <a href="${ url_for(doc) }">
+                        ${ doc.title_hl | n }
                     </a>
                 </h3>
                 <div>
                     <span>
                         % for term in doc.modality(name='authors').terms[:]:
-                            <a href="${ url_for('term', modality='authors', text=term.term.text) }">
+                            <a href="${ url_for(term.term) }">
                                 ${ term.term.text }
                             </a>
                             ${ ',' if not loop.last else '' }
@@ -89,20 +89,24 @@
                     </div>
 
                     <%macros:tagcloud items="${topics}" args="t">
-                        <a href="${ url_for('topic', id=t.topic.id) }" title="P(t | d) = ${ '%.3f' % t.probability }" data-size="${ t.probability }" data-use-size="true">${ t.topic.text }</a>
+                        <a href="${ url_for(t.topic) }" title="P(t | d) = ${ t.probability }" data-size="${ t.probability }" data-use-size="true">${ t.topic.text }</a>
                     </%macros:tagcloud>
                 </div>
             </div>
         </div>
     % endfor
 
-    % if results_cnt > len(results):
+    % if s.results_cnt > len(s.results):
         <div class="text-center panel panel-info">
             <div class="panel-heading">
                 <h3 class="panel-title">
-                    ... ${ results_cnt - len(results) } documents more ...
+                    ... ${ s.results_cnt - len(s.results) } documents more ...
                 </h3>
             </div>
         </div>
+    % endif
+
+    % if not s.results_cnt:
+        <li class="bg-info">No results</li>
     % endif
 % endif

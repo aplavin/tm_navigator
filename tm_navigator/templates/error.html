@@ -3,15 +3,27 @@
 <%block name="title">Error occurred :(</%block>
 
 <div class="container">
-    % if code != 500:
-        <h2>Oops... ${ code }&nbsp;&mdash;&nbsp;${ name }!</h2>
-        <p class="lead">${ desc }</p>
-    % else:
-        <h2>Oops... 500&nbsp;&mdash;&nbsp;ApplicationError!</h2>
-        <p class="lead">Send it to the web-site administrator along with the current URL: ${ request.url }.</p>
-    % endif:
-    <p class="lead">
-        Meanwhile you can try visiting other pages over here :)
-    </p>
-    <div class="bor"></div>
+  % if s.code != 500:
+    <h2>Oops... ${ s.code }&nbsp;&mdash;&nbsp;${ s.name }!</h2>
+
+    <p class="lead">${ s.description }</p>
+  % else:
+    <h2>Oops... 500&nbsp;&mdash;&nbsp;ApplicationError!</h2>
+
+    <p class="lead">An unknown error happened.</p>
+  % endif
+  <p class="lead">
+    Meanwhile you can try visiting other pages over here :)
+  </p>
+
+  <div class="text-center">
+    <button class="btn btn-info" data-toggle="collapse" data-target="#technical_info">
+      Show technical information
+    </button>
+    <div class="collapse text-left" id="technical_info">
+      If you think this error occurred due to an error in the application, please send this data to the website administrator along with the current URL:
+      <a href="${ request.url }">${ request.url }</a>.
+      <pre>${ s.technical_info }</pre>
+    </div>
+  </div>
 </div>

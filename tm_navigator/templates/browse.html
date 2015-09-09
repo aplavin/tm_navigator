@@ -7,14 +7,14 @@
         <label for="search-input" class="control-label col-sm-1">Search:</label>
         <div class="col-sm-11 has-feedback">
             <input type="text" name="query" id="search-input" class="form-control"
-                   value="${ query }" placeholder="enter query here..."
-                   data-search-base-url="${ url_for('search_results', query='%s').replace('%25s', '%s') }"
+                   value="${ s.query }" placeholder="enter query here..."
+                   data-search-base-url="${ url_for(SearchResults(query='%s')) }"
                    data-search-completions-url="">
             <span class="form-control-feedback glyphicon glyphicon-search"></span>
         </div>
     </div>
     <div class="form-group">
-        % for settings_item in settings:
+        % for settings_item in s.settings:
             % if settings_item['mode'] == 'choice':
                 <div class="btn-group" data-switch-name="${ settings_item['name'] }" data-switch-selected="${ settings_item['options'][0]['value'] }">
                     <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">

@@ -97,12 +97,14 @@ class Term(Base):
     def count(self):
         return sa.func.coalesce(sa.func.sum(DocumentTerm.count), 0)
 
+    __table_args__ = (
+        sa.UniqueConstraint(modality_id, text),
+    )
+
 
 class Topic(Base, ModalityFilterMixin):
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.Text, unique=True)
-
-    terms_d = sa.orm.relationship(lambda: TopicTerm, order_by=lambda: TopicTerm.probability.desc(), lazy='dynamic')
 
     @sa.ext.hybrid.hybrid_property
     def level(self):
@@ -160,7 +162,7 @@ class DocumentTerm(Base):
                                    backref=sa.orm.backref('terms', order_by=count.desc(), lazy='dynamic'))
     term = sa.orm.relationship(Term, lazy='joined',
                                backref=sa.orm.backref('documents', order_by=count.desc()))
-    modality = sa.orm.relationship(Modality, viewonly=True, lazy='joined',
+    modality = sa.orm.relationship(Modality, viewonly=True, lazy='select',
                                    backref=sa.orm.backref('documents', viewonly=True))
 
     __table_args__ = (
@@ -191,7 +193,7 @@ class TopicTerm(Base):
                                 backref=sa.orm.backref('terms', order_by=probability.desc()))
     term = sa.orm.relationship(Term, lazy='joined',
                                backref=sa.orm.backref('topics', order_by=probability.desc()))
-    modality = sa.orm.relationship(Modality, viewonly=True, lazy='joined',
+    modality = sa.orm.relationship(Modality, viewonly=True, lazy='select',
                                    backref=sa.orm.backref('topics', viewonly=True))
 
     __table_args__ = (

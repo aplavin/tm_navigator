@@ -1,19 +1,19 @@
 <%inherit file="base.html"/>
 <%namespace name="macros" file="macros.html"/>
 
-<%block name="title">Term ${ term.text }</%block>
+<%block name="title">Term ${ s.term.text }</%block>
 
 <%def name="overview()">
     <div class="panel panel-default">
         <div class="panel-heading">
             <h3 class="panel-title">
                 Term:
-                <a href="${ url_for('term', modality=term.modality.name, text=term.text) }">
-                    ${ term.text }
+                <a href="${ url_for(s.term) }">
+                    ${ s.term.text }
                 </a>
-                <small>(modality: ${ term.modality.name })</small>
+                <small>(modality: ${ s.term.modality.name })</small>
             </h3>
-            Number of occurrences = ${ term.count }
+            Number of occurrences = ${ s.term.count }
         </div>
 
         <div class="panel-body">
@@ -21,8 +21,8 @@
                 <h4>Topics:</h4>
                 <div id="plot-topics" style="height:250px;"></div>
 
-                <%macros:tagcloud items="${term.topics}" additional_class="text-center" args="t">
-                    <a href="${ url_for('topic', id=t.topic.id) }" title="P(w | t) = ${ '%.4f' % t.probability }" data-size="${ t.probability }" data-use-size="true">${ t.topic.text }</a>
+                <%macros:tagcloud items="${s.term.topics}" additional_class="text-center" args="t">
+                    <a href="${ url_for(t.topic) }" title="P(w | t) = ${ '%.4f' % t.probability }" data-size="${ t.probability }" data-use-size="true">${ t.topic.text }</a>
                 </%macros:tagcloud>
             </div>
 
@@ -30,8 +30,8 @@
                 <h4>Documents:</h4>
                 <div id="plot-documents" style="height:250px;"></div>
 
-                <%macros:tagcloud items="${term.documents}" additional_class="collapsed text-center" args="d">
-                    ${ macros.document_in_tagcloud(d.document.slug, d.count, 'N_wd = %d', d.document.title, '') }
+                <%macros:tagcloud items="${s.term.documents}" additional_class="collapsed text-center" args="d">
+                    ${ macros.document_in_tagcloud(d.document, d.count, 'N_wd = %d', '') }
                 </%macros:tagcloud>
             </div>
         </div>
@@ -44,11 +44,11 @@
                 'Usage in topics',
                 ['t', 'P(w | t)'],
                 [
-                    % for t in term.topics:
+                    % for t in s.term.topics:
                         {
                             name: '${ t.topic.text }',
                             y: ${ '%.4f' % t.probability },
-                            url: '${ url_for('topic', id=t.topic.id) }'
+                            url: '${ url_for(t.topic) }'
                         },
                     % endfor
                 ]
@@ -62,11 +62,11 @@
                 'Usage in documents',
                 ['d', 'N_wd'],
                 [
-                    % for d in term.documents:
+                    % for d in s.term.documents:
                         {
                             name: '${ d.document.slug }',
                             y: ${ d.count },
-                            url: '${ url_for('document', slug=d.document.slug) }'
+                            url: '${ url_for(d.document) }'
                         },
                     % endfor
                 ]
@@ -85,7 +85,7 @@
 
 <div class="container">
     <div>
-        <h3>Term: ${ term.text }</h3>
+        <h3>Term: ${ s.term.text }</h3>
         <div class="bs-component">
             <ul class="nav nav-pills">
                 <li class="active"><a href="#overview" data-toggle="tab">Overview</a></li>

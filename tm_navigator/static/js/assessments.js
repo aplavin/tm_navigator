@@ -1,10 +1,9 @@
-function send_value(element, url, parameters, value) {
-    parameters['value'] = value;
+function send_value(element, url, value) {
     $.ajax({
         url: url,
         type: 'POST',
-        data: JSON.stringify(parameters),
-        contentType: "application/json",
+        data: {value: value},
+        contentType: "application/x-www-form-urlencoded",
         complete: function (xhr, status) {
             var categories = {
                 success: 'success',
@@ -14,7 +13,7 @@ function send_value(element, url, parameters, value) {
                 timeout: 'warning',
                 abort: 'error',
                 parsererror: 'error',
-            }
+            };
             element.notify(status, categories[status]);
         }
     });
@@ -24,12 +23,10 @@ function yesno_handler(flag) {
     function click_handler() {
         var block = $(this).parent('.assess-yesno');
         var url = block.data('url');
-        var parameters = block.data('parameters').replace(/'/g, '"');
-        parameters = JSON.parse(parameters);
         var value = flag ? +1 : -1;
 
         if (confirm('Send assessment?')) {
-            send_value(block, url, parameters, value);
+            send_value(block, url, value);
         }
     }
 

@@ -7,22 +7,22 @@
         <div class="col-md-5 col-lg-4">
             <h2>MMRO-IOI</h2>
             <h2><span class="text-muted">Topics</span>
-            % for level, count in topics_cnts[:]:
+            % for level, count in s.topic_level_counts[:]:
                 ${ count }
                 % if not loop.last:
                     <span class="text-muted">+</span>
                 % endif
             % endfor
             </h2>
-            <h2><span class="text-muted">Documents</span> ${ docs.count() }</h2>
-            <h2><span class="text-muted">Words</span> ${ words.count() // 1000 }k</h2>
-            <a href="${ url_for('browse') }" class="btn btn-primary btn-lg btn-block">Browse</a>
+            <h2><span class="text-muted">Documents</span> ${ s.docs.count() }</h2>
+            <h2><span class="text-muted">Words</span> ${ s.modality('words').count // 1000 }k</h2>
+            <a href="${ url_for(Browse) }" class="btn btn-primary btn-lg btn-block">Browse</a>
         </div>
         <div class="col-md-6 col-md-offset-1 col-lg-7">
             <h2>Most common terms:</h2>
 
-            <%macros:tagcloud items="${words[:100]}" additional_class="text-center" args="w">
-                <a href="${ url_for('term', modality='words', text=w.text) }" title="${ w.count } occurrences" data-size="${ w.count }" data-use-size="true">${ w.text }</a>
+            <%macros:tagcloud items="${s.words[:100]}" additional_class="text-center" args="w">
+                <a href="${ url_for(w) }" title="${ w.count } occurrences" data-size="${ w.count }" data-use-size="true">${ w.text }</a>
             </%macros:tagcloud>
         </div>
     </div>
@@ -32,11 +32,11 @@
         <div class="col-md-10 col-md-offset-1 lead">
             <h1><i class="glyphicon glyphicon-question-sign"></i> How to use this website</h1>
 
-            <p>To start browsing the texts collection just click <a href="${ url_for('browse') }" class="btn btn-primary btn-sm">Browse</a> here or above! This will direct you to the documents listing with a lot of metadata, great search and grouping controls.</p>
+            <p>To start browsing the texts collection just click <a href="${ url_for(Browse) }" class="btn btn-primary btn-sm">Browse</a> here or above! This will direct you to the documents listing with a lot of metadata, great search and grouping controls.</p>
 
-            <p>Complete information about any single document is available by click on its name. Try it here: <a href="${ url_for('document', slug=docs[0].slug) }" class="btn btn-primary btn-sm">example document</a>. The available information includes topic structure and dynamic, similar documents, and content colored by topic. You can browse the collection further from this point by cross-links.</p>
+            <p>Complete information about any single document is available by click on its name. Try it here: <a href="${ url_for(Document, slug=s.docs[0].slug) }" class="btn btn-primary btn-sm">example document</a>. The available information includes topic structure and dynamic, similar documents, and content colored by topic. You can browse the collection further from this point by cross-links.</p>
 
-            <p>In the same way, topics and words are clickable almost everywhere. A click on them shows corresponding information and allows for deeper exploration: <a href="${ url_for('topic', id=topics[0].id) }" class="btn btn-primary btn-sm">example topic</a>, <a href="${ url_for('term', modality='words', text=words[0].text) }" class="btn btn-primary btn-sm">example word</a>.</p>
+            <p>In the same way, topics and words are clickable almost everywhere. A click on them shows corresponding information and allows for deeper exploration: <a href="${ url_for(Topic, id=s.topics[0].id) }" class="btn btn-primary btn-sm">example topic</a>, <a href="${ url_for(s.words[0]) }" class="btn btn-primary btn-sm">example word</a>.</p>
 
             <p>Each topic page has a text field to add or change its name. It can be useful to add names for all or almost all topics for easier exploration. Somewhere in the future the names will hopefully be generated automatically.</p>
         </div>

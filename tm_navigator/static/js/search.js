@@ -94,6 +94,7 @@ function search(new_args) {
             }
         }
     }
+    delete args['query'];
     search_settings_display_from_args(args);
 
     $.ajax({

@@ -3,7 +3,7 @@
   from webassets.env import RegisterError
 
   assets_env = Environment('static', '/static')
-##   assets_env.debug = True
+  assets_env.debug = False
 
   def assets_urls(name, files, filters, output):
     asset = Bundle(*files, filters=filters, output=output)
@@ -39,10 +39,10 @@
     % if 'username' in session:
       <div class="pull-right">
         Logged in as <strong>${ session['username'] }</strong>
-        <a href="${ url_for('login') }" class="btn btn-default">Log out</a>
+        <a href="${ url_for(Login) }" class="btn btn-default">Log out</a>
       </div>
     % else:
-      <form class="form-inline pull-right" action="${ url_for('login') }" method="POST">
+      <form class="form-inline pull-right" action="${ url_for(Login) }" method="POST">
         <div class="input-group">
           <input type="text" class="form-control" name="username" placeholder="Any name">
           <span class="input-group-btn">
@@ -54,10 +54,10 @@
       </form>
     % endif
 
-    <h1><a href="${ url_for('overview') }">TM Vis</a></h1>
+    <h1><a href="${ url_for(Overview) }">TM Vis</a></h1>
 
     <ul class="lead breadcrumb">
-      <li><a href="${ url_for('overview') }">Collection</a></li>
+      <li><a href="${ url_for(Overview) }">Collection</a></li>
       <li>${ self.title() }</li>
     </ul>
   </div>

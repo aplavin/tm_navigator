@@ -1,18 +1,18 @@
 <%inherit file="base.html"/>
 <%namespace name="macros" file="macros.html"/>
 
-<%block name="title">Document ${ document.slug }</%block>
+<%block name="title">Document ${ s.document.slug }</%block>
 
 <%def name="overview()">
   <div class="panel panel-default">
     <div class="panel-heading">
       <h3 class="panel-title">
-        ${ document.title }
+        ${ s.document.title }
       </h3>
-      ${ document.slug }
+      ${ s.document.slug }
       <div>
-        % for term in document.modality(name='authors').terms[:]:
-          <a href="${ url_for('term', modality='authors', text=term.term.text) }">
+        % for term in s.document.modality(name='authors').terms[:]:
+          <a href="${ url_for(term.term) }">
             ${ term.term.text }
           </a>
         ${ ',' if not loop.last else '' }
@@ -20,7 +20,7 @@
       </div>
       <div>
         <a href="">
-          ${ document.conference }
+          ${ s.document.conference }
         </a>
       </div>
     </div>
@@ -33,17 +33,18 @@
           % if topic is not None:
             <li class="list-group-item" style="border-width: 2px; border-color: rgba(92, 184, 92, ${ topic.level / 3 })">
               <h4 class="list-group-item-heading">
-                <a href="${ url_for('topic', id=topic.id) }">
+                <a href="${ url_for(topic) }">
                   Topic ${ topic.text }
                 </a>
 
-                ${ macros.assess_yesno(
-                am.ADocumentTopic,
-                {'document_id': document.id, 'topic_id': topic.id, 'child_type': 'topic'},
-                "Does the topic suit this document?",
-                "Yes, it's a good fit",
-                "No, it doesn't belong here",
-                "pull-right") }
+                % if topic.documents:
+                  ${ macros.assess_yesno(
+                  ADocumentTopic(src=topic.documents[0], child_type='topic'),
+                  "Does the topic suit this document?",
+                  "Yes, it's a good fit",
+                  "No, it doesn't belong here",
+                  "pull-right") }
+                % endif
               </h4>
               <p class="list-group-item-text">
               <div class="nofloat">
@@ -53,8 +54,8 @@
                 </div>
               </div>
 
-              <%macros:tagcloud items="${topic.terms_d[:7]}" limit="${-1}" additional_class='' args="w">
-                <a href="${ url_for('term', modality='words', text=w.term.text) }" title="P(w | t) = ${ '%.3f' % w.probability }" data-size="${ w.probability }" data-use-size="true">${ w.term.text }</a>
+              <%macros:tagcloud items="${topic.terms}" limit="${-1}" additional_class='' args="w">
+                <a href="${ url_for(w.term) }" title="P(w | t) = ${ '%.3f' % w.probability }" data-size="${ w.probability }" data-use-size="true">${ w.term.text }</a>
               </%macros:tagcloud>
               </p>
 
@@ -68,7 +69,7 @@
         </%def>
 
         <ul class="list-group">
-          % for t in root_topic.children:
+          % for t in s.root_topic.children:
             ${show_topic(t.child)}
           % endfor
         </ul>
@@ -80,8 +81,8 @@
         <h4>Words:</h4>
         <div id="plot-words" style="height:250px;"></div>
 
-        <%macros:tagcloud items="${document.modality(name='words').terms}" additional_class="collapsed text-center" args="w">
-          <a href="${ url_for('term', modality='words', text=w.term.text) }" title="N_wd = ${ w.count }" data-size="${ w.count }" data-use-size="true">${ w.term.text }</a>
+        <%macros:tagcloud items="${s.document.modality(name='words').terms}" additional_class="collapsed text-center" args="w">
+          <a href="${ url_for(w.term) }" title="N_wd = ${ w.count }" data-size="${ w.count }" data-use-size="true">${ w.term.text }</a>
         </%macros:tagcloud>
       </div>
     </div>
@@ -94,11 +95,11 @@
           'Words distribution',
           ['w', 'N_wd'],
           [
-            % for w in document.modality(name='words').terms:
+            % for w in s.document.modality(name='words').terms:
               {
                 name: '${ w.term.text }',
                 y: ${ w.count },
-                url: '${ url_for('term', modality='words', text=w.term.text) }'
+                url: '${ url_for(w.term) }'
               },
             % endfor
           ]
@@ -112,34 +113,31 @@
     <h3>Similar topics structure</h3>
     <small class="text-muted">Using cosine distance between p(t|d) vectors.</small>
 
-    % for d in document.similar:
+    % for d in s.document.similar:
       <div class="list-group-item">
         <span class="pull-right similarity-chart" data-value="${ d.similarity }"></span>
         <h4 class="list-group-item-heading">
-          <a href="${ url_for('document', slug=d.b.slug) }">
+          <a href="${ url_for(d.b) }">
             ${ d.b.title }
           </a>
         </h4>
         <div class="list-group-item-text">
+          ${ macros.assess_yesno(
+          ADocumentSimilarity(src=d),
+          "Is the document really similar?",
+          "Yes, it's close in topic",
+          "No, it's very different",
+          "pull-right") }
           % for term in d.b.modality(name='authors').terms[:]:
-            <a href="${ url_for('term', modality='authors', text=term.term.text) }">
+            <a href="${ url_for(term.term) }">
               ${ term.term.text }
             </a>
-          ${ ',' if not loop.last else '' }
+            ${ ',' if not loop.last else '' }
           % endfor
           |
           <a href="">
             ${ d.b.conference }
           </a>
-
-          <div class="text-right">
-            ${ macros.assess_yesno(
-            am.ADocumentSimilarity,
-            {'a_id': d.a_id, 'b_id': d.b_id},
-            "Is the document really similar?",
-            "Yes, it's close in topic",
-            "No, it's very different") }
-          </div>
         </div>
       </div>
     % endfor
@@ -148,8 +146,8 @@
 
 <%def name="content()">
   <div class="container">
-    <object data="${ url_for('static', filename='documents_files/%s.pdf' % document.file_name) }" type="application/pdf" style="width: 100%; height: 800px;">
-      <a href="${ url_for('static', filename='documents_files/%s.pdf' % document.file_name) }">Download PDF</a>
+    <object data="${ url_for(filename='documents_files/%s.pdf' % s.document.file_name) }" type="application/pdf" style="width: 100%; height: 800px;">
+      <a href="${ url_for(filename='documents_files/%s.pdf' % s.document.file_name) }">Download PDF</a>
     </object>
   </div>
 </%def>
@@ -157,7 +155,7 @@
 
 <div class="container">
   <div>
-    <h3>${ document.title }</h3>
+    <h3>${ s.document.title }</h3>
     <div class="bs-component">
       <ul class="nav nav-pills">
         <li class="active"><a href="#overview" data-toggle="tab">Overview</a></li>
