@@ -21,6 +21,7 @@
     <div class="panel-body">
       <div class="bs-callout bs-callout-${ macros.colcl('docs') }">
         <h4>Documents:</h4>
+
         <div id="plot-documents" style="height:250px;"></div>
 
         <%macros:tagcloud items="${s.topic.documents}" additional_class="collapsed text-center" args="d">
@@ -30,6 +31,7 @@
 
       <div class="bs-callout bs-callout-${ macros.colcl('words') }">
         <h4>Words:</h4>
+
         <div id="plot-words" style="height:250px;"></div>
 
         <%macros:tagcloud items="${s.topic.terms}" additional_class="collapsed text-center" args="w">
@@ -39,11 +41,11 @@
             ${ w.term.text }
           </a>
 
-          ${ macros.assess_yesno(
-          ATopicTerm(src=w, child_type='term'),
-          "",
-          "'%s' fits well in this topic" % w.term.text,
-          "'%s' doesn't belong here" % w.term.text) }
+        ${ macros.assess_yesno(
+        ATopicTerm(src=w, child_type='term'),
+        "",
+        "'%s' fits well in this topic" % w.term.text,
+        "'%s' doesn't belong here" % w.term.text) }
         </%macros:tagcloud>
       </div>
     </div>
@@ -100,6 +102,7 @@
 <div class="container">
   <div>
     <h3>Topic ${ s.topic.text }</h3>
+
     <div class="bs-component">
       <ul class="nav nav-pills">
         <li class="active"><a href="#overview" data-toggle="tab">Overview</a></li>

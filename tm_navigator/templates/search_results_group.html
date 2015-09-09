@@ -1,112 +1,116 @@
 <%namespace name="macros" file="macros.html"/>
 
 % if s.present_as == 'topics':
-    <%def name="show_topic(t)">
-        <% topic = t.child %>
+  <%def name="show_topic(t)">
+    <% topic = t.child %>
 
-        <div class="panel panel-default col-xs-offset-${ topic.level - 1 }">
-            <div class="panel-heading">
-                <h3 class="panel-title">
-                    <a href="${ url_for(topic) }">
-                        Topic ${ topic.text }
-                    </a>
-                </h3>
+    <div class="panel panel-default col-xs-offset-${ topic.level - 1 }">
+      <div class="panel-heading">
+        <h3 class="panel-title">
+          <a href="${ url_for(topic) }">
+            Topic ${ topic.text }
+          </a>
+        </h3>
 
-                <div class="nofloat">
-                    <div class="progress small" title="P(${ 't' if not s.query else 't | document matches query' }) = ${ topic.probability }">
-                        <div class="progress-bar progress-bar-default" style="width: ${ topic.probability * 100 }%"></div>
-                    </div>
-                </div>
-            </div>
+        <div class="nofloat">
+          <div class="progress small"
+               title="P(${ 't' if not s.query else 't | document matches query' }) = ${ topic.probability }">
+            <div class="progress-bar progress-bar-default" style="width: ${ topic.probability * 100 }%"></div>
+          </div>
+        </div>
+      </div>
 
-            <div class="panel-body">
-                <div class="bs-callout bs-callout-${ macros.colcl('docs') }">
-                    <h4 class="block-label">
-                        Documents<br/>
-                        <small>${ 'Matched only' if s.query else '' }</small>
-                    </h4>
+      <div class="panel-body">
+        <div class="bs-callout bs-callout-${ macros.colcl('docs') }">
+          <h4 class="block-label">
+            Documents<br/>
+            <small>${ 'Matched only' if s.query else '' }</small>
+          </h4>
 
-                    <%macros:tagcloud items="${topic.documents}" limit="${-1}" emptystr='Nothing matched' additional_class='collapsed collapsed-small' args="d">
-                        ${ macros.document_in_tagcloud(d.document, d.probability, 'P(t | d) = %f', '') }
-                    </%macros:tagcloud>
-                </div>
-
-                <div class="bs-callout bs-callout-${ macros.colcl('words') }">
-                    <h4 class="block-label">
-                        Words<br/>
-                        <small>${ 'Matched only' if request.args.get('words_search', None) else '' }</small>
-                    </h4>
-
-                    <%macros:tagcloud items="${topic.terms}" limit="${-1}" emptystr='Nothing matched' additional_class='collapsed collapsed-small' args="w">
-                        <a href="${ url_for(w.term) }" title="P(w | t) = ${ w.probability }" data-size="${ w.probability }" data-use-size="true">${ w.term.text }</a>
-                    </%macros:tagcloud>
-                </div>
-            </div>
+          <%macros:tagcloud items="${topic.documents}" limit="${-1}" emptystr='Nothing matched' additional_class='collapsed collapsed-small' args="d">
+            ${ macros.document_in_tagcloud(d.document, d.probability, 'P(t | d) = %f', '') }
+          </%macros:tagcloud>
         </div>
 
-        % for t in topic.children:
-            ${ show_topic(t) }
-        % endfor
-    </%def>
+        <div class="bs-callout bs-callout-${ macros.colcl('words') }">
+          <h4 class="block-label">
+            Words<br/>
+            <small>${ 'Matched only' if request.args.get('words_search', None) else '' }</small>
+          </h4>
 
-    % for t in s.results.children:
-        ${ show_topic(t) }
+          <%macros:tagcloud items="${topic.terms}" limit="${-1}" emptystr='Nothing matched' additional_class='collapsed collapsed-small' args="w">
+            <a href="${ url_for(w.term) }" title="P(w | t) = ${ w.probability }" data-size="${ w.probability }"
+               data-use-size="true">${ w.term.text }</a>
+          </%macros:tagcloud>
+        </div>
+      </div>
+    </div>
+
+    % for t in topic.children:
+      ${ show_topic(t) }
     % endfor
+  </%def>
+
+  % for t in s.results.children:
+    ${ show_topic(t) }
+  % endfor
 % else:
-    % for doc in s.results:
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">
-                    <a href="${ url_for(doc) }">
-                        ${ doc.title_hl | n }
-                    </a>
-                </h3>
-                <div>
-                    <span>
-                        % for term in doc.modality(name='authors').terms[:]:
-                            <a href="${ url_for(term.term) }">
-                                ${ term.term.text }
-                            </a>
-                            ${ ',' if not loop.last else '' }
-                        % endfor
-                    </span>
-                    |
-                    <a href="">
-                        ${ doc.conference }
-                    </a>
-                </div>
-            </div>
+  % for doc in s.results:
+    <div class="panel panel-default">
+      <div class="panel-heading">
+        <h3 class="panel-title">
+          <a href="${ url_for(doc) }">
+            ${ doc.title_hl | n }
+          </a>
+        </h3>
 
-            <div class="panel-body">
-                <div class="bs-callout bs-callout-${ macros.colcl('topics') }">
-                    <% topics = doc.topics %>
-                    <h4 class="block-label">Topics:</h4>
-
-                    <div class="pull-left sparkline" data-type="column"
-                         data-xvals="${ ','.join(t.topic.text for t in topics) }"
-                         data-yvals="${ ','.join(str(t.probability) for t in topics) }"
-                         data-titles="t,p" data-hlite-tag="true">
-                    </div>
-
-                    <%macros:tagcloud items="${topics}" args="t">
-                        <a href="${ url_for(t.topic) }" title="P(t | d) = ${ t.probability }" data-size="${ t.probability }" data-use-size="true">${ t.topic.text }</a>
-                    </%macros:tagcloud>
-                </div>
-            </div>
+        <div>
+          <span>
+            % for term in doc.modality(name='authors').terms[:]:
+              <a href="${ url_for(term.term) }">
+                ${ term.term.text }
+              </a>
+            ${ ',' if not loop.last else '' }
+            % endfor
+          </span>
+          |
+          <a href="">
+            ${ doc.conference }
+          </a>
         </div>
-    % endfor
+      </div>
 
-    % if s.results_cnt > len(s.results):
-        <div class="text-center panel panel-info">
-            <div class="panel-heading">
-                <h3 class="panel-title">
-                    ... ${ s.results_cnt - len(s.results) } documents more ...
-                </h3>
-            </div>
+      <div class="panel-body">
+        <div class="bs-callout bs-callout-${ macros.colcl('topics') }">
+          <% topics = doc.topics %>
+          <h4 class="block-label">Topics:</h4>
+
+          <div class="pull-left sparkline" data-type="column"
+               data-xvals="${ ','.join(t.topic.text for t in topics) }"
+               data-yvals="${ ','.join(str(t.probability) for t in topics) }"
+               data-titles="t,p" data-hlite-tag="true">
+          </div>
+
+          <%macros:tagcloud items="${topics}" args="t">
+            <a href="${ url_for(t.topic) }" title="P(t | d) = ${ t.probability }" data-size="${ t.probability }"
+               data-use-size="true">${ t.topic.text }</a>
+          </%macros:tagcloud>
         </div>
-    % endif
+      </div>
+    </div>
+  % endfor
 
-    % if not s.results_cnt:
-        <li class="bg-info">No results</li>
-    % endif
+  % if s.results_cnt > len(s.results):
+    <div class="text-center panel panel-info">
+      <div class="panel-heading">
+        <h3 class="panel-title">
+          ... ${ s.results_cnt - len(s.results) } documents more ...
+        </h3>
+      </div>
+    </div>
+  % endif
+
+  % if not s.results_cnt:
+    <li class="bg-info">No results</li>
+  % endif
 % endif

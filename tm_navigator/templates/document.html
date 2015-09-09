@@ -31,7 +31,8 @@
 
         <%def name="show_topic(topic)">
           % if topic is not None:
-            <li class="list-group-item" style="border-width: 2px; border-color: rgba(92, 184, 92, ${ topic.level / 3 })">
+            <li class="list-group-item"
+                style="border-width: 2px; border-color: rgba(92, 184, 92, ${ topic.level / 3 })">
               <h4 class="list-group-item-heading">
                 <a href="${ url_for(topic) }">
                   Topic ${ topic.text }
@@ -46,7 +47,9 @@
                   "pull-right") }
                 % endif
               </h4>
+
               <p class="list-group-item-text">
+
               <div class="nofloat">
                 <% probability = topic.documents[0].probability if topic.documents else 0 %>
                 <div class="progress small" title="P(t | d) = ${ '%.3f' % probability }">
@@ -55,7 +58,8 @@
               </div>
 
               <%macros:tagcloud items="${topic.terms}" limit="${-1}" additional_class='' args="w">
-                <a href="${ url_for(w.term) }" title="P(w | t) = ${ '%.3f' % w.probability }" data-size="${ w.probability }" data-use-size="true">${ w.term.text }</a>
+                <a href="${ url_for(w.term) }" title="P(w | t) = ${ '%.3f' % w.probability }"
+                   data-size="${ w.probability }" data-use-size="true">${ w.term.text }</a>
               </%macros:tagcloud>
               </p>
 
@@ -79,10 +83,12 @@
 
       <div class="bs-callout bs-callout-${ macros.colcl('words') }">
         <h4>Words:</h4>
+
         <div id="plot-words" style="height:250px;"></div>
 
         <%macros:tagcloud items="${s.document.modality(name='words').terms}" additional_class="collapsed text-center" args="w">
-          <a href="${ url_for(w.term) }" title="N_wd = ${ w.count }" data-size="${ w.count }" data-use-size="true">${ w.term.text }</a>
+          <a href="${ url_for(w.term) }" title="N_wd = ${ w.count }" data-size="${ w.count }"
+             data-use-size="true">${ w.term.text }</a>
         </%macros:tagcloud>
       </div>
     </div>
@@ -121,6 +127,7 @@
             ${ d.b.title }
           </a>
         </h4>
+
         <div class="list-group-item-text">
           ${ macros.assess_yesno(
           ADocumentSimilarity(src=d),
@@ -132,7 +139,7 @@
             <a href="${ url_for(term.term) }">
               ${ term.term.text }
             </a>
-            ${ ',' if not loop.last else '' }
+          ${ ',' if not loop.last else '' }
           % endfor
           |
           <a href="">
@@ -146,7 +153,8 @@
 
 <%def name="content()">
   <div class="container">
-    <object data="${ url_for(filename='documents_files/%s.pdf' % s.document.file_name) }" type="application/pdf" style="width: 100%; height: 800px;">
+    <object data="${ url_for(filename='documents_files/%s.pdf' % s.document.file_name) }" type="application/pdf"
+            style="width: 100%; height: 800px;">
       <a href="${ url_for(filename='documents_files/%s.pdf' % s.document.file_name) }">Download PDF</a>
     </object>
   </div>
@@ -156,6 +164,7 @@
 <div class="container">
   <div>
     <h3>${ s.document.title }</h3>
+
     <div class="bs-component">
       <ul class="nav nav-pills">
         <li class="active"><a href="#overview" data-toggle="tab">Overview</a></li>
