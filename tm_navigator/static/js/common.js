@@ -107,24 +107,6 @@ function process_tagclouds() {
 
 $(process_tagclouds);
 
-
-$(function () {
-    $('.overlay-container').each(function () {
-        var divs = $(this).find('div');
-        var base = divs[0];
-        var overlay = divs[1];
-        $(this).hover(
-            function () {
-                $(overlay).slideUp('slow');
-            },
-            function () {
-                $(overlay).slideDown('slow');
-            }
-        );
-    });
-});
-
-
 $(function(){
     var header = $('.sticky-header');
     var replacement = $('<div></div>');
