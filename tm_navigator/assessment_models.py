@@ -3,15 +3,15 @@ from sqlalchemy.dialects import postgresql as pg_dialect
 
 
 class AssessmentMixin(object):
-    id = sa.Column(sa.types.Integer, primary_key=True)
-    username = sa.Column(sa.types.String)
-    date = sa.Column(sa.types.DateTime(timezone=True), server_default=sa.func.current_timestamp(), nullable=False)
+    id = sa.Column(sa.Integer, primary_key=True)
+    username = sa.Column(sa.String)
+    date = sa.Column(sa.DateTime(timezone=True), server_default=sa.func.current_timestamp(), nullable=False)
     technical_info = sa.Column(pg_dialect.JSONB, nullable=False)
 
 
 class ATopic(Base, AssessmentMixin):
-    topic_id = sa.Column(sa.types.Integer, nullable=False)
-    value = sa.Column(sa.types.Integer, nullable=False)
+    topic_id = sa.Column(sa.Integer, nullable=False)
+    value = sa.Column(sa.Integer, nullable=False)
 
     __table_args__ = (
         sa.UniqueConstraint('username', topic_id),
@@ -23,10 +23,10 @@ class ATopic(Base, AssessmentMixin):
 
 
 class ATopicEdge(Base, AssessmentMixin):
-    parent_id = sa.Column(sa.types.Integer, nullable=False)
-    child_id = sa.Column(sa.types.Integer, nullable=False)
-    child_type = sa.Column(sa.types.Enum('parent', 'child', name='pc_enum'), nullable=False)
-    value = sa.Column(sa.types.Integer, nullable=False)
+    parent_id = sa.Column(sa.Integer, nullable=False)
+    child_id = sa.Column(sa.Integer, nullable=False)
+    child_type = sa.Column(sa.Enum('parent', 'child', name='pc_enum'), nullable=False)
+    value = sa.Column(sa.Integer, nullable=False)
 
     __table_args__ = (
         sa.UniqueConstraint('username', parent_id, child_id),
@@ -38,9 +38,9 @@ class ATopicEdge(Base, AssessmentMixin):
 
 
 class ADocumentSimilarity(Base, AssessmentMixin):
-    a_id = sa.Column(sa.types.Integer, nullable=False)
-    b_id = sa.Column(sa.types.Integer, nullable=False)
-    value = sa.Column(sa.types.Integer, nullable=False)
+    a_id = sa.Column(sa.Integer, nullable=False)
+    b_id = sa.Column(sa.Integer, nullable=False)
+    value = sa.Column(sa.Integer, nullable=False)
 
     __table_args__ = (
         sa.UniqueConstraint('username', a_id, b_id),
@@ -52,10 +52,10 @@ class ADocumentSimilarity(Base, AssessmentMixin):
 
 
 class ADocumentTopic(Base, AssessmentMixin):
-    document_id = sa.Column(sa.types.Integer, nullable=False)
-    topic_id = sa.Column(sa.types.Integer, nullable=False)
-    child_type = sa.Column(sa.types.Enum('document', 'topic', name='dt_enum'), nullable=False)
-    value = sa.Column(sa.types.Integer, nullable=False)
+    document_id = sa.Column(sa.Integer, nullable=False)
+    topic_id = sa.Column(sa.Integer, nullable=False)
+    child_type = sa.Column(sa.Enum('document', 'topic', name='dt_enum'), nullable=False)
+    value = sa.Column(sa.Integer, nullable=False)
 
     __table_args__ = (
         sa.UniqueConstraint('username', document_id, topic_id),
@@ -67,11 +67,11 @@ class ADocumentTopic(Base, AssessmentMixin):
 
 
 class ATopicTerm(Base, AssessmentMixin):
-    topic_id = sa.Column(sa.types.Integer, nullable=False)
-    modality_id = sa.Column(sa.types.Integer, nullable=False)
-    term_id = sa.Column(sa.types.Integer, nullable=False)
-    child_type = sa.Column(sa.types.Enum('topic', 'term', name='tt_enum'), nullable=False)
-    value = sa.Column(sa.types.Integer, nullable=False)
+    topic_id = sa.Column(sa.Integer, nullable=False)
+    modality_id = sa.Column(sa.Integer, nullable=False)
+    term_id = sa.Column(sa.Integer, nullable=False)
+    child_type = sa.Column(sa.Enum('topic', 'term', name='tt_enum'), nullable=False)
+    value = sa.Column(sa.Integer, nullable=False)
 
     __table_args__ = (
         sa.UniqueConstraint('username', topic_id, modality_id, term_id),

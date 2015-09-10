@@ -75,6 +75,7 @@ class SubclassDict:
 class Morepath:
     def __init__(self, app=None):
         self._app = app
+        app.context_processor(lambda: {'mp': self})
 
         self.aliases = SubclassDict()
         self.templates = SubclassDict()
@@ -188,5 +189,4 @@ def url_for_cached(endpoint, **values):
 
 url_for_cached.cache = {}
 flask_url_for = flask.url_for
-flask.helpers.url_for = url_for_cached
 flask.url_for = url_for_cached

@@ -15,10 +15,6 @@ mako = MakoTemplates(app)
 toolbar = DebugToolbarExtension(app)
 
 
-def debug():
-    assert not app.debug, "Don't panic! You're here by request of debug()"
-
-
 @app.context_processor
 def override_url_for():
     return dict(url_for=mp.url_for)
@@ -37,15 +33,8 @@ def inject_models():
             for k, v in inspect.getmembers(module, inspect.isclass)}
 
 
-@app.context_processor
-def inject_mp():
-    return {'mp': mp}
-
-
 from routes import *
-from views import *
 app = mp.app
-# from assessment_rest import *
 
 if __name__ == '__main__':
-    app.run(use_reloader=app.config['DEBUG'], port=5000)
+    app.run(use_reloader=True, port=5000)
