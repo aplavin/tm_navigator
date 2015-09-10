@@ -200,7 +200,7 @@ class Logout:
 @mp.route('/document/<slug>/')
 @mp.template('document.html')
 @mp.ui_for(Document)
-class UIDocument:
+class _:
     def __init__(self, **values):
         self.document = db.session.query(Document).filter_by(**values).one()
 
@@ -245,17 +245,17 @@ class UIDocument:
 @mp.route('/term/<modality>/<text>/', to_url=lambda model: {'modality': model.modality.name})
 @mp.template('term.html')
 @mp.ui_for(Term)
-class UITerm:
+class _:
     def __init__(self, modality, text):
         self.term = db.session.query(Term).filter(Term.text == text)\
             .join(Modality).filter(Modality.name == modality)\
             .one()
 
 
-@mp.route('/topic/<id>/')
+@mp.route('/topic/<int:id>/')
 @mp.template('topic.html')
 @mp.ui_for(Topic)
-class UITopic:
+class _:
     def __init__(self, id):
         self.topic = db.session.query(Topic).filter_by(id=id)\
             .outerjoin(Topic.documents).order_by(DocumentTopic.probability.desc())\

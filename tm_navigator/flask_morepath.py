@@ -1,4 +1,4 @@
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 import re
 from itertools import chain
 from functools import cmp_to_key
@@ -78,6 +78,7 @@ class Morepath:
         app.context_processor(lambda: {'mp': self})
 
         self.aliases = SubclassDict()
+        self.aliases_reversed = defaultdict(list)
         self.templates = SubclassDict()
         self.endpoints = SubclassDict()
 
@@ -88,6 +89,7 @@ class Morepath:
     def ui_for(self, a):
         def add_alias(original_cls):
             self.aliases[a] = original_cls
+            self.aliases_reversed[original_cls].append(a)
             return original_cls
 
         return add_alias
@@ -110,7 +112,7 @@ class Morepath:
 
         def add_route(cls):
             if 'endpoint' not in route_options:
-                route_options['endpoint'] = '_%s' % cls.__name__
+                route_options['endpoint'] = '_%s' % self.aliases_reversed.get(cls, [cls])[0].__name__
             self.endpoints[cls] = Endpoint(name=route_options['endpoint'], rule=rule, to_url=to_url, from_url=from_url)
 
             if not hasattr(cls, '_flask_route_handler'):
