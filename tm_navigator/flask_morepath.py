@@ -85,7 +85,7 @@ class Morepath:
     def app(self):
         return self._app or flask.current_app
 
-    def alias(self, a):
+    def ui_for(self, a):
         def add_alias(original_cls):
             self.aliases[a] = original_cls
             return original_cls
@@ -93,9 +93,10 @@ class Morepath:
         return add_alias
 
     def _unalias(self, cls):
-        while cls in self.aliases:
-            cls = self.aliases[cls]
-        return cls
+        try:
+            return self.aliases[cls]
+        except KeyError:
+            return cls
 
     def template(self, template, views=()):
         def add_template(cls):

@@ -199,7 +199,7 @@ class Logout:
 
 @mp.route('/document/<slug>/')
 @mp.template('document.html')
-@mp.alias(Document)
+@mp.ui_for(Document)
 class UIDocument:
     def __init__(self, **values):
         self.document = db.session.query(Document).filter_by(**values).one()
@@ -242,25 +242,27 @@ class UIDocument:
         return topics[0]
 
 
-@mp.route('/term/<modality_id>/<text>/')
+@mp.route('/term/<modality>/<text>/', to_url=lambda model: {'modality': model.modality.name})
 @mp.template('term.html')
-@mp.alias(Term)
+@mp.ui_for(Term)
 class UITerm:
-    def __init__(self, modality_id, text):
-        self.term = db.session.query(Term).filter_by(modality_id=modality_id, text=text).one()
+    def __init__(self, modality, text):
+        self.term = db.session.query(Term).filter(Term.text == text)\
+            .join(Modality).filter(Modality.name == modality)\
+            .one()
 
 
 @mp.route('/topic/<id>/')
 @mp.template('topic.html')
-@mp.alias(Topic)
+@mp.ui_for(Topic)
 class UITopic:
     def __init__(self, id):
         self.topic = db.session.query(Topic).filter_by(id=id)\
-            .join(Topic.documents).order_by(DocumentTopic.probability.desc())\
+            .outerjoin(Topic.documents).order_by(DocumentTopic.probability.desc())\
             .options(sa.orm.contains_eager(Topic.documents))\
             .one()
         topic = db.session.query(Topic).filter_by(id=id)\
-            .join(Topic.terms).order_by(TopicTerm.probability.desc()).limit(100)\
+            .outerjoin(Topic.terms).order_by(TopicTerm.probability.desc()).limit(100)\
             .options(sa.orm.contains_eager(Topic.terms))\
             .one()
         sa.orm.attributes.set_committed_value(self.topic, 'terms', topic.terms)
@@ -277,7 +279,7 @@ class UITopic:
           },
           from_url={'cls': lambda cls: globals()[cls]},
           methods=['POST'])
-@mp.alias(AssessmentMixin)
+@mp.ui_for(AssessmentMixin)
 class UIAssessment:
     def __init__(self, cls):
         self.assessment = globals()[cls]()
