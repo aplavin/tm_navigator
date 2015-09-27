@@ -32,7 +32,7 @@
         <%def name="show_topic(topic)">
           % if topic is not None:
             <li class="list-group-item"
-                style="border-width: 2px; border-color: rgba(92, 184, 92, ${ topic.level / 3 })">
+                style="border-width: 2px; border-color: ${ ('rgba(92, 184, 92, %s)' % (topic.level / 3)) if topic.type == 'foreground' else 'rgba(0, 0, 0, 0.2)' }">
               <h4 class="list-group-item-heading">
                 <a href="${ url_for(topic) }">
                   Topic ${ topic.text }
@@ -153,10 +153,38 @@
 
 <%def name="content()">
   <div class="container">
-    <object data="${ url_for(filename='documents_files/%s.pdf' % s.document.file_name) }" type="application/pdf"
-            style="width: 100%; height: 800px;">
-      <a href="${ url_for(filename='documents_files/%s.pdf' % s.document.file_name) }">Download PDF</a>
-    </object>
+    <div class="well sticky-header">
+      <h4 style="padding: 10px;">
+          Topics:
+          <div class="dropdown pull-right">
+              <a class="dropdown-toggle" data-toggle="dropdown" href="#">
+                  Highlight
+                  <span class="caret"></span>
+              </a>
+              <ul class="dropdown-menu" role="menu" style="margin-left: 20px;">
+                  <li><a href="#" onclick="process_data_color('active'); return false;">Active</a></li>
+                  <li><a href="#" onclick="process_data_color('passive'); return false;">Passive</a></li>
+                  <li><a href="#" onclick="process_data_color('disabled'); return false;">Disabled</a></li>
+              </ul>
+          </div>
+      </h4>
+
+      <ul class="nav nav-pills">
+          % for t in s.document.topics:
+              <li data-color="${ t.topic.id }">
+                  <a style="border: 1px solid grey" href="${ url_for(t.topic) }" title="P(t | d) = ${ t.probability }">
+                      ${ t.topic.text } <!-- <span class="badge">{{ p }}</span> -->
+                  </a>
+              </li>
+          % endfor
+      </ul>
+    </div>
+
+    ${ s.html | n }
+##     <object data="${ url_for(filename='documents_files/%s.pdf' % s.document.file_name) }" type="application/pdf"
+##             style="width: 100%; height: 800px;">
+##       <a href="${ url_for(filename='documents_files/%s.pdf' % s.document.file_name) }">Download PDF</a>
+##     </object>
   </div>
 </%def>
 

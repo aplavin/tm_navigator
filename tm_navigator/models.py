@@ -2,6 +2,7 @@ import re
 import sqlalchemy as sa
 import sqlalchemy.ext.hybrid
 import sqlalchemy.ext.declarative as sa_dec
+from sqlalchemy.dialects import postgresql
 from sqlalchemy_searchable import make_searchable
 from sqlalchemy_utils.types import TSVectorType
 from sqlalchemy_utils import aggregated
@@ -57,6 +58,10 @@ class Document(Base, ModalityFilterMixin):
     title = sa.Column(sa.Text, nullable=False)
     file_name = sa.Column(sa.Text, nullable=False, unique=True)
     slug = sa.Column(sa.Text, nullable=False, unique=True)
+    source = sa.Column(sa.Text)
+
+    text = sa.orm.deferred(sa.Column(sa.Text))
+    html = sa.orm.deferred(sa.Column(sa.Text))
 
     search_vector = sa.orm.deferred(sa.Column(TSVectorType('title', regconfig='russian')))
 
@@ -71,7 +76,7 @@ class Document(Base, ModalityFilterMixin):
 
     @property
     def conference(self):
-        return re.sub(r'^([a-z]+)(\d+)-pdfs/.+', r'\1-\2', self.file_name).upper()
+        return self.source # re.sub(r'^([a-z]+)(\d+)-pdfs/.+', r'\1-\2', self.file_name).upper()
 
 
 class DocumentSimilarity(Base):
@@ -105,6 +110,7 @@ class Term(Base):
 class Topic(Base, ModalityFilterMixin):
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.Text, unique=True)
+    type = sa.Column(sa.Enum('foreground', 'background', name='fgbg_enum'), nullable=False)
 
     @sa.ext.hybrid.hybrid_property
     def level(self):
@@ -198,4 +204,25 @@ class TopicTerm(Base):
 
     __table_args__ = (
         sa.ForeignKeyConstraint([modality_id, term_id], [Term.modality_id, Term.id]),
+    )
+
+
+class DocumentContent(Base):
+    id = sa.Column(sa.Integer, primary_key=True)
+    document_id = sa.Column(sa.Integer, sa.ForeignKey(Document.id), nullable=False)
+    modality_id = sa.Column(sa.Integer, sa.ForeignKey(Modality.id), nullable=False)
+    term_id = sa.Column(sa.Integer, nullable=False)
+    start_pos = sa.Column(sa.Integer, nullable=False)
+    end_pos = sa.Column(sa.Integer, nullable=False)
+    topic_id = sa.Column(sa.Integer, sa.ForeignKey(Topic.id), nullable=False)
+    # topic_probability = sa.Column(sa.Float, nullable=False)
+
+    document = sa.orm.relationship(Document, backref=sa.orm.backref('contents', order_by=start_pos))
+    term = sa.orm.relationship(Term)
+    modality = sa.orm.relationship(Modality)
+    topic = sa.orm.relationship(Topic)
+
+    __table_args__ = (
+        sa.ForeignKeyConstraint([modality_id, term_id], [Term.modality_id, Term.id]),
+        sa.UniqueConstraint(document_id, modality_id, term_id, start_pos),
     )

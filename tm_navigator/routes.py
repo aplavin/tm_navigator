@@ -203,13 +203,13 @@ class Logout:
 class _:
     def __init__(self, **values):
         self.document = db.session.query(Document).filter_by(**values).one()
-
+        print(self.document.id)
 
     @property
     def root_topic(self):
         doctopics = db.session.query(DocumentTopic) \
             .filter(DocumentTopic.document_id == self.document.id) \
-            .filter(DocumentTopic.probability > 0.01) \
+            .filter(DocumentTopic.probability > 0.001) \
             .cte('doctopics')
     
         topics_filtered = db.session.query(Topic) \
@@ -228,8 +228,7 @@ class _:
             .outerjoin(ta, TopicEdge.child) \
             .options(sa.orm.contains_eager(Topic.children).
                      contains_eager(TopicEdge.child, alias=ta)) \
-            .options(sa.orm.contains_eager(Topic.documents, alias=doctopics).noload(DocumentTopic.document)) \
-            .order_by(Topic.level, doctopics.c.probability.desc())
+            .options(sa.orm.contains_eager(Topic.documents, alias=doctopics).noload(DocumentTopic.document))
         topics = topics.all()
 
         for t in topics:
@@ -240,6 +239,27 @@ class _:
             sa.orm.attributes.set_committed_value(t, 'terms', tt.terms)
         
         return topics[0]
+
+    @property
+    def html(self):
+        html = self.document.html
+
+        html_new = ''
+        html_pos = 0
+        for cnt in self.document.contents:
+            html_new += html[html_pos:cnt.start_pos]
+            html_new += '<span data-word="%d" data-color="%d"><a href="#">' % (cnt.term_id, cnt.topic_id)
+            html_new += html[cnt.start_pos:cnt.end_pos]
+            html_new += '</a></span>'
+            html_pos = cnt.end_pos
+        html_new += html[html_pos:]
+
+        html = re.search(r'</header>(.*)</body>', html_new, re.DOTALL).group(1)
+        html = re.sub(r'<img class="(\w+)" src="\w+/(eqn\d+).png".*?/>',
+                      r'<span class="sprite-\2"></span>',
+                      html, flags=re.DOTALL | re.MULTILINE)
+
+        return html
 
 
 @mp.route('/term/<modality>/<text>/', to_url=lambda model: {'modality': model.modality.name})
