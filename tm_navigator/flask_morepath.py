@@ -1,10 +1,11 @@
-from collections import namedtuple, defaultdict
+from collections import namedtuple
 import re
 from itertools import chain
 from functools import cmp_to_key
 from cached_property import cached_property
 import flask
 from flask.ext.mako import render_template, render_template_def
+from markupsafe import Markup
 
 
 class Endpoint(namedtuple('Endpoint', ['name', 'rule'])):
@@ -150,13 +151,14 @@ class Morepath:
 
         return add_route
 
-    def get_view(self, ui_or_model, view=''):
+    def get_view(self, ui_or_model, view='', **kwargs):
         with self.app.extensions['sqlalchemy'].db.session.no_autoflush:  # XXX
             ui = self._get_ui(ui_or_model)
             result = ui() if callable(ui) else ui
 
             if ui.__class__ in self.templates:
-                return self.templates[ui.__class__].render(view, s=result)
+                result = self.templates[ui.__class__].render(view, s=result, **kwargs)
+                return Markup(result)
             else:
                 return result
 
