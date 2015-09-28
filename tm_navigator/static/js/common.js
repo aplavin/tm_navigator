@@ -26,19 +26,23 @@ function process_data_color(mode) {
     var backgroundColor = tinycolor('white').darken(5);
     backgroundColor.setAlpha(0.7);
 
-    var values = unique($('[data-color]').map(function() { return $(this).data('color'); }).get());
     var colormap = {};
     var colors = Highcharts.getOptions().colors.map(tinycolor);
-    values.forEach(function(value, i) {
-        if (i >= colors.length - 1) {
-            i = colors.length - 1;
-        }
-        colormap[value] = colors[i].darken(10);
+
+    $('[data-color-def][data-color-neutral="0"]').each(function(i) {
+        var data_color = $(this).data('color');
+        colormap[data_color] = colors[Math.min(i, colors.length - 1)].darken(10);
+    });
+
+    $('[data-color-def][data-color-neutral="1"]').each(function() {
+        var data_color = $(this).data('color');
+        colormap[data_color] = colors[0].darken(10).greyscale();
     });
 
     var others = {};
-    values.forEach(function(value) {
-        others[value] = $(sprintf('[data-color=%s] a', value));
+    $('[data-color-def]').each(function() {
+        var data_color = $(this).data('color');
+        others[data_color] = $(sprintf('[data-color=%s] a', data_color));
     });
 
     $('[data-color]').each(function() {
