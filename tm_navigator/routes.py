@@ -291,7 +291,7 @@ class _:
 
 
 @mp.route('/term/<modality>/<text>/')
-@mp.template('term.html')
+@mp.template('term.html', views=['tagcloud'])
 @mp.ui_for(Term)
 class _:
     @classmethod

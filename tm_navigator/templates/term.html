@@ -1,3 +1,8 @@
+<%def name="view_tagcloud()">
+  <a href="${ url_for(s.model) }" title="${ s.model.count } occurrences" data-size="${ s.model.count }"
+     data-use-size="true">${ s.model.text }</a>
+</%def>
+
 <%inherit file="base.html"/>
 <%namespace name="macros" file="macros.html"/>
 

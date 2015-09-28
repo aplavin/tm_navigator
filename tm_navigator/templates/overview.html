@@ -25,8 +25,7 @@
       <h2>Most common terms:</h2>
 
       <%macros:tagcloud items="${s.words[:100]}" additional_class="text-center" args="w">
-        <a href="${ url_for(w) }" title="${ w.count } occurrences" data-size="${ w.count }"
-           data-use-size="true">${ w.text }</a>
+        ${ mp.get_view(w, view='tagcloud') }
       </%macros:tagcloud>
     </div>
   </div>
