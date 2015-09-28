@@ -1,0 +1,24 @@
+<% m = s.model %>
+
+<%def name="assess_yesno(model, question, yes_text, no_text, additional_classes='')">
+  <small class="text-muted assess-yesno ${ additional_classes }" data-url="${ url_for(model) }">
+    <span>${ question }</span>
+    <button type="button" class="btn btn-link btn-xs" title="${ yes_text }">
+      <span class="glyphicon glyphicon-ok"></span>
+    </button>
+    <button type="button" class="btn btn-link btn-xs" title="${ no_text }">
+      <span class="glyphicon glyphicon-remove"></span>
+    </button>
+  </small>
+</%def>
+
+% if isinstance(m, ADocumentTopic):
+  % if m.child_type == 'topic':
+      ${ assess_yesno(
+      m,
+      "Does the topic suit this document?",
+      "Yes, it's a good fit",
+      "No, it doesn't belong here",
+      "pull-right") }
+  % endif
+% endif
