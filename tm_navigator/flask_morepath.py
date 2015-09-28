@@ -92,67 +92,67 @@ class Morepath:
     def app(self):
         return self._app or flask.current_app
 
-    def ui_for(self, a):
-        def add_alias(original_cls):
-            class UIParent(original_cls):
+    def ui_for(self, model_cls):
+        def add_alias(original_ui_cls):
+            class UIClass(original_ui_cls):
                 def __init__(self, model):
                     self.model = model
 
-            UIParent.__name__ = original_cls.__name__
+            UIClass.__name__ = original_ui_cls.__name__
 
-            self.ui_for_model[a] = UIParent
-            self.model_for_ui[UIParent] = a
-            return UIParent
+            self.ui_for_model[model_cls] = UIClass
+            self.model_for_ui[UIClass] = model_cls
+            return UIClass
 
         return add_alias
 
-    def _get_ui_for_model(self, model):
-        model_cls = model.__class__
+    def _get_ui(self, model_or_ui):
+        model_cls = model_or_ui.__class__
         if model_cls in self.ui_for_model:
             ui_cls = self.ui_for_model.get(model_cls, model_cls)
-            return ui_cls(model)
+            return ui_cls(model_or_ui)
         else:
-            return model
+            return model_or_ui
 
     def template(self, template, views=()):
-        def add_template(cls):
-            self.templates[cls] = Template(template, views)
-            return cls
+        def add_template(ui_cls):
+            self.templates[ui_cls] = Template(template, views)
+            return ui_cls
 
         return add_template
 
     def route(self, rule, **route_options):
         assert rule.endswith('/')
 
-        def add_route(cls):
+        def add_route(ui_cls):
             if 'endpoint' not in route_options:
-                route_options['endpoint'] = '_%s' % self.model_for_ui.get(cls, cls).__name__
-            self.endpoints[cls] = Endpoint(name=route_options['endpoint'], rule=rule)
+                route_options['endpoint'] = '_%s' % self.model_for_ui.get(ui_cls, ui_cls).__name__
+            self.endpoints[ui_cls] = Endpoint(name=route_options['endpoint'], rule=rule)
 
-            if not hasattr(cls, '_flask_route_handler'):
+            if not hasattr(ui_cls, '_flask_route_handler'):
                 def wrapped(*args, _view_name='', **kwargs):
                     try:
-                        model = cls.from_url(*args, **kwargs)
+                        ui_or_model = getattr(ui_cls, 'from_url', ui_cls)(*args, **kwargs)
                     except Exception:
                         flask.abort(404)
 
                     try:
-                        return self.get_view(model, _view_name)
+                        return self.get_view(ui_or_model, _view_name)
                     except Template.NotFound:
                         flask.abort(404)
 
-                cls._flask_route_handler = wrapped
+                ui_cls._flask_route_handler = wrapped
 
-            self.app.route(rule, **route_options)(cls._flask_route_handler)
-            self.app.route('%s<_view_name>' % rule, **route_options)(cls._flask_route_handler)
+            self.app.route(rule, **route_options)(ui_cls._flask_route_handler)
+            self.app.route('%s<_view_name>' % rule, **route_options)(ui_cls._flask_route_handler)
 
-            return cls
+            return ui_cls
 
         return add_route
 
-    def get_view(self, model, view=''):
+    def get_view(self, ui_or_model, view=''):
         with self.app.extensions['sqlalchemy'].db.session.no_autoflush:  # XXX
-            ui = self._get_ui_for_model(model)
+            ui = self._get_ui(ui_or_model)
             result = ui() if callable(ui) else ui
 
             if ui.__class__ in self.templates:
@@ -160,23 +160,23 @@ class Morepath:
             else:
                 return result
 
-    def url_for(self, model=None, *, view='', **values):
-        if model is None:
+    def url_for(self, ui_or_model=None, *, view='', **values):
+        if ui_or_model is None:
             return flask.url_for('static', **values)
 
-        if isinstance(model, type):
-            model = model()
+        if isinstance(ui_or_model, type):
+            ui_or_model = ui_or_model()
 
-        ui = self._get_ui_for_model(model)
+        ui = self._get_ui(ui_or_model)
         endpoint = self.endpoints[ui.__class__]
         values = endpoint.get_dict(ui, values)
 
         return flask.url_for(endpoint.name, _view_name=view, **values)
 
     def errorhandler(self, code_or_exception=None):
-        def add_handler(cls):
+        def add_handler(ui_cls):
             def wrapped(error):
-                model = cls(error)
+                model = ui_cls(error)
                 return self.get_view(model), getattr(error, 'code', 500)
 
             if code_or_exception is None:
@@ -186,7 +186,7 @@ class Morepath:
             else:
                 self.app.errorhandler(code_or_exception)(wrapped)
 
-            return cls
+            return ui_cls
 
         return add_handler
 
