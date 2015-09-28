@@ -31,7 +31,7 @@ class Template(namedtuple('Template', ['file', 'views'])):
         if view_name == '':
             return render_template(self.file, **kwargs)
         elif view_name not in self.views:
-            raise self.NotFound
+            raise self.NotFound('View "%s" in file "%s"' % (view_name, self.file))
         else:
             def_name = 'view_%s' % view_name
             return render_template_def(self.file, def_name, **kwargs)
@@ -95,15 +95,23 @@ class Morepath:
 
     def ui_for(self, model_cls):
         def add_alias(original_ui_cls):
-            class UIClass(original_ui_cls):
-                def __init__(self, model):
-                    self.model = model
+            if getattr(original_ui_cls, '_uiclass', False):
+                ui_class = original_ui_cls
+            else:
+                class ui_class(original_ui_cls):
+                    def __init__(self, model):
+                        self.model = model
 
-            UIClass.__name__ = original_ui_cls.__name__
+                ui_class.__name__ = original_ui_cls.__name__
+                ui_class._uiclass = True
 
-            self.ui_for_model[model_cls] = UIClass
-            self.model_for_ui[UIClass] = model_cls
-            return UIClass
+            self.ui_for_model[model_cls] = ui_class
+
+            if ui_class in self.model_for_ui:
+                self.model_for_ui[ui_class] = None  # don't support multiple models for ui here
+            else:
+                self.model_for_ui[ui_class] = model_cls
+            return ui_class
 
         return add_alias
 

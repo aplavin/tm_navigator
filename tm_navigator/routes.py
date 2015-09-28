@@ -224,7 +224,7 @@ class Logout:
 
 
 @mp.route('/document/<slug>/')
-@mp.template('document.html', views=['tagcloud'])
+@mp.template('document.html')
 @mp.ui_for(Document)
 class _:
     @classmethod
@@ -322,6 +322,13 @@ class _:
         return cls(topic_docs)
 
 
+@mp.template('relations_views.html', views=['tagcloud'])
+@mp.ui_for(DocumentTopic)
+@mp.ui_for(DocumentTerm)
+@mp.ui_for(TopicTerm)
+class _: pass
+
+
 @mp.route('/assess/<cls>/', methods=['POST'])
 @mp.ui_for(AssessmentMixin)
 class UIAssessment:
@@ -359,7 +366,7 @@ class UIAssessment:
         return res
 
 
-# @mp.errorhandler()
+@mp.errorhandler()
 @mp.template('error.html')
 class UIError:
     def __init__(self, error):

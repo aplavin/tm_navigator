@@ -34,7 +34,7 @@
         <div id="plot-documents" style="height:250px;"></div>
 
         <%macros:tagcloud items="${s.model.documents}" additional_class="collapsed text-center" args="d">
-          ${ mp.get_view(d.document, view='tagcloud', np=d.count, np_fmt='N_wd = %d') }
+          ${ mp.get_view(d, view='tagcloud') }
         </%macros:tagcloud>
       </div>
     </div>
