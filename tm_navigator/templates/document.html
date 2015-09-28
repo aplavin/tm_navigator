@@ -19,7 +19,7 @@
       <h3 class="panel-title">
         ${ s.model.title }
       </h3>
-      ${ s.model.slug }
+      ${ s.model.slug } | document #${ s.model.id }
       <div>
         % for term in s.model.modality(name='authors').terms[:]:
           <a href="${ url_for(term.term) }">
@@ -30,7 +30,7 @@
       </div>
       <div>
         <a href="">
-          ${ s.model.conference }
+          ${ s.model.source }
         </a>
       </div>
     </div>
@@ -153,7 +153,7 @@
           % endfor
           |
           <a href="">
-            ${ d.b.conference }
+            ${ d.b.source }
           </a>
         </div>
       </div>

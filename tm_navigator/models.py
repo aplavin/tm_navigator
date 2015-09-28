@@ -74,10 +74,6 @@ class Document(Base, ModalityFilterMixin):
             '''highlightall=true, startsel='<span class="match">', stopsel='</span>' '''
         )
 
-    @property
-    def conference(self):
-        return self.source # re.sub(r'^([a-z]+)(\d+)-pdfs/.+', r'\1-\2', self.file_name).upper()
-
 
 class DocumentSimilarity(Base):
     a_id = sa.Column(sa.Integer, sa.ForeignKey(Document.id), primary_key=True)
