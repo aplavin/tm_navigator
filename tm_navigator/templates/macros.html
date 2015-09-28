@@ -1,6 +1,6 @@
 <%def name="tagcloud(items, limit=None, emptystr=None, additional_class='')">
   <ul class="tagcloud ${ additional_class }">
-    % for it in (items[:limit] if limit is not None else items):
+    % for it in (items[:limit] if limit is not None and limit != -1 else items):
       <li>${ caller.body(it) }</li>
     % endfor
 
