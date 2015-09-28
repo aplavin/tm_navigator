@@ -1,3 +1,13 @@
+<%def name="view_tagcloud()">
+  <a href="${ url_for(s.model) }" data-size="${ np }" data-use-opacity="true"
+     data-placement="top" data-toggle="tooltip" data-html="true"
+     title="
+    ${ s.model.title }<br/><br/>
+##     ${ authors }<hr/>
+    ${ np_fmt % np }
+    ">${ s.model.slug }</a>
+</%def>
+
 <%inherit file="base.html"/>
 <%namespace name="macros" file="macros.html"/>
 

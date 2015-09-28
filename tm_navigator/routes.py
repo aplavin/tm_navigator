@@ -224,7 +224,7 @@ class Logout:
 
 
 @mp.route('/document/<slug>/')
-@mp.template('document.html')
+@mp.template('document.html', views=['tagcloud'])
 @mp.ui_for(Document)
 class _:
     @classmethod
@@ -359,7 +359,7 @@ class UIAssessment:
         return res
 
 
-@mp.errorhandler()
+# @mp.errorhandler()
 @mp.template('error.html')
 class UIError:
     def __init__(self, error):

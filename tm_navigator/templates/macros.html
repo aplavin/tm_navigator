@@ -1,13 +1,3 @@
-<%def name="document_in_tagcloud(document, np, np_fmt, authors)">
-  <a href="${ url_for(document) }" data-size="${ np }" data-use-opacity="true"
-     data-placement="top" data-toggle="tooltip" data-html="true"
-     title="
-    ${ document.title }<br/><br/>
-    ${ authors }<hr/>
-    ${ np_fmt % np }
-    ">${ document.slug }</a>
-</%def>
-
 <%def name="tagcloud(items, limit=None, emptystr=None, additional_class='')">
   <ul class="tagcloud ${ additional_class }">
     % for it in (items[:limit] if limit is not None else items):

@@ -28,7 +28,7 @@
           </h4>
 
           <%macros:tagcloud items="${topic.documents}" limit="${-1}" emptystr='Nothing matched' additional_class='collapsed collapsed-small' args="d">
-            ${ macros.document_in_tagcloud(d.document, d.probability, 'P(t | d) = %f', '') }
+            ${ mp.get_view(d.document, view='tagcloud', np=d.probability, np_fmt='P(t | d) = %f') }
           </%macros:tagcloud>
         </div>
 
