@@ -142,6 +142,7 @@ class SearchResultsGroup:
     def __init__(self, term, query):
         self.term = term
         self.query = query
+        self.present_as = None  # used in template
 
     @classmethod
     def from_url(cls, modality_id, term_id, query=''):
@@ -150,7 +151,7 @@ class SearchResultsGroup:
         return cls(term, query)
 
     def to_url(self):
-        return {'query': self.query}
+        return {'query': self.query, 'modality_id': self.term.modality_id, 'term_id': self.term.id}
 
     @cached_property
     def query_parsed(self):

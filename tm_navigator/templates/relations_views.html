@@ -31,6 +31,16 @@
   % endif
 </%def>
 
+<%def name="view_tagcloud_topic()">
+  % if isinstance(s.model, DocumentTopic):
+    <a href="${ url_for(s.model.topic) }" title="P(t | d) = ${ s.model.probability }"
+       data-size="${ s.model.probability }" data-use-size="true">${ s.model.topic.text }</a>
+  % elif isinstance(s.model, TopicTerm):
+    <a href="${ url_for(s.model.topic) }" title="P(w | t) = ${ s.model.probability }"
+       data-size="${ s.model.probability }" data-use-size="true">${ s.model.topic.text }</a>
+  % endif
+</%def>
+
 <%def name="view_plot_document()">
   % if isinstance(s.model, DocumentTopic):
     {
@@ -64,9 +74,7 @@
 </%def>
 
 <%def name="view_plot_topic()">
-  % if isinstance(s.model, DocumentTopic):
-    a
-  % elif isinstance(s.model, TopicTerm):
+  % if isinstance(s.model, TopicTerm):
     {
       name: '${ s.model.topic.text }',
       y: ${ s.model.probability },

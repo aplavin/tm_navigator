@@ -39,8 +39,7 @@
           </h4>
 
           <%macros:tagcloud items="${topic.terms}" limit="${-1}" emptystr='Nothing matched' additional_class='collapsed collapsed-small' args="w">
-            <a href="${ url_for(w.term) }" title="P(w | t) = ${ w.probability }" data-size="${ w.probability }"
-               data-use-size="true">${ w.term.text }</a>
+            ${ mp.get_view(w, view='tagcloud_term') }
           </%macros:tagcloud>
         </div>
       </div>
@@ -92,8 +91,7 @@
           </div>
 
           <%macros:tagcloud items="${topics}" args="t">
-            <a href="${ url_for(t.topic) }" title="P(t | d) = ${ t.probability }" data-size="${ t.probability }"
-               data-use-size="true">${ t.topic.text }</a>
+            ${ mp.get_view(t, 'tagcloud_topic') }
           </%macros:tagcloud>
         </div>
       </div>

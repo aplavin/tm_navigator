@@ -23,8 +23,7 @@
         <div id="plot-topics" style="height:250px;"></div>
 
         <%macros:tagcloud items="${s.model.topics}" additional_class="text-center" args="t">
-          <a href="${ url_for(t.topic) }" title="P(w | t) = ${ '%.4f' % t.probability }" data-size="${ t.probability }"
-             data-use-size="true">${ t.topic.text }</a>
+          ${ mp.get_view(t, view='tagcloud_topic') }
         </%macros:tagcloud>
       </div>
 

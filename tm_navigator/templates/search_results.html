@@ -10,7 +10,7 @@
         % for term, cnt in s.results[:groups_max]:
           <li class="${ 'active' if loop.first else '' }">
             <a href="#${ term.id }" class="dynamic"
-               data-url="${ url_for(SearchResultsGroup(query=s.query, modality_id=term.modality_id, term_id=term.id)) }"
+               data-url="${ url_for(SearchResultsGroup(query=s.query, term=term)) }"
                data-target="#group-content" data-toggle="pill">
               <span class="badge pull-right">${ cnt }</span>
               ${ term.text }
@@ -40,7 +40,7 @@
 
     <div id='group-content'>
       % if not s.present_as.startswith('groupby:'):
-                <%include file='search_results_group.html'/>
+        <%include file='search_results_group.html'/>
       % endif
     </div>
   </div>
