@@ -7,14 +7,14 @@ import flask
 from flask.ext.mako import render_template, render_template_def
 
 
-class Endpoint(namedtuple('Endpoint', ['name', 'rule', 'to_url', 'from_url'])):
+class Endpoint(namedtuple('Endpoint', ['name', 'rule'])):
     @cached_property
     def rule_keys(self):
         return re.findall(r'<(?:\w+:)?(\w+)>', self.rule)
 
-    def get_dict(self, model, values):
-        custom_params = self.to_url(model)
-        dct = {key: getattr(model, key)
+    def get_dict(self, ui, values):
+        custom_params = getattr(ui, 'to_url', lambda: {})()
+        dct = {key: getattr(ui.model, key)
                for key in self.rule_keys
                if key not in values and key not in custom_params}
         dct.update(custom_params)
@@ -64,12 +64,18 @@ class SubclassDict:
             raise KeyError
         return self.dct[key]
 
-    def __contains__(self, item):
+    def __contains__(self, key):
         try:
-            self.__getitem__(item)
+            self.__getitem__(key)
             return True
         except KeyError:
             return False
+
+    def get(self, key, default):
+        try:
+            return self.__getitem__(key)
+        except KeyError:
+            return default
 
 
 class Morepath:
@@ -77,10 +83,10 @@ class Morepath:
         self._app = app
         app.context_processor(lambda: {'mp': self})
 
-        self.aliases = SubclassDict()
-        self.aliases_reversed = defaultdict(list)
-        self.templates = SubclassDict()
-        self.endpoints = SubclassDict()
+        self.ui_for_model = SubclassDict()
+        self.model_for_ui = dict()
+        self.templates = dict()
+        self.endpoints = dict()
 
     @property
     def app(self):
@@ -88,17 +94,25 @@ class Morepath:
 
     def ui_for(self, a):
         def add_alias(original_cls):
-            self.aliases[a] = original_cls
-            self.aliases_reversed[original_cls].append(a)
-            return original_cls
+            class UIParent(original_cls):
+                def __init__(self, model):
+                    self.model = model
+
+            UIParent.__name__ = original_cls.__name__
+
+            self.ui_for_model[a] = UIParent
+            self.model_for_ui[UIParent] = a
+            return UIParent
 
         return add_alias
 
-    def _unalias(self, cls):
-        try:
-            return self.aliases[cls]
-        except KeyError:
-            return cls
+    def _get_ui_for_model(self, model):
+        model_cls = model.__class__
+        if model_cls in self.ui_for_model:
+            ui_cls = self.ui_for_model.get(model_cls, model_cls)
+            return ui_cls(model)
+        else:
+            return model
 
     def template(self, template, views=()):
         def add_template(cls):
@@ -107,17 +121,17 @@ class Morepath:
 
         return add_template
 
-    def route(self, rule, to_url=lambda m: {}, from_url=lambda m: {}, **route_options):
+    def route(self, rule, **route_options):
         assert rule.endswith('/')
 
         def add_route(cls):
             if 'endpoint' not in route_options:
-                route_options['endpoint'] = '_%s' % self.aliases_reversed.get(cls, [cls])[0].__name__
-            self.endpoints[cls] = Endpoint(name=route_options['endpoint'], rule=rule, to_url=to_url, from_url=from_url)
+                route_options['endpoint'] = '_%s' % self.model_for_ui.get(cls, cls).__name__
+            self.endpoints[cls] = Endpoint(name=route_options['endpoint'], rule=rule)
 
             if not hasattr(cls, '_flask_route_handler'):
                 def wrapped(*args, _view_name='', **kwargs):
-                    model = cls(*args, **kwargs)
+                    model = cls.from_url(*args, **kwargs)
                     try:
                         return self.get_view(model, _view_name)
                     except Template.NotFound:
@@ -133,13 +147,12 @@ class Morepath:
         return add_route
 
     def get_view(self, model, view=''):
-        cls = self._unalias(model.__class__)
+        with self.app.extensions['sqlalchemy'].db.session.no_autoflush:  # XXX
+            ui = self._get_ui_for_model(model)
+            result = ui() if callable(ui) else ui
 
-        with self.app.extensions['sqlalchemy'].db.session.no_autoflush:
-            result = model() if callable(model) else model
-
-            if cls in self.templates:
-                return self.templates[cls].render(view, s=result)
+            if ui.__class__ in self.templates:
+                return self.templates[ui.__class__].render(view, s=result)
             else:
                 return result
 
@@ -150,9 +163,9 @@ class Morepath:
         if isinstance(model, type):
             model = model()
 
-        cls = self._unalias(model.__class__)
-        endpoint = self.endpoints[cls]
-        values = endpoint.get_dict(model, values)
+        ui = self._get_ui_for_model(model)
+        endpoint = self.endpoints[ui.__class__]
+        values = endpoint.get_dict(ui, values)
 
         return flask.url_for(endpoint.name, _view_name=view, **values)
 

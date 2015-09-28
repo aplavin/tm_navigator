@@ -1,17 +1,17 @@
 <%inherit file="base.html"/>
 <%namespace name="macros" file="macros.html"/>
 
-<%block name="title">Topic ${ s.topic.text }</%block>
+<%block name="title">Topic ${ s.model.text }</%block>
 
 <%def name="overview()">
   <div class="panel panel-default">
     <div class="panel-heading">
       <h3 class="panel-title">
-        Topic ${ s.topic.text }
+        Topic ${ s.model.text }
       </h3>
-      P(t) = ${ '%.3f' % s.topic.probability }
+      P(t) = ${ '%.3f' % s.model.probability }
       ${ macros.assess_yesno(
-      ATopic(src=s.topic),
+      ATopic(src=s.model),
       "Is this a good topic overall?",
       "Yes",
       "No",
@@ -24,7 +24,7 @@
 
         <div id="plot-documents" style="height:250px;"></div>
 
-        <%macros:tagcloud items="${s.topic.documents}" additional_class="collapsed text-center" args="d">
+        <%macros:tagcloud items="${s.model.documents}" additional_class="collapsed text-center" args="d">
           ${ macros.document_in_tagcloud(d.document, d.probability, 'P(t | d) = %f', '') }
         </%macros:tagcloud>
       </div>
@@ -34,7 +34,7 @@
 
         <div id="plot-words" style="height:250px;"></div>
 
-        <%macros:tagcloud items="${s.topic.terms}" additional_class="collapsed text-center" args="w">
+        <%macros:tagcloud items="${s.model.terms}" additional_class="collapsed text-center" args="w">
           <a href="${ url_for(w.term) }"
              title="P(w | t) = ${ w.probability }"
              data-size="${ w.probability }" data-use-size="true">
@@ -58,7 +58,7 @@
           'Usage in documents',
           ['d', 'P(t | d)'],
           [
-            % for d in s.topic.documents:
+            % for d in s.model.documents:
               {
                 name: '${ d.document.slug }',
                 y: ${ d.probability },
@@ -76,7 +76,7 @@
           'Words distribution',
           ['w', 'P(w | t)'],
           [
-            % for w in s.topic.terms:
+            % for w in s.model.terms:
               {
                 name: '${ w.term.text }',
                 y: ${ w.probability },
@@ -101,7 +101,7 @@
 
 <div class="container">
   <div>
-    <h3>Topic ${ s.topic.text }</h3>
+    <h3>Topic ${ s.model.text }</h3>
 
     <div class="bs-component">
       <ul class="nav nav-pills">

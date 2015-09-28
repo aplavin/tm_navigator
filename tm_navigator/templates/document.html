@@ -1,17 +1,17 @@
 <%inherit file="base.html"/>
 <%namespace name="macros" file="macros.html"/>
 
-<%block name="title">Document ${ s.document.slug }</%block>
+<%block name="title">Document ${ s.model.slug }</%block>
 
 <%def name="overview()">
   <div class="panel panel-default">
     <div class="panel-heading">
       <h3 class="panel-title">
-        ${ s.document.title }
+        ${ s.model.title }
       </h3>
-      ${ s.document.slug }
+      ${ s.model.slug }
       <div>
-        % for term in s.document.modality(name='authors').terms[:]:
+        % for term in s.model.modality(name='authors').terms[:]:
           <a href="${ url_for(term.term) }">
             ${ term.term.text }
           </a>
@@ -20,7 +20,7 @@
       </div>
       <div>
         <a href="">
-          ${ s.document.conference }
+          ${ s.model.conference }
         </a>
       </div>
     </div>
@@ -86,7 +86,7 @@
 
         <div id="plot-words" style="height:250px;"></div>
 
-        <%macros:tagcloud items="${s.document.modality(name='words').terms}" additional_class="collapsed text-center" args="w">
+        <%macros:tagcloud items="${s.model.modality(name='words').terms}" additional_class="collapsed text-center" args="w">
           <a href="${ url_for(w.term) }" title="N_wd = ${ w.count }" data-size="${ w.count }"
              data-use-size="true">${ w.term.text }</a>
         </%macros:tagcloud>
@@ -101,7 +101,7 @@
           'Words distribution',
           ['w', 'N_wd'],
           [
-            % for w in s.document.modality(name='words').terms:
+            % for w in s.model.modality(name='words').terms:
               {
                 name: '${ w.term.text }',
                 y: ${ w.count },
@@ -119,7 +119,7 @@
     <h3>Similar topics structure</h3>
     <small class="text-muted">Using cosine distance between p(t|d) vectors.</small>
 
-    % for d in s.document.similar:
+    % for d in s.model.similar:
       <div class="list-group-item">
         <span class="pull-right similarity-chart" data-value="${ d.similarity }"></span>
         <h4 class="list-group-item-heading">
@@ -170,7 +170,7 @@
       </h4>
 
       <ul class="nav nav-pills">
-          % for t in s.document.topics:
+          % for t in s.model.topics:
               <li data-color="${ t.topic.id }">
                   <a style="border: 1px solid grey" href="${ url_for(t.topic) }" title="P(t | d) = ${ t.probability }">
                       ${ t.topic.text } <!-- <span class="badge">{{ p }}</span> -->
@@ -181,9 +181,9 @@
     </div>
 
     ${ s.html | n }
-##     <object data="${ url_for(filename='documents_files/%s.pdf' % s.document.file_name) }" type="application/pdf"
+##     <object data="${ url_for(filename='documents_files/%s.pdf' % s.model.file_name) }" type="application/pdf"
 ##             style="width: 100%; height: 800px;">
-##       <a href="${ url_for(filename='documents_files/%s.pdf' % s.document.file_name) }">Download PDF</a>
+##       <a href="${ url_for(filename='documents_files/%s.pdf' % s.model.file_name) }">Download PDF</a>
 ##     </object>
   </div>
 </%def>
@@ -191,7 +191,7 @@
 
 <div class="container">
   <div>
-    <h3>${ s.document.title }</h3>
+    <h3>${ s.model.title }</h3>
 
     <div class="bs-component">
       <ul class="nav nav-pills">

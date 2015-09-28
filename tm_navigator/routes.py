@@ -8,12 +8,12 @@ import sqlalchemy_searchable as searchable
 from cached_property import cached_property
 
 
-@mp.route('/browse/', to_url=lambda model: {'query': model.query})
+@mp.route('/browse/')
 @mp.template('browse.html')
 class Browse:
     def __init__(self, query=''):
-        self.query = query or request.args.get('query', '')
-        self.settings =  [
+        self.query = query
+        self.settings = [
             {
                 'mode': 'choice',
                 'name': 'present_as',
@@ -25,13 +25,30 @@ class Browse:
             }
         ]
 
+    @classmethod
+    def from_url(cls):
+        query = request.args.get('query', '')
+        return cls(query)
 
-@mp.route('/_search_results/', to_url=lambda model: {'query': model.query})
+    def to_url(self):
+        return {'query': self.query}
+
+
+@mp.route('/_search_results/')
 @mp.template('search_results.html')
 class SearchResults:
-    def __init__(self, query=''):
-        self.query = query or request.args.get('query', '')
-        self.present_as = request.args.get('present_as', '')
+    def __init__(self, query='', present_as=''):
+        self.query = query
+        self.present_as = present_as
+
+    @classmethod
+    def from_url(cls):
+        query = request.args.get('query', '')
+        present_as = request.args.get('present_as', '')
+        return cls(query, present_as)
+
+    def to_url(self):
+        return {'query': self.query}
 
     @cached_property
     def query_parsed(self):
@@ -119,14 +136,21 @@ class SearchResults:
                     if [setattr(doc, 'title_hl', title_hl)]]
 
 
-@mp.route('/_search_results_group/<int:modality_id>/<int:term_id>/', to_url=lambda model: {'query': model.query})
+@mp.route('/_search_results_group/<int:modality_id>/<int:term_id>/')
 @mp.template('search_results_group.html')
 class SearchResultsGroup:
-    def __init__(self, modality_id, term_id, query=''):
-        self.modality_id = modality_id
-        self.term_id = term_id
-        self.query = query or request.args.get('query', '')
-        self.present_as = None
+    def __init__(self, term, query):
+        self.term = term
+        self.query = query
+
+    @classmethod
+    def from_url(cls, modality_id, term_id, query=''):
+        term = db.session.query(Term).filter_by(modality_id=modality_id, id=term_id).one()
+        query = query or request.args.get('query', '')
+        return cls(term, query)
+
+    def to_url(self):
+        return {'query': self.query}
 
     @cached_property
     def query_parsed(self):
@@ -138,15 +162,17 @@ class SearchResultsGroup:
 
     @cached_property
     def results_cnt(self):
+        # TODO: filter by term itself
         q = db.session.query(Document) \
-            .join(Document.terms).filter_by(modality_id=self.modality_id, term_id=self.term_id) \
+            .join(Document.terms).filter_by(modality_id=self.term.modality_id, term_id=self.term.id) \
             .filter(self.query_condition)
         return q.count()
 
     @cached_property
     def results(self):
+        # TODO: filter by term itself
         q = db.session.query(Document) \
-            .join(Document.terms).filter_by(modality_id=self.modality_id, term_id=self.term_id) \
+            .join(Document.terms).filter_by(modality_id=self.term.modality_id, term_id=self.term.id) \
             .filter(self.query_condition) \
             .order_by(sa.desc(sa.func.ts_rank_cd(Document.search_vector, sa.func.to_tsquery('russian', self.query_parsed)))) \
             .add_columns(Document.highlight('title', self.query_parsed)) \
@@ -201,14 +227,15 @@ class Logout:
 @mp.template('document.html')
 @mp.ui_for(Document)
 class _:
-    def __init__(self, **values):
-        self.document = db.session.query(Document).filter_by(**values).one()
-        print(self.document.id)
+    @classmethod
+    def from_url(cls, slug):
+        document = db.session.query(Document).filter_by(slug=slug).one()
+        return cls(document)
 
     @property
     def root_topic(self):
         doctopics = db.session.query(DocumentTopic) \
-            .filter(DocumentTopic.document_id == self.document.id) \
+            .filter(DocumentTopic.document_id == self.model.id) \
             .filter(DocumentTopic.probability > 0.001) \
             .cte('doctopics')
     
@@ -242,11 +269,11 @@ class _:
 
     @property
     def html(self):
-        html = self.document.html
+        html = self.model.html
 
         html_new = ''
         html_pos = 0
-        for cnt in self.document.contents:
+        for cnt in self.model.contents:
             html_new += html[html_pos:cnt.start_pos]
             html_new += '<span data-word="%d" data-color="%d"><a href="#">' % (cnt.term_id, cnt.topic_id)
             html_new += html[cnt.start_pos:cnt.end_pos]
@@ -262,58 +289,68 @@ class _:
         return html
 
 
-@mp.route('/term/<modality>/<text>/', to_url=lambda model: {'modality': model.modality.name})
+@mp.route('/term/<modality>/<text>/')
 @mp.template('term.html')
 @mp.ui_for(Term)
 class _:
-    def __init__(self, modality, text):
-        self.term = db.session.query(Term).filter(Term.text == text)\
+    @classmethod
+    def from_url(cls, modality, text):
+        term = db.session.query(Term).filter(Term.text == text)\
             .join(Modality).filter(Modality.name == modality)\
             .one()
+        return cls(term)
+
+    def to_url(self):
+        return {'modality': self.model.modality.name}
 
 
 @mp.route('/topic/<int:id>/')
 @mp.template('topic.html')
 @mp.ui_for(Topic)
 class _:
-    def __init__(self, id):
-        self.topic = db.session.query(Topic).filter_by(id=id)\
+    @classmethod
+    def from_url(cls, id):
+        topic_docs = db.session.query(Topic).filter_by(id=id)\
             .outerjoin(Topic.documents).order_by(DocumentTopic.probability.desc())\
             .options(sa.orm.contains_eager(Topic.documents))\
             .one()
-        topic = db.session.query(Topic).filter_by(id=id)\
+        topic_terms = db.session.query(Topic).filter_by(id=id)\
             .outerjoin(Topic.terms).order_by(TopicTerm.probability.desc()).limit(100)\
             .options(sa.orm.contains_eager(Topic.terms))\
             .one()
-        sa.orm.attributes.set_committed_value(self.topic, 'terms', topic.terms)
+        sa.orm.attributes.set_committed_value(topic_docs, 'terms', topic_terms.terms)
+        return cls(topic_docs)
 
 
-@mp.route('/assess/<cls>/',
-          to_url=lambda model: {
-              'cls': model.__class__.__name__,
-              **{local.name: getattr(model.src, remote.name)
-                 for local, remote in model.__class__.src.property.local_remote_pairs},
-              **{k: v
-                 for k, v in model.__dict__.items()
-                 if not k.startswith('_') and k != 'src'},
-          },
-          from_url={'cls': lambda cls: globals()[cls]},
-          methods=['POST'])
+@mp.route('/assess/<cls>/', methods=['POST'])
 @mp.ui_for(AssessmentMixin)
 class UIAssessment:
-    def __init__(self, cls):
-        self.assessment = globals()[cls]()
+    @classmethod
+    def from_url(cls, ass_cls):
+        ass_cls = globals()[ass_cls]
+        assessment = globals()[ass_cls]()
         if 'username' in session:
-            self.assessment.username = session['username']
-        self.assessment.technical_info = {
+            assessment.username = session['username']
+        assessment.technical_info = {
             'user_agent': request.user_agent.string,
             'referrer': request.referrer,
             'access_route': request.access_route
         }
         for k, v in request.args.items():
-            setattr(self.assessment, k, v)
+            setattr(assessment, k, v)
         for k, v in request.form.items():
-            setattr(self.assessment, k, v)
+            setattr(assessment, k, v)
+        return cls(assessment)
+
+    def to_url(self):
+        return {
+              'cls': self.model.__class__.__name__,
+              **{local.name: getattr(self.model.src, remote.name)
+                 for local, remote in self.model.__class__.src.property.local_remote_pairs},
+              **{k: v
+                 for k, v in self.model.__dict__.items()
+                 if not k.startswith('_') and k != 'src'},
+          }
 
     def __call__(self):
         res = repr(self.assessment)

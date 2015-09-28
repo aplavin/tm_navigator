@@ -1,19 +1,19 @@
 <%inherit file="base.html"/>
 <%namespace name="macros" file="macros.html"/>
 
-<%block name="title">Term ${ s.term.text }</%block>
+<%block name="title">Term ${ s.model.text }</%block>
 
 <%def name="overview()">
   <div class="panel panel-default">
     <div class="panel-heading">
       <h3 class="panel-title">
         Term:
-        <a href="${ url_for(s.term) }">
-          ${ s.term.text }
+        <a href="${ url_for(s.model) }">
+          ${ s.model.text }
         </a>
-        <small>(modality: ${ s.term.modality.name })</small>
+        <small>(modality: ${ s.model.modality.name })</small>
       </h3>
-      Number of occurrences = ${ s.term.count }
+      Number of occurrences = ${ s.model.count }
     </div>
 
     <div class="panel-body">
@@ -22,7 +22,7 @@
 
         <div id="plot-topics" style="height:250px;"></div>
 
-        <%macros:tagcloud items="${s.term.topics}" additional_class="text-center" args="t">
+        <%macros:tagcloud items="${s.model.topics}" additional_class="text-center" args="t">
           <a href="${ url_for(t.topic) }" title="P(w | t) = ${ '%.4f' % t.probability }" data-size="${ t.probability }"
              data-use-size="true">${ t.topic.text }</a>
         </%macros:tagcloud>
@@ -33,7 +33,7 @@
 
         <div id="plot-documents" style="height:250px;"></div>
 
-        <%macros:tagcloud items="${s.term.documents}" additional_class="collapsed text-center" args="d">
+        <%macros:tagcloud items="${s.model.documents}" additional_class="collapsed text-center" args="d">
           ${ macros.document_in_tagcloud(d.document, d.count, 'N_wd = %d', '') }
         </%macros:tagcloud>
       </div>
@@ -47,7 +47,7 @@
           'Usage in topics',
           ['t', 'P(w | t)'],
           [
-            % for t in s.term.topics:
+            % for t in s.model.topics:
               {
                 name: '${ t.topic.text }',
                 y: ${ '%.4f' % t.probability },
@@ -65,7 +65,7 @@
           'Usage in documents',
           ['d', 'N_wd'],
           [
-            % for d in s.term.documents:
+            % for d in s.model.documents:
               {
                 name: '${ d.document.slug }',
                 y: ${ d.count },
@@ -88,7 +88,7 @@
 
 <div class="container">
   <div>
-    <h3>Term: ${ s.term.text }</h3>
+    <h3>Term: ${ s.model.text }</h3>
 
     <div class="bs-component">
       <ul class="nav nav-pills">
