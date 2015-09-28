@@ -1,3 +1,66 @@
+<%def name="view_hierarchy()">
+  <%def name="show_topic_tree(topic)">
+    % if topic is not None:
+      <li class="list-group-item"
+          style="border-width: 2px; border-color: ${ ('rgba(92, 184, 92, %s)' % (topic.level / 3)) if (topic.level > 0 and topic.type == 'foreground') else 'rgba(0, 0, 0, %s)' % (topic.level / 6 + 0.1) }">
+        <h4 class="list-group-item-heading">
+          <a href="${ url_for(topic) }">
+            Topic ${ topic.text }
+          </a>
+
+          % if isinstance(parent_obj, Document) and len(topic.documents) > 0:
+            <% assert len(topic.documents) == 1 and topic.documents[0].document == parent_obj %>
+            ${ mp.get_view(ADocumentTopic(src=topic.documents[0], child_type='topic')) }
+          % endif
+        </h4>
+
+        <p class="list-group-item-text">
+          <div class="nofloat">
+            % if isinstance(parent_obj, Document):
+              <%
+                probability = topic.documents[0].probability if topic.documents else 0
+                p_fmt = 'P(t | d) = %f'
+              %>
+            % elif isinstance(parent_obj, Term):
+              <%
+                matching_obj = next((t for t in topic.terms if t.term == parent_obj), None)
+                probability = matching_obj.probability if matching_obj else 0
+                p_fmt = 'P(w | t) = %f'
+              %>
+            % endif
+            <div class="progress small" title="${ p_fmt % probability }">
+              <div class="progress-bar progress-bar-default" style="width: ${ probability * 100 }%"></div>
+            </div>
+          </div>
+
+          <%macros:tagcloud items="${ topic.terms }" limit="${ -1 }" additional_class='' args="w">
+            % if w.term == parent_obj:
+              <mark>${ mp.get_view(w, view='tagcloud_term') }</mark>
+            % else:
+              ${ mp.get_view(w, view='tagcloud_term') }
+            % endif
+          </%macros:tagcloud>
+        </p>
+
+        <ul class="list-group" style="margin-bottom: 0">
+          % for t in topic.children:
+            ${ show_topic_tree(t.child) }
+          % endfor
+        </ul>
+      </li>
+    % endif
+  </%def>
+
+  <% parent_obj = context.get('parent_obj', None) %>
+
+  % if s.model.level == 0:
+    <ul class="list-group">
+      ${ show_topic_tree(s.model) }
+    </ul>
+  % endif
+</%def>
+
+
 <%inherit file="base.html"/>
 <%namespace name="macros" file="macros.html"/>
 

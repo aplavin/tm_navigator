@@ -28,55 +28,7 @@
     <div class="panel-body">
       <div class="bs-callout bs-callout-${ macros.colcl('topics') }">
         <h4>Topics:</h4>
-
-        <%def name="show_topic(topic)">
-          % if topic is not None:
-            <li class="list-group-item"
-                style="border-width: 2px; border-color: ${ ('rgba(92, 184, 92, %s)' % (topic.level / 3)) if topic.type == 'foreground' else 'rgba(0, 0, 0, 0.2)' }">
-              <h4 class="list-group-item-heading">
-                <a href="${ url_for(topic) }">
-                  Topic ${ topic.text }
-                </a>
-
-                % if topic.documents:
-                  ${ macros.assess_yesno(
-                  ADocumentTopic(src=topic.documents[0], child_type='topic'),
-                  "Does the topic suit this document?",
-                  "Yes, it's a good fit",
-                  "No, it doesn't belong here",
-                  "pull-right") }
-                % endif
-              </h4>
-
-              <p class="list-group-item-text">
-
-              <div class="nofloat">
-                <% probability = topic.documents[0].probability if topic.documents else 0 %>
-                <div class="progress small" title="P(t | d) = ${ '%.3f' % probability }">
-                  <div class="progress-bar progress-bar-default" style="width: ${ probability * 100 }%"></div>
-                </div>
-              </div>
-
-              <%macros:tagcloud items="${topic.terms}" limit="${-1}" additional_class='' args="w">
-                <a href="${ url_for(w.term) }" title="P(w | t) = ${ '%.3f' % w.probability }"
-                   data-size="${ w.probability }" data-use-size="true">${ w.term.text }</a>
-              </%macros:tagcloud>
-              </p>
-
-              <ul class="list-group" style="margin-bottom: 0">
-                % for t in topic.children:
-                  ${ show_topic(t.child) }
-                % endfor
-              </ul>
-            </li>
-          % endif
-        </%def>
-
-        <ul class="list-group">
-          % for t in s.root_topic.children:
-            ${show_topic(t.child)}
-          % endfor
-        </ul>
+        ${ mp.get_view(s.root_topic, view='hierarchy', parent_obj=s.model) }
 
         ##                 <div id="plot-topics-flow" style="height:400px;"></div>
       </div>
@@ -165,8 +117,8 @@
       </h4>
 
       <ul class="nav nav-pills">
-          % for t in s.model.topics:
-              <li data-color="${ t.topic.id }">
+          % for t in sorted(s.model.topics, key=lambda t: (-t.topic.level, t.topic.type), reverse=True):
+              <li data-color="${ t.topic.id }" data-color-def data-color-neutral="${ int(t.topic.type != 'foreground') }">
                   <a style="border: 1px solid grey" href="${ url_for(t.topic) }" title="P(t | d) = ${ t.probability }">
                       ${ t.topic.text } <!-- <span class="badge">{{ p }}</span> -->
                   </a>

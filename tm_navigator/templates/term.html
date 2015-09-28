@@ -16,7 +16,7 @@
         <a href="${ url_for(s.model) }">
           ${ s.model.text }
         </a>
-        <small>(modality: ${ s.model.modality.name })</small>
+        <small>(modality: ${ s.model.modality.name }) | term #${ s.model.id }</small>
       </h3>
       Number of occurrences = ${ s.model.count }
     </div>
@@ -24,12 +24,13 @@
     <div class="panel-body">
       <div class="bs-callout bs-callout-${ macros.colcl('topics') }">
         <h4>Topics:</h4>
+        ${ mp.get_view(s.root_topic, view='hierarchy', parent_obj=s.model) }
 
-        <div id="plot-topics" style="height:250px;"></div>
+##         <div id="plot-topics" style="height:250px;"></div>
 
-        <%macros:tagcloud items="${s.model.topics}" additional_class="text-center" args="t">
-          ${ mp.get_view(t, view='tagcloud_topic') }
-        </%macros:tagcloud>
+ ##         <%macros:tagcloud items="${s.model.topics}" additional_class="text-center" args="t">
+##           ${ mp.get_view(t, view='tagcloud_topic') }
+##         </%macros:tagcloud>
       </div>
 
       <div class="bs-callout bs-callout-${ macros.colcl('docs') }">

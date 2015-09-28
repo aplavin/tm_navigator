@@ -145,6 +145,9 @@ class Morepath:
                     except Exception:
                         flask.abort(404)
 
+                    if callable(ui_or_model):
+                        ui_or_model()
+
                     try:
                         return self.get_view(ui_or_model, _view_name)
                     except Template.NotFound:
@@ -162,13 +165,12 @@ class Morepath:
     def get_view(self, ui_or_model, view='', **kwargs):
         with self.app.extensions['sqlalchemy'].db.session.no_autoflush:  # XXX
             ui = self._get_ui(ui_or_model)
-            result = ui() if callable(ui) else ui
 
             if ui.__class__ in self.templates:
-                result = self.templates[ui.__class__].render(view, s=result, **kwargs)
+                result = self.templates[ui.__class__].render(view, s=ui, **kwargs)
                 return Markup(result)
             else:
-                return result
+                return ui
 
     def url_for(self, ui_or_model=None, *, view='', **values):
         if ui_or_model is None:

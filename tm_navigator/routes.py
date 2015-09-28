@@ -224,6 +224,37 @@ class Logout:
         return redirect(request.referrer)
 
 
+def load_hierarchy(filtered_seed):
+    filtered_topics = db.session.query(Topic) \
+        .select_from(filtered_seed).join(Topic) \
+        .cte('filtered_topics', recursive=True)
+    filtered_topics = filtered_topics.union(
+        db.session.query(Topic)
+            .join(Topic.children)
+            .join(filtered_topics, TopicEdge.child)
+    )
+
+    ft_a = sa.orm.aliased(filtered_topics)
+    topics = db.session.query(Topic).select_entity_from(filtered_topics) \
+        .outerjoin(Topic.children) \
+        .outerjoin(ft_a, TopicEdge.child) \
+        .options(sa.orm.contains_eager(Topic.children).contains_eager(TopicEdge.child, alias=ft_a))
+    topics = {t.id: t for t in topics}
+
+    rn_terms = sa.func.row_number().over(partition_by=(TopicTerm.topic_id, TopicTerm.modality_id),
+                                         order_by=TopicTerm.probability.desc())
+    topics_with_terms = db.session.query(Topic, TopicTerm, rn_terms) \
+        .outerjoin(Topic.terms) \
+        .join(filtered_topics, Topic.id == filtered_topics.c.id) \
+        .from_self(Topic) \
+        .filter(rn_terms <= 15) \
+        .order_by(Topic.id, TopicTerm.modality_id, TopicTerm.probability.desc()) \
+        .options(sa.orm.contains_eager(Topic.terms))
+    topics_with_terms.all()
+
+    return topics
+
+
 @mp.route('/document/<slug>/')
 @mp.template('document.html')
 @mp.ui_for(Document)
@@ -240,32 +271,11 @@ class _:
             .filter(DocumentTopic.probability > 0.001) \
             .cte('doctopics')
     
-        topics_filtered = db.session.query(Topic) \
-            .select_from(doctopics).join(Topic) \
-            .cte('topics_filtered', recursive=True)
-        topics_filtered = topics_filtered.union(
-            db.session.query(Topic)
-                .join(Topic.children)
-                .join(topics_filtered, TopicEdge.child_id == topics_filtered.c.id)
-        )
-    
-        ta = sa.orm.aliased(topics_filtered)
-        topics = db.session.query(Topic).select_entity_from(topics_filtered) \
-            .outerjoin(doctopics) \
-            .outerjoin(Topic.children) \
-            .outerjoin(ta, TopicEdge.child) \
-            .options(sa.orm.contains_eager(Topic.children).
-                     contains_eager(TopicEdge.child, alias=ta)) \
-            .options(sa.orm.contains_eager(Topic.documents, alias=doctopics).noload(DocumentTopic.document))
-        topics = topics.all()
+        topics = load_hierarchy(doctopics)
+        db.session.query(Topic).outerjoin(doctopics)\
+            .options(sa.orm.contains_eager(Topic.documents, alias=doctopics).noload(DocumentTopic.document))\
+            .all()
 
-        for t in topics:
-            tt = db.session.query(Topic).filter_by(id=t.id)\
-                .outerjoin(Topic.terms).order_by(TopicTerm.probability.desc()).limit(10)\
-                .options(sa.orm.contains_eager(Topic.terms))\
-                .one()
-            sa.orm.attributes.set_committed_value(t, 'terms', tt.terms)
-        
         return topics[0]
 
     @property
@@ -304,9 +314,25 @@ class _:
     def to_url(self):
         return {'modality': self.model.modality.name}
 
+    @property
+    def root_topic(self):
+        topicterms = db.session.query(TopicTerm) \
+            .filter(TopicTerm.modality_id == self.model.modality_id) \
+            .filter(TopicTerm.term_id == self.model.id) \
+            .filter(TopicTerm.probability > 0.001) \
+            .cte('topicterms')
+
+        topics = load_hierarchy(topicterms)
+        for tt in db.session.query(TopicTerm).select_entity_from(topicterms):
+            old_val = topics[tt.topic_id].terms
+            if tt not in old_val:
+                sa.orm.attributes.set_committed_value(topics[tt.topic_id], 'terms', old_val + [tt])
+
+        return topics[0]
+
 
 @mp.route('/topic/<int:id>/')
-@mp.template('topic.html')
+@mp.template('topic.html', views=['hierarchy'])
 @mp.ui_for(Topic)
 class _:
     @classmethod
@@ -330,13 +356,14 @@ class _:
 class _: pass
 
 
-@mp.route('/assess/<cls>/', methods=['POST'])
+@mp.template('assessments.html')
+@mp.route('/assess/<ass_cls>/', methods=['POST'])
 @mp.ui_for(AssessmentMixin)
-class UIAssessment:
+class _:
     @classmethod
     def from_url(cls, ass_cls):
         ass_cls = globals()[ass_cls]
-        assessment = globals()[ass_cls]()
+        assessment = ass_cls()
         if 'username' in session:
             assessment.username = session['username']
         assessment.technical_info = {
@@ -352,7 +379,7 @@ class UIAssessment:
 
     def to_url(self):
         return {
-              'cls': self.model.__class__.__name__,
+              'ass_cls': self.model.__class__.__name__,
               **{local.name: getattr(self.model.src, remote.name)
                  for local, remote in self.model.__class__.src.property.local_remote_pairs},
               **{k: v
@@ -361,8 +388,8 @@ class UIAssessment:
           }
 
     def __call__(self):
-        res = repr(self.assessment)
-        db.session.add(self.assessment)
+        res = repr(self.model)
+        db.session.add(self.model)
         db.session.commit()
         return res
 
