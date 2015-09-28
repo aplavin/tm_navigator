@@ -131,7 +131,11 @@ class Morepath:
 
             if not hasattr(cls, '_flask_route_handler'):
                 def wrapped(*args, _view_name='', **kwargs):
-                    model = cls.from_url(*args, **kwargs)
+                    try:
+                        model = cls.from_url(*args, **kwargs)
+                    except Exception:
+                        flask.abort(404)
+
                     try:
                         return self.get_view(model, _view_name)
                     except Template.NotFound:
