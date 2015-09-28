@@ -1,4 +1,4 @@
-<%def name="view_tagcloud()">
+<%def name="view_tagcloud_document()">
   % if isinstance(s.model, DocumentTopic):
     <a href="${ url_for(s.model.document) }" data-size="${ s.model.probability }" data-use-opacity="true"
        data-placement="top" data-toggle="tooltip" data-html="true"
@@ -15,5 +15,62 @@
   ##     ${ authors }<hr/>
       ${ 'N_wd = %d' % s.model.count }
       ">${ s.model.document.slug }</a>
+  % endif
+</%def>
+
+<%def name="view_tagcloud_term()">
+  % if isinstance(s.model, DocumentTerm):
+    <a href="${ url_for(s.model.term) }" title="N_wd = ${ s.model.count }" data-size="${ s.model.count }"
+             data-use-size="true">${ s.model.term.text }</a>
+  % elif isinstance(s.model, TopicTerm):
+    <a href="${ url_for(s.model.term) }"
+       title="P(w | t) = ${ s.model.probability }"
+       data-size="${ s.model.probability }" data-use-size="true">
+      ${ s.model.term.text }
+    </a>
+  % endif
+</%def>
+
+<%def name="view_plot_document()">
+  % if isinstance(s.model, DocumentTopic):
+    {
+      name: '${ s.model.document.slug }',
+      y: ${ s.model.probability },
+      url: '${ url_for(s.model.document) }'
+    },
+  % elif isinstance(s.model, DocumentTerm):
+    {
+      name: '${ s.model.document.slug }',
+      y: ${ s.model.count },
+      url: '${ url_for(s.model.document) }'
+    },
+  % endif
+</%def>
+
+<%def name="view_plot_term()">
+  % if isinstance(s.model, DocumentTerm):
+    {
+      name: '${ s.model.term.text }',
+      y: ${ s.model.count },
+      url: '${ url_for(s.model.term) }'
+    },
+  % elif isinstance(s.model, TopicTerm):
+    {
+      name: '${ s.model.term.text }',
+      y: ${ s.model.probability },
+      url: '${ url_for(s.model.term) }'
+    },
+  % endif
+</%def>
+
+<%def name="view_plot_topic()">
+  % if isinstance(s.model, DocumentTopic):
+    a
+  % elif isinstance(s.model, TopicTerm):
+    {
+      name: '${ s.model.topic.text }',
+      y: ${ s.model.probability },
+      url: '${ url_for(s.model.topic) }'
+    },
   % endif
 </%def>

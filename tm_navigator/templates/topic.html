@@ -25,7 +25,7 @@
         <div id="plot-documents" style="height:250px;"></div>
 
         <%macros:tagcloud items="${s.model.documents}" additional_class="collapsed text-center" args="d">
-          ${ mp.get_view(d, view='tagcloud') }
+          ${ mp.get_view(d, view='tagcloud_document') }
         </%macros:tagcloud>
       </div>
 
@@ -35,17 +35,13 @@
         <div id="plot-words" style="height:250px;"></div>
 
         <%macros:tagcloud items="${s.model.terms}" additional_class="collapsed text-center" args="w">
-          <a href="${ url_for(w.term) }"
-             title="P(w | t) = ${ w.probability }"
-             data-size="${ w.probability }" data-use-size="true">
-            ${ w.term.text }
-          </a>
+          ${ mp.get_view(w, view='tagcloud_term') }
 
-        ${ macros.assess_yesno(
-        ATopicTerm(src=w, child_type='term'),
-        "",
-        "'%s' fits well in this topic" % w.term.text,
-        "'%s' doesn't belong here" % w.term.text) }
+          ${ macros.assess_yesno(
+          ATopicTerm(src=w, child_type='term'),
+          "",
+          "'%s' fits well in this topic" % w.term.text,
+          "'%s' doesn't belong here" % w.term.text) }
         </%macros:tagcloud>
       </div>
     </div>
@@ -59,11 +55,7 @@
           ['d', 'P(t | d)'],
           [
             % for d in s.model.documents:
-              {
-                name: '${ d.document.slug }',
-                y: ${ d.probability },
-                url: '${ url_for(d.document) }'
-              },
+              ${ mp.get_view(d, 'plot_document') }
             % endfor
           ],
           1
@@ -77,11 +69,7 @@
           ['w', 'P(w | t)'],
           [
             % for w in s.model.terms:
-              {
-                name: '${ w.term.text }',
-                y: ${ w.probability },
-                url: '${ url_for(w.term) }'
-              },
+              ${ mp.get_view(w, 'plot_term') }
             % endfor
           ]
       );

@@ -30,7 +30,7 @@ class Template(namedtuple('Template', ['file', 'views'])):
     def render(self, view_name, **kwargs):
         if view_name == '':
             return render_template(self.file, **kwargs)
-        elif view_name not in self.views:
+        elif self.views is not None and view_name not in self.views:
             raise self.NotFound('View "%s" in file "%s"' % (view_name, self.file))
         else:
             def_name = 'view_%s' % view_name

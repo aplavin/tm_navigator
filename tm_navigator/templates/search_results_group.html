@@ -28,7 +28,7 @@
           </h4>
 
           <%macros:tagcloud items="${topic.documents}" limit="${-1}" emptystr='Nothing matched' additional_class='collapsed collapsed-small' args="d">
-            ${ mp.get_view(d, view='tagcloud') }
+            ${ mp.get_view(d, view='tagcloud_document') }
           </%macros:tagcloud>
         </div>
 

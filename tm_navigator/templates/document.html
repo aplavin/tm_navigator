@@ -87,8 +87,7 @@
         <div id="plot-words" style="height:250px;"></div>
 
         <%macros:tagcloud items="${s.model.modality(name='words').terms}" additional_class="collapsed text-center" args="w">
-          <a href="${ url_for(w.term) }" title="N_wd = ${ w.count }" data-size="${ w.count }"
-             data-use-size="true">${ w.term.text }</a>
+          ${ mp.get_view(w, view='tagcloud_term') }
         </%macros:tagcloud>
       </div>
     </div>
@@ -102,11 +101,7 @@
           ['w', 'N_wd'],
           [
             % for w in s.model.modality(name='words').terms:
-              {
-                name: '${ w.term.text }',
-                y: ${ w.count },
-                url: '${ url_for(w.term) }'
-              },
+              ${ mp.get_view(w, view='plot_term') }
             % endfor
           ]
       );

@@ -34,7 +34,7 @@
         <div id="plot-documents" style="height:250px;"></div>
 
         <%macros:tagcloud items="${s.model.documents}" additional_class="collapsed text-center" args="d">
-          ${ mp.get_view(d, view='tagcloud') }
+          ${ mp.get_view(d, view='tagcloud_document') }
         </%macros:tagcloud>
       </div>
     </div>
@@ -48,11 +48,7 @@
           ['t', 'P(w | t)'],
           [
             % for t in s.model.topics:
-              {
-                name: '${ t.topic.text }',
-                y: ${ '%.4f' % t.probability },
-                url: '${ url_for(t.topic) }'
-              },
+              ${ mp.get_view(t, view='plot_topic') }
             % endfor
           ]
       );
@@ -66,11 +62,7 @@
           ['d', 'N_wd'],
           [
             % for d in s.model.documents:
-              {
-                name: '${ d.document.slug }',
-                y: ${ d.count },
-                url: '${ url_for(d.document) }'
-              },
+              ${ mp.get_view(d, view='plot_document') }
             % endfor
           ]
       );

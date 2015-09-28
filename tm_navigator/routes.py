@@ -322,7 +322,7 @@ class _:
         return cls(topic_docs)
 
 
-@mp.template('relations_views.html', views=['tagcloud'])
+@mp.template('relations_views.html', views=None)
 @mp.ui_for(DocumentTopic)
 @mp.ui_for(DocumentTerm)
 @mp.ui_for(TopicTerm)
