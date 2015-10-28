@@ -98,7 +98,7 @@ function process_tagclouds() {
             if (valprefix) {
                 $(this).attr('title', valprefix + val)
             }
-            var relval = Math.max(Math.pow(val / max, 0.3), 0.4);
+            var relval = Math.max(Math.pow(val / max, 0.3), 0.5);
             if ($(this).data('use-opacity')) {
                 $(this).css('opacity', relval);
             }
