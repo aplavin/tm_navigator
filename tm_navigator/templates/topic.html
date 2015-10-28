@@ -9,7 +9,7 @@
           </a>
 
           % if isinstance(parent_obj, Document) and len(topic.documents) > 0:
-            <% assert len(topic.documents) == 1 and topic.documents[0].document == parent_obj %>
+            <% assert len(topic.documents) == 1 and topic.documents[0].document_id == parent_obj.id, (len(topic.documents), topic.documents, parent_obj) %>
             ${ mp.get_view(ADocumentTopic(src=topic.documents[0], child_type='topic')) }
           % endif
         </h4>
