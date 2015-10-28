@@ -39,20 +39,7 @@ class Modality(Base):
         return sa.func.count()
 
 
-class ModalityFilterMixin(object):
-    def modality(self, *args, **kwargs):
-        outer_self = self
-
-        class ModalityFiltered(object):
-            def __getattr__(self, attr_name):
-                outer_value = getattr(outer_self, attr_name)
-                outer_value = outer_value.join(Modality).filter_by(*args, **kwargs)
-                return outer_value
-
-        return ModalityFiltered()
-
-
-class Document(Base, ModalityFilterMixin):
+class Document(Base):
     id = sa.Column(sa.Integer, primary_key=True)
     title = sa.Column(sa.Text, nullable=False)
     file_name = sa.Column(sa.Text, nullable=False, unique=True)
@@ -102,7 +89,7 @@ class Term(Base):
     )
 
 
-class Topic(Base, ModalityFilterMixin):
+class Topic(Base):
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.Text, unique=True)
     type = sa.Column(sa.Enum('foreground', 'background', name='fgbg_enum'), nullable=False)
@@ -171,7 +158,7 @@ class DocumentTerm(Base):
     count = sa.Column(sa.Integer, nullable=False)
 
     document = sa.orm.relationship(Document, lazy='joined',
-                                   backref=sa.orm.backref('terms', order_by=count.desc(), lazy='dynamic'))
+                                   backref=sa.orm.backref('terms', order_by=count.desc()))
     term = sa.orm.relationship(Term, lazy='joined',
                                backref=sa.orm.backref('documents', order_by=count.desc()))
     modality = sa.orm.relationship(Modality, viewonly=True, lazy='select',

@@ -4,7 +4,7 @@
        data-placement="top" data-toggle="tooltip" data-html="true"
        title="
       ${ s.model.document.title }<br/><br/>
-  ##     ${ authors }<hr/>
+      ${ ', '.join(ta.term.text for ta in s.model.document.terms_authors) }<hr/>
       ${ 'P(t | d) = %f' % s.model.prob_td }
       ">${ s.model.document.slug }</a>
   % elif isinstance(s.model, DocumentTerm):
@@ -12,7 +12,7 @@
        data-placement="top" data-toggle="tooltip" data-html="true"
        title="
       ${ s.model.document.title }<br/><br/>
-  ##     ${ authors }<hr/>
+      ${ ', '.join(ta.term.text for ta in s.model.document.terms_authors) }<hr/>
       ${ 'N_wd = %d' % s.model.count }
       ">${ s.model.document.slug }</a>
   % endif

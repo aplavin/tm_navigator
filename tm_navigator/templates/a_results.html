@@ -78,7 +78,7 @@
 
                 <div>
                   <span>
-                    % for term in row.Document.modality(name='authors').terms[:]:
+                    % for term in row.Document.terms_authors:
                       <a href="${ url_for(term.term) }">
                         ${ term.term.text }
                       </a>

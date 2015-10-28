@@ -9,6 +9,31 @@ import sqlalchemy_searchable as searchable
 from cached_property import cached_property
 
 
+def add_modality_relationships(model, target, rel_name, rel_expr, order_by=None):
+    for mod in db.session.query(Modality):
+        setattr(
+            model,
+            '%s_%s' % (rel_name, mod.name),
+            sa.orm.relationship(
+                target,
+                primaryjoin=sa.and_(rel_expr,
+                                    target.modality_id == mod.id),
+                order_by=order_by
+            )
+        )
+
+# add_modality_relationships(Document, Document.terms, DocumentTerm)
+# add_modality_relationships(Topic, Topic.terms, TopicTerm)
+add_modality_relationships(
+    Document, DocumentTerm,
+    'terms', Document.id == DocumentTerm.document_id, DocumentTerm.count.desc()
+)
+add_modality_relationships(
+    Topic, TopicTerm,
+    'terms', Topic.id == TopicTerm.topic_id
+)
+
+
 @mp.route('/browse/')
 @mp.template('browse.html')
 class Browse:
@@ -106,7 +131,9 @@ class SearchResults:
                 .from_self(Topic) \
                 .filter(rn_docs <= limit) \
                 .order_by(Topic.id, DocumentTopic.prob_td.desc()) \
-                .options(sa.orm.contains_eager(Topic.documents)) \
+                .options(sa.orm.contains_eager(Topic.documents)
+                         .joinedload(DocumentTopic.document)
+                         .joinedload(Document.terms_authors)) \
                 .all()
 
             rn_terms = sa.func.row_number().over(partition_by=(TopicTerm.topic_id, TopicTerm.modality_id),
@@ -178,7 +205,8 @@ class SearchResultsGroup:
             .filter(self.query_condition) \
             .order_by(sa.desc(sa.func.ts_rank_cd(Document.search_vector, sa.func.to_tsquery('russian', self.query_parsed)))) \
             .add_columns(Document.highlight('title', self.query_parsed)) \
-            .options(sa.orm.subqueryload('topics'))
+            .options(sa.orm.subqueryload('topics'),
+                     sa.orm.joinedload(Document.terms_authors))
         return [doc
                 for doc, title_hl in q[:50]
                 if [setattr(doc, 'title_hl', title_hl)]]
@@ -311,6 +339,9 @@ class _:
     def from_url(cls, modality, text):
         term = db.session.query(Term).filter(Term.text == text)\
             .join(Modality).filter(Modality.name == modality)\
+            .options(sa.orm.joinedload(Term.documents)
+                     .joinedload(DocumentTerm.document)
+                     .joinedload(Document.terms_authors).joinedload(DocumentTerm.term))\
             .one()
         return cls(term)
 
@@ -342,7 +373,9 @@ class _:
     def from_url(cls, id):
         topic_docs = db.session.query(Topic).filter_by(id=id)\
             .outerjoin(Topic.documents).order_by(DocumentTopic.prob_td.desc())\
-            .options(sa.orm.contains_eager(Topic.documents))\
+            .options(sa.orm.contains_eager(Topic.documents)
+                     .joinedload(DocumentTopic.document)
+                     .joinedload(Document.terms_authors))\
             .one()
         topic_terms = db.session.query(Topic).filter_by(id=id)\
             .outerjoin(Topic.terms).order_by(TopicTerm.prob_wt.desc()).limit(100)\

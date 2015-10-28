@@ -11,7 +11,7 @@
       </h3>
       ${ s.model.slug } | document #${ s.model.id }
       <div>
-        % for term in s.model.modality(name='authors').terms[:]:
+        % for term in s.model.terms_authors:
           <a href="${ url_for(term.term) }">
             ${ term.term.text }
           </a>
@@ -38,7 +38,7 @@
 
         <div id="plot-words" style="height:250px;"></div>
 
-        <%macros:tagcloud items="${s.model.modality(name='words').terms}" additional_class="collapsed text-center" args="w">
+        <%macros:tagcloud items="${ s.model.terms_words }" additional_class="collapsed text-center" args="w">
           ${ mp.get_view(w, view='tagcloud_term') }
         </%macros:tagcloud>
       </div>
@@ -52,7 +52,7 @@
           'Words distribution',
           ['w', 'N_wd'],
           [
-            % for w in s.model.modality(name='words').terms:
+            % for w in s.model.terms_words:
               ${ mp.get_view(w, view='plot_term') }
             % endfor
           ]
@@ -82,7 +82,7 @@
           "Yes, it's close in topic",
           "No, it's very different",
           "pull-right") }
-          % for term in d.b.modality(name='authors').terms[:]:
+          % for term in d.b.terms_authors:
             <a href="${ url_for(term.term) }">
               ${ term.term.text }
             </a>
