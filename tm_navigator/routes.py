@@ -1,4 +1,5 @@
 import traceback
+import re
 from main import mp, db
 from flask import request, session, redirect
 from models import *
@@ -270,7 +271,7 @@ class _:
             .filter(DocumentTopic.document_id == self.model.id) \
             .filter(DocumentTopic.probability > 0.001) \
             .cte('doctopics')
-    
+
         topics = load_hierarchy(doctopics)
         db.session.query(Topic).outerjoin(doctopics)\
             .options(sa.orm.contains_eager(Topic.documents, alias=doctopics).noload(DocumentTopic.document))\
@@ -392,6 +393,86 @@ class _:
         db.session.add(self.model)
         db.session.commit()
         return res
+
+
+@mp.template('a_results.html')
+@mp.route('/assessment_results/')
+class _:
+    @property
+    def topics_ass_count(self):
+        return db.session.query(ATopicTerm).count()
+
+    @property
+    def topics_score(self):
+        prob_positive = sa.func.sum(TopicTerm.probability).filter(ATopicTerm.value == 1)
+        prob_negative = sa.func.sum(TopicTerm.probability).filter(ATopicTerm.value == -1)
+        return db.session.query((prob_positive - prob_negative) / (prob_positive + prob_negative)).select_from(ATopicTerm).join(ATopicTerm.src).scalar()
+
+    @property
+    def topics(self):
+        prob_positive = sa.func.coalesce(sa.func.sum(TopicTerm.probability).filter(ATopicTerm.value == 1), 0)
+        prob_negative = sa.func.coalesce(sa.func.sum(TopicTerm.probability).filter(ATopicTerm.value == -1), 0)
+        q = db.session.query(
+                Topic,
+                sa.func.count(ATopicTerm.value).label('count'),
+                sa.func.count(ATopicTerm.value).filter(ATopicTerm.value == 1).label('count_positive'),
+                ((prob_positive - prob_negative) / sa.func.nullif(prob_positive + prob_negative, 0)).label('score')
+            ) \
+            .join(Topic.terms).outerjoin(TopicTerm.assessments) \
+            .group_by(Topic.id) \
+            .order_by(sa.desc('score').nullslast(), sa.desc('count'))
+        topics = q.all()
+
+        rn_terms = sa.func.row_number().over(partition_by=(TopicTerm.topic_id, TopicTerm.modality_id),
+                                             order_by=TopicTerm.probability.desc())
+        topics_with_terms = db.session.query(Topic, TopicTerm, rn_terms) \
+            .outerjoin(Topic.terms) \
+            .from_self(Topic) \
+            .filter(rn_terms <= 15) \
+            .order_by(Topic.id, TopicTerm.modality_id, TopicTerm.probability.desc()) \
+            .options(sa.orm.contains_eager(Topic.terms))
+        topics_with_terms.all()
+
+        for r in topics:
+            r.Topic.score = r.score
+            r.Topic.count = r.count
+            r.Topic.ass_terms = []
+
+        count_positive = sa.func.count(ATopicTerm.value).filter(ATopicTerm.value == 1)
+        count_negative = sa.func.count(ATopicTerm.value).filter(ATopicTerm.value == -1)
+        q = db.session.query(
+                TopicTerm,
+                ((count_positive - count_negative)/(count_positive + count_negative)).label('score')
+            ) \
+            .join(TopicTerm.assessments) \
+            .group_by(TopicTerm) \
+            .order_by(sa.desc('score'), TopicTerm.probability.desc()) \
+            .options(sa.orm.lazyload(TopicTerm.topic), sa.orm.subqueryload(TopicTerm.term))
+        tterms = q.all()
+
+        for r in tterms:
+            r.TopicTerm.topic.ass_terms.append(r)
+
+        return topics
+
+    @property
+    def documents(self):
+        prob_positive = sa.func.coalesce(sa.func.sum(DocumentTopic.probability).filter(ADocumentTopic.value == 1), 0)
+        prob_negative = sa.func.coalesce(sa.func.sum(DocumentTopic.probability).filter(ADocumentTopic.value == -1), 0)
+        score = (prob_positive - prob_negative) / 1
+        q = db.session.query(
+                Document,
+                sa.func.count(ADocumentTopic.value).label('count'),
+                score.label('score')
+            ) \
+            .join(Document.topics).join(DocumentTopic.assessments) \
+            .group_by(Document.id) \
+            .order_by(sa.func.random()).limit(100) \
+            .from_self() \
+            .order_by(score.desc().nullslast(), sa.desc('count'))
+
+        docs = q.all()
+        return docs
 
 
 @mp.errorhandler()

@@ -1,0 +1,117 @@
+<%inherit file="base.html"/>
+<%namespace name="macros" file="macros.html"/>
+
+<%block name="title">Assessments</%block>
+<div class="container">
+  <div>
+    <div class="bs-component">
+      <ul class="nav nav-tabs">
+        <li class="active"><a href="#topics" data-toggle="tab">Topics</a></li>
+        <li><a href="#documents" data-toggle="tab">Documents</a></li>
+      </ul>
+      <div class="tab-content" style="padding: 10px;">
+
+        <div class="tab-pane fade active in" id="topics">
+          <h2>Topics <small class="text-muted">With best terms</small></h2>
+          <p class="text-muted">
+            Score is (P - N)/(P + N) where P is the sum of p(w|t) for positively-assessed words and N - for negatively-assessed.
+          </p>
+          <p>
+            Overall score <code>${ '%.2f' % s.topics_score }</code>, based on <code>${ s.topics_ass_count }</code> marks.
+          </p>
+
+          <ul class="list-group">
+          % for row in s.topics:
+            <li class="list-group-item">
+              <h4 class="list-group-item-heading">
+                <a href="${ url_for(row.Topic) }">
+                  Topic ${ row.Topic.text }
+                  <small class="text-muted">|
+                    % if row.count > 0:
+                      ${ row.count } marks, score ${ '%.2f' % row.score }
+                    % else:
+                      no term marks, score unknown
+                    % endif
+                  </small>
+                </a>
+              </h4>
+
+              <p class="list-group-item-text">
+                <div class="nofloat">
+                  <div class="progress small">
+                    <div class="progress-bar progress-bar-default" style="width: ${ (row.score or 0) * 100 }%"></div>
+                    <div class="progress-bar progress-bar-info" style="width: ${ -(row.score or 0) * 100 }%"></div>
+                  </div>
+                </div>
+
+                <%macros:tagcloud items="${ row.Topic.terms }" limit="${ -1 }" additional_class='' args="w">
+                  ${ mp.get_view(w, view='tagcloud_term') }
+                </%macros:tagcloud>
+
+                <br/>
+                <%macros:tagcloud items="${ filter(lambda w: w.score > 0, row.Topic.ass_terms) }" args="w">
+                  <mark class="bg-success">${ mp.get_view(w.TopicTerm, view='tagcloud_term') }</mark>
+                </%macros:tagcloud>
+                <%macros:tagcloud items="${ filter(lambda w: w.score < 0, row.Topic.ass_terms) }" args="w">
+                  <mark class="bg-danger">${ mp.get_view(w.TopicTerm, view='tagcloud_term') }</mark>
+                </%macros:tagcloud>
+              </p>
+            </li>
+          % endfor
+          </ul>
+        </div>
+
+        <div class="tab-pane fade" id="documents">
+          <h2>Documents <small class="text-muted">Described well by topics</small></h2>
+          <p class="text-muted">
+            Score is (P - N) where P is the sum of p(t|d) for positively-assessed topics and N - for negatively-assessed.
+          </p>
+
+          <ul class="list-group">
+          % for row in s.documents:
+            <li class="list-group-item">
+              <h4 class="list-group-item-heading">
+                <a href="${ url_for(row.Document) }">
+                  ${ row.Document.title }
+                </a>
+              </h4>
+
+                <div>
+                  <span>
+                    % for term in row.Document.modality(name='authors').terms[:]:
+                      <a href="${ url_for(term.term) }">
+                        ${ term.term.text }
+                      </a>
+                    ${ ',' if not loop.last else '' }
+                    % endfor
+                  </span>
+                  |
+                  <a href="">
+                    ${ row.Document.source }
+                  </a>
+                  <small class="text-muted">|
+                    % if row.count > 0:
+                      ${ row.count } marks, score ${ '%.2f' % row.score }
+                    % else:
+                      no term marks, score unknown
+                    % endif
+                  </small>
+                </div>
+
+              <p class="list-group-item-text">
+                <div class="nofloat">
+                  <div class="progress small">
+                    <div class="progress-bar progress-bar-default" style="width: ${ (row.score or 0) * 100 }%"></div>
+                    <div class="progress-bar progress-bar-info" style="width: ${ -(row.score or 0) * 100 }%"></div>
+                  </div>
+                </div>
+              </p>
+            </li>
+          % endfor
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>

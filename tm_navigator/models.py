@@ -1,4 +1,3 @@
-import re
 import sqlalchemy as sa
 import sqlalchemy.ext.hybrid
 import sqlalchemy.ext.declarative as sa_dec
