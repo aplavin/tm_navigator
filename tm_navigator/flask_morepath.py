@@ -140,9 +140,8 @@ class Morepath:
 
             if not hasattr(ui_cls, '_flask_route_handler'):
                 def wrapped(*args, _view_name='', **kwargs):
-                    try:
-                        ui_or_model = getattr(ui_cls, 'from_url', ui_cls)(*args, **kwargs)
-                    except Exception:
+                    ui_or_model = getattr(ui_cls, 'from_url', ui_cls)(*args, **kwargs)
+                    if ui_or_model is None:
                         flask.abort(404)
 
                     if callable(ui_or_model):
