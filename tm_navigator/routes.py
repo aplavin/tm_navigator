@@ -100,22 +100,22 @@ class SearchResults:
             limit = 10
 
             rn_docs = sa.func.row_number().over(partition_by=DocumentTopic.topic_id,
-                                                order_by=DocumentTopic.probability.desc())
+                                                order_by=DocumentTopic.prob_td.desc())
             topics_with_docs = db.session.query(Topic, DocumentTopic, rn_docs) \
                 .outerjoin(Topic.documents) \
                 .from_self(Topic) \
                 .filter(rn_docs <= limit) \
-                .order_by(Topic.id, DocumentTopic.probability.desc()) \
+                .order_by(Topic.id, DocumentTopic.prob_td.desc()) \
                 .options(sa.orm.contains_eager(Topic.documents)) \
                 .all()
 
             rn_terms = sa.func.row_number().over(partition_by=(TopicTerm.topic_id, TopicTerm.modality_id),
-                                                 order_by=TopicTerm.probability.desc())
+                                                 order_by=TopicTerm.prob_wt.desc())
             topics_with_terms = db.session.query(Topic, TopicTerm, rn_terms) \
                 .outerjoin(Topic.terms) \
                 .from_self(Topic) \
                 .filter(rn_terms <= limit) \
-                .order_by(Topic.id, TopicTerm.modality_id, TopicTerm.probability.desc()) \
+                .order_by(Topic.id, TopicTerm.modality_id, TopicTerm.prob_wt.desc()) \
                 .options(sa.orm.contains_eager(Topic.terms)) \
                 .all()
 
@@ -243,13 +243,13 @@ def load_hierarchy(filtered_seed):
     topics = {t.id: t for t in topics}
 
     rn_terms = sa.func.row_number().over(partition_by=(TopicTerm.topic_id, TopicTerm.modality_id),
-                                         order_by=TopicTerm.probability.desc())
+                                         order_by=TopicTerm.prob_wt.desc())
     topics_with_terms = db.session.query(Topic, TopicTerm, rn_terms) \
         .outerjoin(Topic.terms) \
         .join(filtered_topics, Topic.id == filtered_topics.c.id) \
         .from_self(Topic) \
         .filter(rn_terms <= 15) \
-        .order_by(Topic.id, TopicTerm.modality_id, TopicTerm.probability.desc()) \
+        .order_by(Topic.id, TopicTerm.modality_id, TopicTerm.prob_wt.desc()) \
         .options(sa.orm.contains_eager(Topic.terms))
     topics_with_terms.all()
 
@@ -262,14 +262,16 @@ def load_hierarchy(filtered_seed):
 class _:
     @classmethod
     def from_url(cls, slug):
-        document = db.session.query(Document).filter_by(slug=slug).one()
+        document = db.session.query(Document).filter_by(slug=slug) \
+            .options(sa.orm.joinedload(Document.contents, DocumentContent.topics)) \
+            .one()
         return cls(document)
 
     @property
     def root_topic(self):
         doctopics = db.session.query(DocumentTopic) \
             .filter(DocumentTopic.document_id == self.model.id) \
-            .filter(DocumentTopic.probability > 0.001) \
+            .filter(DocumentTopic.prob_td > 0.001) \
             .cte('doctopics')
 
         topics = load_hierarchy(doctopics)
@@ -287,7 +289,7 @@ class _:
         html_pos = 0
         for cnt in self.model.contents:
             html_new += html[html_pos:cnt.start_pos]
-            html_new += '<span data-word="%d" data-color="%d"><a href="#">' % (cnt.term_id, cnt.topic_id)
+            html_new += '<span data-word="%d" data-color="%d"><a href="#">' % (cnt.term_id, cnt.topics[0].topic_id)
             html_new += html[cnt.start_pos:cnt.end_pos]
             html_new += '</a></span>'
             html_pos = cnt.end_pos
@@ -320,7 +322,7 @@ class _:
         topicterms = db.session.query(TopicTerm) \
             .filter(TopicTerm.modality_id == self.model.modality_id) \
             .filter(TopicTerm.term_id == self.model.id) \
-            .filter(TopicTerm.probability > 0.001) \
+            .filter(TopicTerm.prob_wt > 0.001) \
             .cte('topicterms')
 
         topics = load_hierarchy(topicterms)
@@ -339,11 +341,11 @@ class _:
     @classmethod
     def from_url(cls, id):
         topic_docs = db.session.query(Topic).filter_by(id=id)\
-            .outerjoin(Topic.documents).order_by(DocumentTopic.probability.desc())\
+            .outerjoin(Topic.documents).order_by(DocumentTopic.prob_td.desc())\
             .options(sa.orm.contains_eager(Topic.documents))\
             .one()
         topic_terms = db.session.query(Topic).filter_by(id=id)\
-            .outerjoin(Topic.terms).order_by(TopicTerm.probability.desc()).limit(100)\
+            .outerjoin(Topic.terms).order_by(TopicTerm.prob_wt.desc()).limit(100)\
             .options(sa.orm.contains_eager(Topic.terms))\
             .one()
         sa.orm.attributes.set_committed_value(topic_docs, 'terms', topic_terms.terms)
@@ -404,14 +406,14 @@ class _:
 
     @property
     def topics_score(self):
-        prob_positive = sa.func.sum(TopicTerm.probability).filter(ATopicTerm.value == 1)
-        prob_negative = sa.func.sum(TopicTerm.probability).filter(ATopicTerm.value == -1)
+        prob_positive = sa.func.sum(TopicTerm.prob_wt).filter(ATopicTerm.value == 1)
+        prob_negative = sa.func.sum(TopicTerm.prob_wt).filter(ATopicTerm.value == -1)
         return db.session.query((prob_positive - prob_negative) / (prob_positive + prob_negative)).select_from(ATopicTerm).join(ATopicTerm.src).scalar()
 
     @property
     def topics(self):
-        prob_positive = sa.func.coalesce(sa.func.sum(TopicTerm.probability).filter(ATopicTerm.value == 1), 0)
-        prob_negative = sa.func.coalesce(sa.func.sum(TopicTerm.probability).filter(ATopicTerm.value == -1), 0)
+        prob_positive = sa.func.coalesce(sa.func.sum(TopicTerm.prob_wt).filter(ATopicTerm.value == 1), 0)
+        prob_negative = sa.func.coalesce(sa.func.sum(TopicTerm.prob_wt).filter(ATopicTerm.value == -1), 0)
         q = db.session.query(
                 Topic,
                 sa.func.count(ATopicTerm.value).label('count'),
@@ -424,12 +426,12 @@ class _:
         topics = q.all()
 
         rn_terms = sa.func.row_number().over(partition_by=(TopicTerm.topic_id, TopicTerm.modality_id),
-                                             order_by=TopicTerm.probability.desc())
+                                             order_by=TopicTerm.prob_wt.desc())
         topics_with_terms = db.session.query(Topic, TopicTerm, rn_terms) \
             .outerjoin(Topic.terms) \
             .from_self(Topic) \
             .filter(rn_terms <= 15) \
-            .order_by(Topic.id, TopicTerm.modality_id, TopicTerm.probability.desc()) \
+            .order_by(Topic.id, TopicTerm.modality_id, TopicTerm.prob_wt.desc()) \
             .options(sa.orm.contains_eager(Topic.terms))
         topics_with_terms.all()
 
@@ -446,7 +448,7 @@ class _:
             ) \
             .join(TopicTerm.assessments) \
             .group_by(TopicTerm) \
-            .order_by(sa.desc('score'), TopicTerm.probability.desc()) \
+            .order_by(sa.desc('score'), TopicTerm.prob_wt.desc()) \
             .options(sa.orm.lazyload(TopicTerm.topic), sa.orm.subqueryload(TopicTerm.term))
         tterms = q.all()
 
@@ -457,8 +459,8 @@ class _:
 
     @property
     def documents(self):
-        prob_positive = sa.func.coalesce(sa.func.sum(DocumentTopic.probability).filter(ADocumentTopic.value == 1), 0)
-        prob_negative = sa.func.coalesce(sa.func.sum(DocumentTopic.probability).filter(ADocumentTopic.value == -1), 0)
+        prob_positive = sa.func.coalesce(sa.func.sum(DocumentTopic.prob_td).filter(ADocumentTopic.value == 1), 0)
+        prob_negative = sa.func.coalesce(sa.func.sum(DocumentTopic.prob_td).filter(ADocumentTopic.value == -1), 0)
         score = (prob_positive - prob_negative) / 1
         q = db.session.query(
                 Document,
@@ -475,24 +477,25 @@ class _:
         return docs
 
 
-@mp.errorhandler()
-@mp.template('error.html')
-class UIError:
-    def __init__(self, error):
-        self.error = error
+if not mp.app.debug:
+    @mp.errorhandler()
+    @mp.template('error.html')
+    class UIError:
+        def __init__(self, error):
+            self.error = error
 
-    @property
-    def code(self):
-        return getattr(self.error, 'code', 500)
+        @property
+        def code(self):
+            return getattr(self.error, 'code', 500)
 
-    @property
-    def description(self):
-        return getattr(self.error, 'description', getattr(self.error, 'message', ''))
+        @property
+        def description(self):
+            return getattr(self.error, 'description', getattr(self.error, 'message', ''))
 
-    @property
-    def name(self):
-        return getattr(self.error, 'name', self.error.__class__.__name__)
+        @property
+        def name(self):
+            return getattr(self.error, 'name', self.error.__class__.__name__)
 
-    @property
-    def technical_info(self):
-        return traceback.format_exc()
+        @property
+        def technical_info(self):
+            return traceback.format_exc()

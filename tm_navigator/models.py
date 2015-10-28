@@ -139,7 +139,18 @@ class Topic(Base, ModalityFilterMixin):
                 sa.Column(sa.Float, nullable=False, server_default=sa.literal(0)))
     def probability(self):
         # TODO: correct computation!
-        return sa.func.coalesce(sa.func.sum(DocumentTopic.probability), 0)
+        return sa.func.coalesce(sa.func.sum(DocumentTopic.prob_td), 0)
+
+
+class TopicSimilarity(Base):
+    a_id = sa.Column(sa.Integer, sa.ForeignKey(Topic.id), primary_key=True)
+    b_id = sa.Column(sa.Integer, sa.ForeignKey(Topic.id), primary_key=True)
+    similarity = sa.Column(sa.Float, nullable=False)
+
+    a = sa.orm.relationship(Topic, lazy='joined',
+                            backref=sa.orm.backref('similar', order_by=similarity.desc()),
+                            foreign_keys=a_id)
+    b = sa.orm.relationship(Topic, lazy='joined', foreign_keys=b_id)
 
 
 class TopicEdge(Base):
@@ -169,31 +180,32 @@ class DocumentTerm(Base):
     __table_args__ = (
         sa.ForeignKeyConstraint([modality_id, term_id], [Term.modality_id, Term.id]),
         sa.Index('dt_term_ix', modality_id, term_id),
-        sa.Index('dt_doc_ix', document_id),
     )
 
 
 class DocumentTopic(Base):
     document_id = sa.Column(sa.Integer, sa.ForeignKey(Document.id), primary_key=True)
     topic_id = sa.Column(sa.Integer, sa.ForeignKey(Topic.id), primary_key=True)
-    probability = sa.Column(sa.Float, nullable=False)
+    prob_td = sa.Column(sa.Float, nullable=False)
+    prob_dt = sa.Column(sa.Float, nullable=False)
 
     document = sa.orm.relationship(Document, lazy='joined',
-                                   backref=sa.orm.backref('topics', order_by=probability.desc()))
+                                   backref=sa.orm.backref('topics', order_by=prob_td.desc()))
     topic = sa.orm.relationship(Topic, lazy='joined',
-                                backref=sa.orm.backref('documents', order_by=probability.desc()))
+                                backref=sa.orm.backref('documents', order_by=prob_td.desc()))
 
 
 class TopicTerm(Base):
     topic_id = sa.Column(sa.Integer, sa.ForeignKey(Topic.id), primary_key=True)
     modality_id = sa.Column(sa.Integer, sa.ForeignKey(Modality.id), primary_key=True)
     term_id = sa.Column(sa.Integer, primary_key=True)
-    probability = sa.Column(sa.Float)
+    prob_wt = sa.Column(sa.Float, nullable=False)
+    prob_tw = sa.Column(sa.Float, nullable=False)
 
     topic = sa.orm.relationship(Topic, lazy='joined',
-                                backref=sa.orm.backref('terms', order_by=probability.desc()))
+                                backref=sa.orm.backref('terms', order_by=prob_wt.desc()))
     term = sa.orm.relationship(Term, lazy='joined',
-                               backref=sa.orm.backref('topics', order_by=probability.desc()))
+                               backref=sa.orm.backref('topics', order_by=prob_wt.desc()))
     modality = sa.orm.relationship(Modality, viewonly=True, lazy='select',
                                    backref=sa.orm.backref('topics', viewonly=True))
 
@@ -209,15 +221,21 @@ class DocumentContent(Base):
     term_id = sa.Column(sa.Integer, nullable=False)
     start_pos = sa.Column(sa.Integer, nullable=False)
     end_pos = sa.Column(sa.Integer, nullable=False)
-    topic_id = sa.Column(sa.Integer, sa.ForeignKey(Topic.id), nullable=False)
-    # topic_probability = sa.Column(sa.Float, nullable=False)
 
     document = sa.orm.relationship(Document, backref=sa.orm.backref('contents', order_by=start_pos))
     term = sa.orm.relationship(Term)
-    modality = sa.orm.relationship(Modality)
-    topic = sa.orm.relationship(Topic)
+    modality = sa.orm.relationship(Modality, viewonly=True)
 
     __table_args__ = (
         sa.ForeignKeyConstraint([modality_id, term_id], [Term.modality_id, Term.id]),
-        sa.UniqueConstraint(document_id, modality_id, term_id, start_pos),
+        sa.UniqueConstraint(document_id, modality_id, start_pos, term_id),
     )
+
+
+class DocumentContentTopic(Base):
+    document_content_id = sa.Column(sa.Integer, sa.ForeignKey(DocumentContent.id), nullable=False, primary_key=True)
+    topic_id = sa.Column(sa.Integer, sa.ForeignKey(Topic.id), nullable=False, primary_key=True)
+    # topic_probability = sa.Column(sa.Float, nullable=False)
+
+    document_content = sa.orm.relationship(DocumentContent, backref=sa.orm.backref('topics'))
+    topic = sa.orm.relationship(Topic)

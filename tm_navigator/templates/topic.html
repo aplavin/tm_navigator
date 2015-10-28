@@ -18,13 +18,13 @@
           <div class="nofloat">
             % if isinstance(parent_obj, Document):
               <%
-                probability = topic.documents[0].probability if topic.documents else 0
+                probability = topic.documents[0].prob_td if topic.documents else 0
                 p_fmt = 'P(t | d) = %f'
               %>
             % elif isinstance(parent_obj, Term):
               <%
                 matching_obj = next((t for t in topic.terms if t.term == parent_obj), None)
-                probability = matching_obj.probability if matching_obj else 0
+                probability = matching_obj.prob_wt if matching_obj else 0
                 p_fmt = 'P(w | t) = %f'
               %>
             % endif
@@ -87,7 +87,7 @@
 
         <div id="plot-documents" style="height:250px;"></div>
 
-        <%macros:tagcloud items="${s.model.documents}" additional_class="collapsed text-center" args="d">
+        <%macros:tagcloud items="${ s.model.documents }" limit="${ 200 }" additional_class="collapsed text-center" args="d">
           ${ mp.get_view(d, view='tagcloud_document') }
         </%macros:tagcloud>
       </div>
@@ -97,7 +97,7 @@
 
         <div id="plot-words" style="height:250px;"></div>
 
-        <%macros:tagcloud items="${s.model.terms}" additional_class="collapsed text-center" args="w">
+        <%macros:tagcloud items="${s.model.terms}" limit="${ 200 }" additional_class="collapsed text-center" args="w">
           ${ mp.get_view(w, view='tagcloud_term') }
 
           ${ macros.assess_yesno(
@@ -117,7 +117,7 @@
           'Usage in documents',
           ['d', 'P(t | d)'],
           [
-            % for d in s.model.documents:
+            % for d in s.model.documents[:200]:
               ${ mp.get_view(d, 'plot_document') }
             % endfor
           ],
@@ -131,7 +131,7 @@
           'Words distribution',
           ['w', 'P(w | t)'],
           [
-            % for w in s.model.terms:
+            % for w in s.model.terms[:200]:
               ${ mp.get_view(w, 'plot_term') }
             % endfor
           ]

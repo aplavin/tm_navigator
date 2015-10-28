@@ -1,11 +1,11 @@
 <%def name="view_tagcloud_document()">
   % if isinstance(s.model, DocumentTopic):
-    <a href="${ url_for(s.model.document) }" data-size="${ s.model.probability }" data-use-opacity="true"
+    <a href="${ url_for(s.model.document) }" data-size="${ s.model.prob_td }" data-use-opacity="true"
        data-placement="top" data-toggle="tooltip" data-html="true"
        title="
       ${ s.model.document.title }<br/><br/>
   ##     ${ authors }<hr/>
-      ${ 'P(t | d) = %f' % s.model.probability }
+      ${ 'P(t | d) = %f' % s.model.prob_td }
       ">${ s.model.document.slug }</a>
   % elif isinstance(s.model, DocumentTerm):
     <a href="${ url_for(s.model.document) }" data-size="${ s.model.count }" data-use-opacity="true"
@@ -24,8 +24,8 @@
              data-use-size="true">${ s.model.term.text }</a>
   % elif isinstance(s.model, TopicTerm):
     <a href="${ url_for(s.model.term) }"
-       title="P(w | t) = ${ s.model.probability }"
-       data-size="${ s.model.probability }" data-use-size="true">
+       title="P(w | t) = ${ s.model.prob_wt }"
+       data-size="${ s.model.prob_wt }" data-use-size="true">
       ${ s.model.term.text }
     </a>
   % endif
@@ -33,11 +33,11 @@
 
 <%def name="view_tagcloud_topic()">
   % if isinstance(s.model, DocumentTopic):
-    <a href="${ url_for(s.model.topic) }" title="P(t | d) = ${ s.model.probability }"
-       data-size="${ s.model.probability }" data-use-size="true">${ s.model.topic.text }</a>
+    <a href="${ url_for(s.model.topic) }" title="P(t | d) = ${ s.model.prob_td }"
+       data-size="${ s.model.prob_td }" data-use-size="true">${ s.model.topic.text }</a>
   % elif isinstance(s.model, TopicTerm):
-    <a href="${ url_for(s.model.topic) }" title="P(w | t) = ${ s.model.probability }"
-       data-size="${ s.model.probability }" data-use-size="true">${ s.model.topic.text }</a>
+    <a href="${ url_for(s.model.topic) }" title="P(w | t) = ${ s.model.prob_wt }"
+       data-size="${ s.model.prob_wt }" data-use-size="true">${ s.model.topic.text }</a>
   % endif
 </%def>
 
@@ -45,7 +45,7 @@
   % if isinstance(s.model, DocumentTopic):
     {
       name: '${ s.model.document.slug }',
-      y: ${ s.model.probability },
+      y: ${ s.model.prob_td },
       url: '${ url_for(s.model.document) }'
     },
   % elif isinstance(s.model, DocumentTerm):
@@ -67,7 +67,7 @@
   % elif isinstance(s.model, TopicTerm):
     {
       name: '${ s.model.term.text }',
-      y: ${ s.model.probability },
+      y: ${ s.model.prob_wt },
       url: '${ url_for(s.model.term) }'
     },
   % endif
@@ -77,7 +77,7 @@
   % if isinstance(s.model, TopicTerm):
     {
       name: '${ s.model.topic.text }',
-      y: ${ s.model.probability },
+      y: ${ s.model.prob_wt },
       url: '${ url_for(s.model.topic) }'
     },
   % endif

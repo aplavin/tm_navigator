@@ -86,7 +86,7 @@
 
           <div class="pull-left sparkline" data-type="column"
                data-xvals="${ ','.join(t.topic.text for t in topics) }"
-               data-yvals="${ ','.join(str(t.probability) for t in topics) }"
+               data-yvals="${ ','.join(str(t.prob_td) for t in topics) }"
                data-titles="t,p" data-hlite-tag="true">
           </div>
 
