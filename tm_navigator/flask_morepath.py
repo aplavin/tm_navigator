@@ -146,7 +146,7 @@ class Morepath:
                         flask.abort(404)
 
                     if callable(ui_or_model):
-                        ui_or_model()
+                        ui_or_model = ui_or_model()
 
                     try:
                         return self.get_view(ui_or_model, _view_name)
