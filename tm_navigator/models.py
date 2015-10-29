@@ -1,32 +1,8 @@
 import sqlalchemy as sa
 import sqlalchemy.ext.hybrid
-import sqlalchemy.ext.declarative as sa_dec
-from sqlalchemy.dialects import postgresql
-from sqlalchemy_searchable import make_searchable
 from sqlalchemy_utils.types import TSVectorType
 from sqlalchemy_utils import aggregated
-import inflection
-from db_helpers import *
-
-
-class Base(object):
-    @sa_dec.declared_attr
-    def __tablename__(cls):
-        return inflection.tableize(cls.__name__)
-
-    def __repr__(self):
-        return "<{}({})>".format(
-            self.__class__.__name__,
-            ', '.join(
-                ["{}={}".format(k, repr(self.__dict__[k]))
-                 for k in sorted(self.__dict__.keys())
-                 if k[0] != '_']
-            )
-        )
-
-
-Base = sa_dec.declarative_base(cls=Base)
-make_searchable()
+from db_helpers import Base
 
 
 class Modality(Base):

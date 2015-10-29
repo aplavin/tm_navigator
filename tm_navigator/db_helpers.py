@@ -1,7 +1,30 @@
 import sqlalchemy as sa
+from sqlalchemy.ext.declarative import declarative_base, declared_attr
+from sqlalchemy_searchable import make_searchable
 from sqlalchemy.ext.compiler import compiles
 from sqlalchemy.sql.expression import ColumnElement
 from sqlalchemy.dialects import postgresql as pg_dialect
+import inflection
+
+
+class Base(object):
+    @declared_attr
+    def __tablename__(cls):
+        return inflection.tableize(cls.__name__)
+
+    def __repr__(self):
+        return "<{}({})>".format(
+            self.__class__.__name__,
+            ', '.join(
+                ["{}={}".format(k, repr(self.__dict__[k]))
+                 for k in sorted(self.__dict__.keys())
+                 if k[0] != '_']
+            )
+        )
+
+
+Base = declarative_base(cls=Base)
+make_searchable()
 
 
 def create_aggregate_with_orderby(name, coltype):
