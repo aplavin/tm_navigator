@@ -89,6 +89,24 @@ class Term(Base):
     )
 
 
+class TermSimilarity(Base):
+    a_modality_id = sa.Column(sa.Integer, primary_key=True)
+    a_id = sa.Column(sa.Integer, primary_key=True)
+    b_modality_id = sa.Column(sa.Integer, primary_key=True)
+    b_id = sa.Column(sa.Integer, primary_key=True)
+    similarity = sa.Column(sa.Float, nullable=False)
+
+    a = sa.orm.relationship(Term, lazy='joined',
+                            backref=sa.orm.backref('similar', order_by=similarity.desc()),
+                            foreign_keys=[a_modality_id, a_id])
+    b = sa.orm.relationship(Term, lazy='joined', foreign_keys=[b_modality_id, b_id])
+
+    __table_args__ = (
+        sa.ForeignKeyConstraint([a_modality_id, a_id], [Term.modality_id, Term.id]),
+        sa.ForeignKeyConstraint([b_modality_id, b_id], [Term.modality_id, Term.id]),
+    )
+
+
 class Topic(Base):
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.Text, unique=True)
