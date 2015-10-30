@@ -73,7 +73,7 @@ def check_required_optional_files(directory, required_names, optional_names, ext
 
 
 def delete_data_for(session, models):
-    with click.progressbar(list(reversed(Base.metadata.sorted_tables)), label='Deleting data') as pbar:
+    with click.progressbar(reversed(Base.metadata.sorted_tables), label='Deleting data', length=len(models)) as pbar:
         for table in pbar:
             matching_models = [m for m in models if m.__table__ == table]
             if not matching_models:
@@ -83,7 +83,7 @@ def delete_data_for(session, models):
 
 
 def load_data_for(session, models, directory):
-    with click.progressbar(Base.metadata.sorted_tables, label='Loading data') as pbar:
+    with click.progressbar(Base.metadata.sorted_tables, label='Loading data', length=len(models)) as pbar:
         for table in pbar:
             matching_models = [m for m in models if m.__table__ == table]
             if not matching_models:
