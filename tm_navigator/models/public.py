@@ -54,7 +54,8 @@ class TopicModelMeta(Base, SchemaMixin):
     dataset_id = sa.Column(sa.Integer, sa.ForeignKey(DatasetMeta.id), nullable=False)
     schema_name = sa.orm.column_property('tmnav_topicmodel_' + sa.cast(id, sa.Text))
 
-    dataset = sa.orm.relationship(DatasetMeta, backref='topic_models')
+    dataset = sa.orm.relationship(DatasetMeta, lazy='joined',
+                                  backref=sa.orm.backref('topic_models', lazy='joined', order_by=id))
 
     @property
     def schemas(self):
@@ -67,7 +68,8 @@ class TopicModelDomain(Base):
     domain = sa.Column(sa.Text, primary_key=True)
     topic_model_id = sa.Column(sa.Integer, sa.ForeignKey(TopicModelMeta.id), nullable=False)
 
-    topic_model = sa.orm.relationship(TopicModelMeta, backref='domains')
+    topic_model = sa.orm.relationship(TopicModelMeta, lazy='joined',
+                                      backref=sa.orm.backref('domains', lazy='joined', order_by=domain))
 
     def full_domain(self, base_domain):
         if self.domain.endswith('.'):
