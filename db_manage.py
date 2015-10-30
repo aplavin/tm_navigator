@@ -51,6 +51,49 @@ def copy_from_csv(session, model, csv_file):
     update_aggregates(session, model)
 
 
+def check_required_optional_files(directory, required_names, optional_names, extension='.csv'):
+    file_names = {p.name for p in directory.iterdir() if p.is_file()}
+
+    required_files = {t + extension for t in required_names}
+    if len(required_files - file_names) > 0:
+        click.echo('Required files {} not found.'.format(
+            ', '.join('"{}"'.format(f) for f in sorted(required_files - file_names))
+        ))
+        raise click.Abort
+
+    optional_files = {t + extension for t in optional_names}
+    if len(optional_files - file_names) > 0:
+        click.echo('Optional files {} not found.'.format(
+            ', '.join('"{}"'.format(f) for f in sorted(optional_files - file_names))
+        ))
+    if len(file_names - required_files - optional_files) > 0:
+        click.echo('Unexpected files {} found, they will be ignored'.format(
+            ', '.join('"{}"'.format(f) for f in sorted(file_names - required_files - optional_files))
+        ))
+
+
+def delete_data_for(session, models):
+    with click.progressbar(list(reversed(Base.metadata.sorted_tables)), label='Deleting data') as pbar:
+        for table in pbar:
+            matching_models = [m for m in models if m.__table__ == table]
+            if not matching_models:
+                continue
+            model = matching_models[0]
+            session.query(model).delete()
+
+
+def load_data_for(session, models, directory):
+    with click.progressbar(Base.metadata.sorted_tables, label='Loading data') as pbar:
+        for table in pbar:
+            matching_models = [m for m in models if m.__table__ == table]
+            if not matching_models:
+                continue
+            model = matching_models[0]
+
+            file = directory / '{}.csv'.format(model.__tablename__)
+            copy_from_csv(session, model, file)
+
+
 @click.group()
 def cli():
     pass
@@ -117,63 +160,26 @@ def add_dataset():
 @click.option('-dir', '--directory', type=dir_type, required=True)
 def load_dataset(dataset_id, title, directory):
     directory = Path(directory)
-    file_names = {p.name for p in directory.iterdir() if p.is_file()}
-
-    required_files = {'{}.csv'.format(t) for t in ('modalities', 'terms', 'documents', 'document_terms')}
-    if len(required_files - file_names) > 0:
-        click.echo('Required files {} not found.'.format(
-            ', '.join('"{}"'.format(f) for f in sorted(required_files - file_names))
-        ))
-        raise click.Abort
-
-    optional_files = {'{}.csv'.format(t) for t in ('document_contents',)}
-    if len(optional_files - file_names) > 0:
-        click.echo('Optional files {} not found.'.format(
-            ', '.join('"{}"'.format(f) for f in sorted(optional_files - file_names))
-        ))
-    if len(file_names - required_files - optional_files) > 0:
-        click.echo('Unexpected files {} found, they will be ignored'.format(
-            ', '.join('"{}"'.format(f) for f in sorted(file_names - required_files - optional_files))
-        ))
-
+    check_required_optional_files(directory,
+                                  ('modalities', 'terms', 'documents', 'document_terms'),
+                                  ('document_contents',))
     click.confirm('Proceeding will overwrite the corresponding data in the database. Continue?',
                   abort=True, default=True)
 
     target_models = [Modality, Term, Document, DocumentTerm, DocumentContent]
+    models = [m
+              for m in target_models
+              if (directory / '{}.csv'.format(m.__tablename__)).is_file()]
 
-    with session_scope() as session, click.progressbar(label='Deleting data', length=len(target_models)) as pbar:
+    with session_scope() as session:
         SchemaMixin.activate_public_schema(session)
         ds = session.query(DatasetMeta).filter_by(id=dataset_id).one()
         ds.activate_schemas()
 
-        for table in reversed(Base.metadata.sorted_tables):
-            matching_models = [m for m in target_models if m.__table__ == table]
-            if not matching_models:
-                continue
-            model = matching_models[0]
-
-            file = directory / '{}.csv'.format(model.__tablename__)
-            if file.is_file():
-                session.query(model).delete()
-            pbar.update(1)
-
-    with session_scope() as session, click.progressbar(label='Loading data', length=len(target_models)) as pbar:
-        SchemaMixin.activate_public_schema(session)
-        ds = session.query(DatasetMeta).filter_by(id=dataset_id).one()
         if title is not None:
             ds.title = title
-        ds.activate_schemas()
-
-        for table in Base.metadata.sorted_tables:
-            matching_models = [m for m in target_models if m.__table__ == table]
-            if not matching_models:
-                continue
-            model = matching_models[0]
-
-            file = directory / '{}.csv'.format(model.__tablename__)
-            if file.is_file():
-                copy_from_csv(session, model, file)
-            pbar.update(1)
+        delete_data_for(session, models)
+        load_data_for(session, models, directory)
 
 
 @cli.command()
@@ -200,63 +206,28 @@ def add_topicmodel(dataset_id):
 @click.option('-dir', '--directory', type=dir_type, required=True)
 def load_topicmodel(topicmodel_id, title, directory):
     directory = Path(directory)
-    file_names = {p.name for p in directory.iterdir() if p.is_file()}
-
-    required_files = {'{}.csv'.format(t) for t in ('topics', 'topic_terms', 'document_topics', 'topic_edges')}
-    if len(required_files - file_names) > 0:
-        click.echo('Required files {} not found.'.format(
-            ', '.join('"{}"'.format(f) for f in sorted(required_files - file_names))
-        ))
-        raise click.Abort
-
-    optional_files = {'{}.csv'.format(t) for t in ('document_content_topics', 'document_similarities', 'term_similarities', 'topic_similarities')}
-    if len(optional_files - file_names) > 0:
-        click.echo('Optional files {} not found.'.format(
-            ', '.join('"{}"'.format(f) for f in sorted(optional_files - file_names))
-        ))
-    if len(file_names - required_files - optional_files) > 0:
-        click.echo('Unexpected files {} found, they will be ignored'.format(
-            ', '.join('"{}"'.format(f) for f in sorted(file_names - required_files - optional_files))
-        ))
-
+    check_required_optional_files(directory,
+                                  ('topics', 'topic_terms', 'document_topics', 'topic_edges'),
+                                  ('document_content_topics', 'document_similarities',
+                                   'term_similarities', 'topic_similarities'))
     click.confirm('Proceeding will overwrite the corresponding data in the database. Continue?',
                   abort=True, default=True)
 
-    target_models = [Topic, TopicTerm, DocumentTopic, TopicEdge, DocumentContentTopic, DocumentSimilarity, TermSimilarity, TopicSimilarity]
+    target_models = [Topic, TopicTerm, DocumentTopic, TopicEdge, DocumentContentTopic,
+                     DocumentSimilarity, TermSimilarity, TopicSimilarity]
+    models = [m
+              for m in target_models
+              if (directory / '{}.csv'.format(m.__tablename__)).is_file()]
 
-    with session_scope() as session, click.progressbar(label='Deleting data', length=len(target_models)) as pbar:
+    with session_scope() as session:
         SchemaMixin.activate_public_schema(session)
         tm = session.query(TopicModelMeta).filter_by(id=topicmodel_id).one()
         tm.activate_schemas()
 
-        for table in reversed(Base.metadata.sorted_tables):
-            matching_models = [m for m in target_models if m.__table__ == table]
-            if not matching_models:
-                continue
-            model = matching_models[0]
-
-            file = directory / '{}.csv'.format(model.__tablename__)
-            if file.is_file():
-                session.query(model).delete()
-            pbar.update(1)
-
-    with session_scope() as session, click.progressbar(label='Loading data', length=len(target_models)) as pbar:
-        SchemaMixin.activate_public_schema(session)
-        tm = session.query(TopicModelMeta).filter_by(id=topicmodel_id).one()
         if title is not None:
             tm.title = title
-        tm.activate_schemas()
-
-        for table in Base.metadata.sorted_tables:
-            matching_models = [m for m in target_models if m.__table__ == table]
-            if not matching_models:
-                continue
-            model = matching_models[0]
-
-            file = directory / '{}.csv'.format(model.__tablename__)
-            if file.is_file():
-                copy_from_csv(session, model, file)
-            pbar.update(1)
+        delete_data_for(session, models)
+        load_data_for(session, models, directory)
 
 
 if __name__ == '__main__':
