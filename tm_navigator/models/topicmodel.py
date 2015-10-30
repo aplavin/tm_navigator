@@ -37,6 +37,7 @@ class Topic(Base):
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.Text, unique=True)
     type = sa.Column(sa.Enum('foreground', 'background', name='fgbg_enum'), nullable=False)
+    probability = sa.Column(sa.Float, nullable=False)
 
     @sa.ext.hybrid.hybrid_property
     def level(self):
@@ -65,12 +66,6 @@ class Topic(Base):
     @property
     def text(self):
         return '%s-%s' % (self.level, self.name or '%02d' % self.id_in_level)
-
-    @aggregated('documents',
-                sa.Column(sa.Float, nullable=False, server_default=sa.literal(0)))
-    def probability(self):
-        # TODO: correct computation!
-        return sa.func.coalesce(sa.func.sum(DocumentTopic.prob_td), 0)
 
 
 class TopicSimilarity(Base):
