@@ -21,6 +21,7 @@ setup(
         'flask-assets',
         'cssmin',
         'cached-property',
+        'click',
     ],
     url='',
     license='MIT',
