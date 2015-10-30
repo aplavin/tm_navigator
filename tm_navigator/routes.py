@@ -3,21 +3,20 @@ import re
 from main import mp, db
 from flask import request, session, redirect
 from models import *
-from assessment_models import *
 import sqlalchemy as sa
 import sqlalchemy_searchable as searchable
 from cached_property import cached_property
 
 
 def add_modality_relationships(model, target, rel_name, rel_expr, order_by=None):
-    for mod in db.session.query(Modality):
+    for mod_id, mod_name in ((1, 'words'), (2, 'authors')):
         setattr(
             model,
-            '%s_%s' % (rel_name, mod.name),
+            '%s_%s' % (rel_name, mod_name),
             sa.orm.relationship(
                 target,
                 primaryjoin=sa.and_(rel_expr,
-                                    target.modality_id == mod.id),
+                                    target.modality_id == mod_id),
                 order_by=order_by
             )
         )
