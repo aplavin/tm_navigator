@@ -11,6 +11,7 @@ setup(
         'flask-mako',
         'flask-debugtoolbar',
         'flask-debugtoolbar-lineprofilerpanel',
+        'pygments',
         'flask',
         'sqlalchemy',
         'sqlalchemy-searchable',
