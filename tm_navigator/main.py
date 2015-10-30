@@ -28,7 +28,7 @@ import inspect
 @app.context_processor
 def inject_models():
     return {k: v
-            for module_name in ['models', 'assessment_models', 'routes']
+            for module_name in ['models', 'routes']
             for module in [__import__(module_name)]
             for k, v in inspect.getmembers(module, inspect.isclass)}
 

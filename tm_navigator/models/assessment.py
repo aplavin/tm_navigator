@@ -1,5 +1,6 @@
-from models import *
+import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql as pg_dialect
+from models.topicmodel import *
 
 
 class AssessmentMixin(object):
@@ -80,3 +81,10 @@ class ATopicTerm(Base, AssessmentMixin):
     )
 
     src = sa.orm.relationship(TopicTerm, backref='assessments')
+
+
+models_assessment = (ATopic, ATopicEdge, ADocumentSimilarity, ADocumentTopic, ATopicTerm)
+__all__ = ('Base', 'SchemaMixin', 'models_public') + tuple(m.__name__ for m in models_public) + \
+          ('models_dataset',) + tuple(m.__name__ for m in models_dataset) + \
+          ('models_topic',) + tuple(m.__name__ for m in models_topic) + \
+          ('models_assessment', 'AssessmentMixin') + tuple(m.__name__ for m in models_assessment)

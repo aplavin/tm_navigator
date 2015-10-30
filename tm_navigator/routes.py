@@ -33,6 +33,37 @@ add_modality_relationships(
 )
 
 
+@mp.template('tms_list.html')
+class TmsList:
+    @property
+    def datasets(self):
+        return db.session.query(DatasetMeta).all()
+
+    @property
+    def topicmodels(self):
+        return db.session.query(TopicModelMeta).all()
+
+    @property
+    def base_domain(self):
+        return request.host
+
+
+@mp.app.before_request
+def set_schema():
+    if request.endpoint == 'static':
+        return
+
+    try:
+        domain = sa.bindparam('domain', request.host)
+        tm = db.session.query(TopicModelMeta) \
+            .filter(TopicModelMeta.domains.any(domain.startswith(TopicModelDomain.domain))) \
+            .one()
+        tm.activate_schemas()
+    except sa.orm.exc.NoResultFound:
+        SchemaMixin.activate_public_schema(db.session)
+        return mp.get_view(TmsList())
+
+
 @mp.route('/browse/')
 @mp.template('browse.html')
 class Browse:

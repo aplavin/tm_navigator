@@ -1,0 +1,42 @@
+<%inherit file="base.html"/>
+
+<%block name="title">Available Datasets and Topic Models</%block>
+<div class="container">
+  <div>
+    <ul class="list-group">
+    % for ds in s.datasets:
+      <li class="list-group-item">
+        <h4 class="list-group-item-heading">
+          Dataset #${ ds.id }, ${ ds.title or 'untitled' }
+        </h4>
+
+        <p class="list-group-item-text">
+          ${ len(ds.topic_models) } topic models for this dataset:
+
+          <ul class="list-group">
+          % for tm in ds.topic_models:
+            <li class="list-group-item">
+              <h4 class="list-group-item-heading">
+                Topic model #${ tm.id }, ${ tm.title or 'untitled' }
+              </h4>
+
+              <p class="list-group-item-text">
+                Built for dataset #${ tm.dataset.id } (${ tm.dataset.title or 'untitled' })
+                <br/>
+                Available at domains
+                % for d in tm.domains:
+                  <a href="//${ d.full_domain(s.base_domain) }">${ d.full_domain(s.base_domain) }</a>
+                  % if not loop.last:
+                    ,
+                  % endif
+                % endfor
+              </p>
+            </li>
+          % endfor
+          </ul>
+        </p>
+      </li>
+    % endfor
+    </ul>
+  </div>
+</div>
