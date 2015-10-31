@@ -152,11 +152,12 @@ def add_dataset():
 @click.option('-dir', '--directory', type=dir_type, required=True)
 def load_dataset(dataset_id, title, directory):
     directory = Path(directory)
-    check_files(directory, ('modalities', 'terms', 'documents', 'document_terms', 'document_contents',))
+    target_models = [Modality, Term, Document, DocumentTerm, DocumentContent]
+
+    check_files(directory, [m.__tablename__ for m in target_models])
     click.confirm('Proceeding will overwrite the corresponding data in the database. Continue?',
                   abort=True, default=True)
 
-    target_models = [Modality, Term, Document, DocumentTerm, DocumentContent]
     models = [m
               for m in target_models
               if (directory / '{}.csv'.format(m.__tablename__)).is_file()]
@@ -196,13 +197,13 @@ def add_topicmodel(dataset_id):
 @click.option('-dir', '--directory', type=dir_type, required=True)
 def load_topicmodel(topicmodel_id, title, directory):
     directory = Path(directory)
-    check_files(directory, ('topics', 'topic_terms', 'document_topics', 'topic_edges', 'document_content_topics',
-                            'document_similarities', 'term_similarities', 'topic_similarities'))
+    target_models = [Topic, TopicTerm, DocumentTopic, TopicEdge, DocumentContentTopic,
+                     DocumentSimilarity, TermSimilarity, TopicSimilarity]
+
+    check_files(directory, [m.__tablename__ for m in target_models])
     click.confirm('Proceeding will overwrite the corresponding data in the database. Continue?',
                   abort=True, default=True)
 
-    target_models = [Topic, TopicTerm, DocumentTopic, TopicEdge, DocumentContentTopic,
-                     DocumentSimilarity, TermSimilarity, TopicSimilarity]
     models = [m
               for m in target_models
               if (directory / '{}.csv'.format(m.__tablename__)).is_file()]
