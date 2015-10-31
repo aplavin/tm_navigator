@@ -51,25 +51,17 @@ def copy_from_csv(session, model, csv_file):
     update_aggregates(session, model)
 
 
-def check_required_optional_files(directory, required_names, optional_names, extension='.csv'):
+def check_files(directory, expected_names, extension='.csv'):
     file_names = {p.name for p in directory.iterdir() if p.is_file()}
+    expected_files = {t + extension for t in expected_names}
 
-    required_files = {t + extension for t in required_names}
-    if len(required_files - file_names) > 0:
-        click.echo('Required files {} not found.'.format(
-            ', '.join('"{}"'.format(f) for f in sorted(required_files - file_names))
-        ))
-        raise click.Abort
-
-    optional_files = {t + extension for t in optional_names}
-    if len(optional_files - file_names) > 0:
-        click.echo('Optional files {} not found.'.format(
-            ', '.join('"{}"'.format(f) for f in sorted(optional_files - file_names))
-        ))
-    if len(file_names - required_files - optional_files) > 0:
-        click.echo('Unexpected files {} found, they will be ignored'.format(
-            ', '.join('"{}"'.format(f) for f in sorted(file_names - required_files - optional_files))
-        ))
+    click.echo('Found files {}'.format(
+        ', '.join('"{}"'.format(f) for f in sorted(expected_files & file_names))
+    ))
+    click.echo('Not found files {}'.format(
+        ', '.join('"{}"'.format(f) for f in sorted(expected_files - file_names))
+    ))
+    click.echo('Will try to continue with the files present.')
 
 
 def delete_data_for(session, models):
@@ -160,9 +152,7 @@ def add_dataset():
 @click.option('-dir', '--directory', type=dir_type, required=True)
 def load_dataset(dataset_id, title, directory):
     directory = Path(directory)
-    check_required_optional_files(directory,
-                                  ('modalities', 'terms', 'documents', 'document_terms'),
-                                  ('document_contents',))
+    check_files(directory, ('modalities', 'terms', 'documents', 'document_terms', 'document_contents',))
     click.confirm('Proceeding will overwrite the corresponding data in the database. Continue?',
                   abort=True, default=True)
 
@@ -206,10 +196,8 @@ def add_topicmodel(dataset_id):
 @click.option('-dir', '--directory', type=dir_type, required=True)
 def load_topicmodel(topicmodel_id, title, directory):
     directory = Path(directory)
-    check_required_optional_files(directory,
-                                  ('topics', 'topic_terms', 'document_topics', 'topic_edges'),
-                                  ('document_content_topics', 'document_similarities',
-                                   'term_similarities', 'topic_similarities'))
+    check_files(directory, ('topics', 'topic_terms', 'document_topics', 'topic_edges', 'document_content_topics',
+                            'document_similarities', 'term_similarities', 'topic_similarities'))
     click.confirm('Proceeding will overwrite the corresponding data in the database. Continue?',
                   abort=True, default=True)
 
