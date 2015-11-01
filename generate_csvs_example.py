@@ -10,6 +10,10 @@ import h5py
 import re
 import itertools as it
 import click
+import sys
+
+sys.path.append('tm_navigator')
+from tm_navigator.models import *
 
 
 def topic_id(level, t):
@@ -22,7 +26,8 @@ def topic_id(level, t):
 
 
 class CsvWriter:
-    def __init__(self, directory, file_name):
+    def __init__(self, directory, model):
+        file_name = model.__tablename__
         csv_file = directory / (file_name + '.csv')
         self.csv_file = csv_file
         if csv_file.exists():
@@ -81,8 +86,8 @@ def clean(obj):
     """
     Remove all the CSV files.
     """
-    file_names = ('modalities', 'terms', 'documents', 'document_terms', 'document_contents',
-                  'topics', 'document_topics', 'topic_terms', 'topic_edges', 'document_content_topics')
+    models = models_dataset + models_topic
+    file_names = [m.__tablename__ for m in models]
 
     for fname in file_names:
         f = obj.directory / (fname + '.csv')
@@ -96,14 +101,14 @@ def dataset_basic(obj):
     """
     Required dataset tables.
     """
-    with CsvWriter(obj.directory, 'modalities') as out:
+    with CsvWriter(obj.directory, Modality) as out:
         out << [dict(id=1, name='words'),
                 dict(id=2, name='authors')]  # these two modalities are required
 
     with h5py.File('data/data.hdf') as h5f:
         metadata = h5f['metadata'][...]  # contains basic metadata for documents like ids, titles, authors
 
-    with CsvWriter(obj.directory, 'documents') as out:
+    with CsvWriter(obj.directory, Document) as out:
         out << (
             dict(id=i,
                  title=t['title'],
@@ -124,13 +129,13 @@ def dataset_basic(obj):
                      for i, a in enumerate(authors)}
 
     with open('data/dictionary.mmro.txt') as f, \
-            CsvWriter(obj.directory, 'terms') as out:
+            CsvWriter(obj.directory, Term) as out:
         out << authors_terms.values()
         out << (dict(id=i, modality_id=1, text=line.strip())
                 for i, line in enumerate(f))
 
     with open('data/documents.mmro.txt') as f, \
-            CsvWriter(obj.directory, 'document_terms') as out:
+            CsvWriter(obj.directory, DocumentTerm) as out:
         out << (dict(document_id=d, modality_id=2, term_id=authors_terms[a]['id'], count=1)
                 for d, a in doc_authors)
         out << (dict(document_id=d, modality_id=1, term_id=w, count=cnt)
@@ -159,24 +164,30 @@ def topicmodel_basic(obj):
     ptw = pwt * pt / pw[:, np.newaxis]
     pdt = ptd * pd / pt[:, np.newaxis]
 
-    with CsvWriter(obj.directory, 'topics') as out:
+    with CsvWriter(obj.directory, Topic) as out:
         out << [dict(id=0, type='foreground', probability=1)]  # the zero-level topic is required
         out << (dict(id=topic_id(1, t),
                      type='foreground' if t < 50 else 'background',
                      probability=p)
                 for t, p in enumerate(pt))
 
-    with CsvWriter(obj.directory, 'topic_terms') as out:
-        out << (dict(topic_id=topic_id(1, t), modality_id=1, term_id=w, prob_wt=val, prob_tw=ptw[w, t])
+    with CsvWriter(obj.directory, TopicTerm) as out:
+        out << (dict(topic_id=topic_id(1, t),
+                     modality_id=1, term_id=w,
+                     prob_wt=val, prob_tw=ptw[w, t])
                 for w, t, val in zip(phi.row, phi.col, phi.data))
 
-    with CsvWriter(obj.directory, 'document_topics') as out:
-        out << (dict(topic_id=topic_id(1, t), document_id=d, prob_td=val, prob_dt=pdt[t, d])
+    with CsvWriter(obj.directory, DocumentTopic) as out:
+        out << (dict(topic_id=topic_id(1, t),
+                     document_id=d,
+                     prob_td=val, prob_dt=pdt[t, d])
                 for t, d, val in zip(theta.row, theta.col, theta.data))
 
-    with CsvWriter(obj.directory, 'topic_edges') as out:
+    with CsvWriter(obj.directory, TopicEdge) as out:
         # all topics are assumed to be reachable by edges from the root topic #0
-        out << (dict(parent_id=0, child_id=topic_id(1, t), probability=p)
+        out << (dict(parent_id=0,
+                     child_id=topic_id(1, t),
+                     probability=p)
                 for t, p in enumerate(pt))
 
 
@@ -187,7 +198,7 @@ def document_contents(obj):
     Optional: document highlighting.
     """
     with open('data/documents.mmro.txt') as f, \
-            CsvWriter(obj.directory, 'document_contents') as out:
+            CsvWriter(obj.directory, DocumentContent) as out:
         id_cnt = it.count()
         out << (dict(id=next(id_cnt),  # must correspond to the ids in document_content_topics
                      document_id=d, modality_id=1, term_id=w,
@@ -197,7 +208,7 @@ def document_contents(obj):
                 for w, s, e in (map(int, dw.split()) for dw in line.split(';')[:-1]))
 
     with open('data/ptdw.txt') as fp, \
-            CsvWriter(obj.directory, 'document_content_topics') as out:
+            CsvWriter(obj.directory, DocumentContentTopic) as out:
         id_cnt = it.count()
         out << (dict(document_content_id=next(id_cnt),  # same ids as above
                      topic_id=topic_id(1, int(t)))
@@ -214,7 +225,7 @@ def similarities(obj):
     phi = np.load('data/phi.npy')
     theta = np.load('data/theta.npy')
 
-    with CsvWriter(obj.directory, 'document_similarities') as out:
+    with CsvWriter(obj.directory, DocumentSimilarity) as out:
         distances = squareform(pdist(theta.T, 'cosine'))
         out << (dict(a_id=i,
                      b_id=sim_i,
@@ -223,7 +234,7 @@ def similarities(obj):
                 for sim_i in row.argsort()[:31]  # first 30 similar docs
                 if sim_i != i)
 
-    with CsvWriter(obj.directory, 'topic_similarities') as out:
+    with CsvWriter(obj.directory, TopicSimilarity) as out:
         distances = squareform(pdist(phi.T, 'cosine'))
         out << (dict(a_id=topic_id(1, i),
                      b_id=topic_id(1, sim_i),
@@ -232,7 +243,7 @@ def similarities(obj):
                 for sim_i in row.argsort()[:]
                 if sim_i != i)
 
-    with CsvWriter(obj.directory, 'term_similarities') as out:
+    with CsvWriter(obj.directory, TermSimilarity) as out:
         distances = squareform(pdist(phi, 'cosine'))
         out << (dict(a_modality_id=1, a_id=i,
                      b_modality_id=1, b_id=sim_i,
