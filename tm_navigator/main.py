@@ -6,7 +6,6 @@ from flask.ext.mako import MakoTemplates
 from flask_debugtoolbar import DebugToolbarExtension
 from flask_morepath import Morepath
 
-
 app = Flask(__name__)
 mp = Morepath(app)
 app.config.from_pyfile('config.cfg')
@@ -19,14 +18,13 @@ toolbar = DebugToolbarExtension(app)
 def override_url_for():
     return dict(url_for=mp.url_for)
 
+
 flask.helpers.url_for = mp.url_for
-
-
-import inspect
 
 
 @app.context_processor
 def inject_models():
+    import inspect
     return {k: v
             for module_name in ['models', 'routes']
             for module in [__import__(module_name)]
@@ -34,6 +32,7 @@ def inject_models():
 
 
 from routes import *
+
 app = mp.app
 
 if __name__ == '__main__':

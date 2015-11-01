@@ -21,6 +21,7 @@ def add_modality_relationships(model, target, rel_name, rel_expr, order_by=None)
             )
         )
 
+
 # add_modality_relationships(Document, Document.terms, DocumentTerm)
 # add_modality_relationships(Topic, Topic.terms, TopicTerm)
 add_modality_relationships(
@@ -180,13 +181,15 @@ class SearchResults:
             def _(t):
                 for tt in t.children:
                     _(tt.child)
+
             _(topics[0])
 
             return topics[0]  # the root topic
         else:
             q = db.session.query(Document) \
                 .filter(self.query_condition) \
-                .order_by(sa.desc(sa.func.ts_rank_cd(Document.search_vector, sa.func.to_tsquery('russian', self.query_parsed)))) \
+                .order_by(sa.desc(sa.func.ts_rank_cd(Document.search_vector,
+                                                     sa.func.to_tsquery('russian', self.query_parsed)))) \
                 .add_columns(Document.highlight('title', self.query_parsed)) \
                 .options(sa.orm.subqueryload('topics'))
             return [doc
@@ -233,7 +236,8 @@ class SearchResultsGroup:
         q = db.session.query(Document) \
             .join(Document.terms).filter_by(modality_id=self.term.modality_id, term_id=self.term.id) \
             .filter(self.query_condition) \
-            .order_by(sa.desc(sa.func.ts_rank_cd(Document.search_vector, sa.func.to_tsquery('russian', self.query_parsed)))) \
+            .order_by(sa.desc(sa.func.ts_rank_cd(Document.search_vector,
+                                                 sa.func.to_tsquery('russian', self.query_parsed)))) \
             .add_columns(Document.highlight('title', self.query_parsed)) \
             .options(sa.orm.subqueryload('topics'),
                      sa.orm.joinedload(Document.terms_authors))
@@ -247,9 +251,9 @@ class SearchResultsGroup:
 class Overview:
     @property
     def words(self):
-        return db.session.query(Term)\
-            .join(Modality).filter(Modality.name == 'words')\
-            .order_by(Term.count.desc())\
+        return db.session.query(Term) \
+            .join(Modality).filter(Modality.name == 'words') \
+            .order_by(Term.count.desc()) \
             .options(sa.orm.contains_eager(Term.modality))
 
     def modality(self, name):
@@ -333,8 +337,8 @@ class _:
             .cte('doctopics')
 
         topics = load_hierarchy(doctopics)
-        db.session.query(Topic).outerjoin(doctopics)\
-            .options(sa.orm.contains_eager(Topic.documents, alias=doctopics).noload(DocumentTopic.document))\
+        db.session.query(Topic).outerjoin(doctopics) \
+            .options(sa.orm.contains_eager(Topic.documents, alias=doctopics).noload(DocumentTopic.document)) \
             .all()
 
         return topics[0]
@@ -367,11 +371,11 @@ class _:
 class _:
     @classmethod
     def from_url(cls, modality, text):
-        term = db.session.query(Term).filter(Term.text == text)\
-            .join(Modality).filter(Modality.name == modality)\
+        term = db.session.query(Term).filter(Term.text == text) \
+            .join(Modality).filter(Modality.name == modality) \
             .options(sa.orm.joinedload(Term.documents)
                      .joinedload(DocumentTerm.document)
-                     .joinedload(Document.terms_authors).joinedload(DocumentTerm.term))\
+                     .joinedload(Document.terms_authors).joinedload(DocumentTerm.term)) \
             .one()
         return cls(term)
 
@@ -401,15 +405,15 @@ class _:
 class _:
     @classmethod
     def from_url(cls, id):
-        topic_docs = db.session.query(Topic).filter_by(id=id)\
-            .outerjoin(Topic.documents).order_by(DocumentTopic.prob_td.desc())\
+        topic_docs = db.session.query(Topic).filter_by(id=id) \
+            .outerjoin(Topic.documents).order_by(DocumentTopic.prob_td.desc()) \
             .options(sa.orm.contains_eager(Topic.documents)
                      .joinedload(DocumentTopic.document)
-                     .joinedload(Document.terms_authors))\
+                     .joinedload(Document.terms_authors)) \
             .one()
-        topic_terms = db.session.query(Topic).filter_by(id=id)\
-            .outerjoin(Topic.terms).order_by(TopicTerm.prob_wt.desc()).limit(100)\
-            .options(sa.orm.contains_eager(Topic.terms))\
+        topic_terms = db.session.query(Topic).filter_by(id=id) \
+            .outerjoin(Topic.terms).order_by(TopicTerm.prob_wt.desc()).limit(100) \
+            .options(sa.orm.contains_eager(Topic.terms)) \
             .one()
         sa.orm.attributes.set_committed_value(topic_docs, 'terms', topic_terms.terms)
         return cls(topic_docs)
@@ -419,7 +423,8 @@ class _:
 @mp.ui_for(DocumentTopic)
 @mp.ui_for(DocumentTerm)
 @mp.ui_for(TopicTerm)
-class _: pass
+class _:
+    pass
 
 
 @mp.template('assessments.html')
@@ -445,13 +450,13 @@ class _:
 
     def to_url(self):
         return {
-              'ass_cls': self.model.__class__.__name__,
-              **{local.name: getattr(self.model.src, remote.name)
-                 for local, remote in self.model.__class__.src.property.local_remote_pairs},
-              **{k: v
-                 for k, v in self.model.__dict__.items()
-                 if not k.startswith('_') and k != 'src'},
-          }
+            'ass_cls': self.model.__class__.__name__,
+            **{local.name: getattr(self.model.src, remote.name)
+               for local, remote in self.model.__class__.src.property.local_remote_pairs},
+            **{k: v
+               for k, v in self.model.__dict__.items()
+               if not k.startswith('_') and k != 'src'},
+        }
 
     def __call__(self):
         res = repr(self.model)
@@ -471,18 +476,19 @@ class _:
     def topics_score(self):
         prob_positive = sa.func.sum(TopicTerm.prob_wt).filter(ATopicTerm.value == 1)
         prob_negative = sa.func.sum(TopicTerm.prob_wt).filter(ATopicTerm.value == -1)
-        return db.session.query((prob_positive - prob_negative) / (prob_positive + prob_negative)).select_from(ATopicTerm).join(ATopicTerm.src).scalar()
+        return db.session.query((prob_positive - prob_negative) / (prob_positive + prob_negative)) \
+            .select_from(ATopicTerm).join(ATopicTerm.src).scalar()
 
     @property
     def topics(self):
         prob_positive = sa.func.coalesce(sa.func.sum(TopicTerm.prob_wt).filter(ATopicTerm.value == 1), 0)
         prob_negative = sa.func.coalesce(sa.func.sum(TopicTerm.prob_wt).filter(ATopicTerm.value == -1), 0)
         q = db.session.query(
-                Topic,
-                sa.func.count(ATopicTerm.value).label('count'),
-                sa.func.count(ATopicTerm.value).filter(ATopicTerm.value == 1).label('count_positive'),
-                ((prob_positive - prob_negative) / sa.func.nullif(prob_positive + prob_negative, 0)).label('score')
-            ) \
+            Topic,
+            sa.func.count(ATopicTerm.value).label('count'),
+            sa.func.count(ATopicTerm.value).filter(ATopicTerm.value == 1).label('count_positive'),
+            ((prob_positive - prob_negative) / sa.func.nullif(prob_positive + prob_negative, 0)).label('score')
+        ) \
             .join(Topic.terms).outerjoin(TopicTerm.assessments) \
             .group_by(Topic.id) \
             .order_by(sa.desc('score').nullslast(), sa.desc('count'))
@@ -506,9 +512,9 @@ class _:
         count_positive = sa.func.count(ATopicTerm.value).filter(ATopicTerm.value == 1)
         count_negative = sa.func.count(ATopicTerm.value).filter(ATopicTerm.value == -1)
         q = db.session.query(
-                TopicTerm,
-                ((count_positive - count_negative)/(count_positive + count_negative)).label('score')
-            ) \
+            TopicTerm,
+            ((count_positive - count_negative) / (count_positive + count_negative)).label('score')
+        ) \
             .join(TopicTerm.assessments) \
             .group_by(TopicTerm) \
             .order_by(sa.desc('score'), TopicTerm.prob_wt.desc()) \
@@ -526,10 +532,10 @@ class _:
         prob_negative = sa.func.coalesce(sa.func.sum(DocumentTopic.prob_td).filter(ADocumentTopic.value == -1), 0)
         score = (prob_positive - prob_negative) / 1
         q = db.session.query(
-                Document,
-                sa.func.count(ADocumentTopic.value).label('count'),
-                score.label('score')
-            ) \
+            Document,
+            sa.func.count(ADocumentTopic.value).label('count'),
+            score.label('score')
+        ) \
             .join(Document.topics).join(DocumentTopic.assessments) \
             .group_by(Document.id) \
             .order_by(sa.func.random()).limit(100) \

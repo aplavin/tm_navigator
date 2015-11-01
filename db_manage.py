@@ -1,5 +1,6 @@
 #!/usr/bin/env python3.5
 import sqlalchemy as sa
+import sqlalchemy.exc
 import sys
 from contextlib import contextmanager
 from pathlib import Path
@@ -46,7 +47,7 @@ def update_aggregates(session, *classes_modified):
 def copy_from_csv(session, model, csv_file):
     with session.connection().connection.cursor() as cursor, csv_file.open() as csv_f:
         fieldnames = csv_f.readline()
-        cursor.copy_expert('copy %s (%s) from stdin with csv' % (model.__tablename__, fieldnames), csv_f)
+        cursor.copy_expert('copy {0} ({1}) from stdin with csv'.format(model.__tablename__, fieldnames), csv_f)
 
     update_aggregates(session, model)
 
@@ -111,7 +112,7 @@ def describe():
                                      for m, nocc in session.query(Modality, sa.func.count())
                                      .join(Modality.terms).join(Term.documents)
                                      .group_by(Modality).order_by(Modality.name)))
-            except:
+            except sa.exc.ProgrammingError:
                 click.echo('  Error - can\'t find data')
                 session.rollback()
             click.echo()
@@ -124,7 +125,7 @@ def describe():
                                ', '.join('{cnt} {t} at lvl {lvl}'.format(lvl=lvl, t=t, cnt=cnt)
                                          for lvl, t, cnt in session.query(Topic.level, Topic.type, sa.func.count())
                                          .group_by(Topic.level, Topic.type).order_by(Topic.level, Topic.type)))
-                except:
+                except sa.exc.ProgrammingError:
                     click.echo('    Error - can\'t find data')
                     session.rollback()
                 click.echo()
