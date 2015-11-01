@@ -345,13 +345,16 @@ class _:
 
     @property
     def html(self):
-        html = self.model.html
+        html = self.model.html or ''
 
         html_new = ''
         html_pos = 0
         for cnt in self.model.contents:
             html_new += html[html_pos:cnt.start_pos]
-            html_new += '<span data-word="%d" data-color="%d"><a href="#">' % (cnt.term_id, cnt.topics[0].topic_id)
+            if cnt.topics:
+                html_new += '<span data-word="%d" data-color="%d"><a href="#">' % (cnt.term_id, cnt.topics[0].topic_id)
+            else:
+                html_new += '<span data-word="%d"><a href="#">' % cnt.term_id
             html_new += html[cnt.start_pos:cnt.end_pos]
             html_new += '</a></span>'
             html_pos = cnt.end_pos
