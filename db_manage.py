@@ -186,6 +186,7 @@ def add_topicmodel(dataset_id):
         tm = TopicModelMeta(dataset=ds)
         session.add(tm)
         session.flush()
+        tm.domains.append(TopicModelDomain(domain='{}.'.format(tm.id)))
 
         tm.activate_schemas()
         Base.metadata.create_all(engine,
