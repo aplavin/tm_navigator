@@ -4,7 +4,8 @@ from recordclass import recordclass
 from pathlib import Path
 import csv
 import numpy as np
-import scipy.sparse as sp
+from scipy.sparse import coo_matrix
+from scipy.spatial.distance import squareform, pdist
 import h5py
 import re
 import itertools as it
@@ -146,8 +147,8 @@ def topicmodel_basic(obj):
     """
 
     # load matrices and compute all the probabilities
-    phi = sp.coo_matrix(np.load('data/phi.npy'))
-    theta = sp.coo_matrix(np.load('data/theta.npy'))
+    phi = coo_matrix(np.load('data/phi.npy'))
+    theta = coo_matrix(np.load('data/theta.npy'))
 
     pwt = phi.A
     ptd = theta.A
@@ -183,7 +184,7 @@ def topicmodel_basic(obj):
 @click.pass_obj
 def document_contents(obj):
     """
-    Optional tables: document highlighting.
+    Optional: document highlighting.
     """
     with open('data/documents.mmro.txt') as f, \
             CsvWriter(obj.directory, 'document_contents') as out:
@@ -202,6 +203,43 @@ def document_contents(obj):
                      topic_id=topic_id(1, int(t)))
                 for d, linep in enumerate(fp)
                 for t in linep.split())
+
+
+@cli.command()
+@click.pass_obj
+def similarities(obj):
+    """
+    Optional: similarities of entities.
+    """
+    phi = np.load('data/phi.npy')
+    theta = np.load('data/theta.npy')
+
+    with CsvWriter(obj.directory, 'document_similarities') as out:
+        distances = squareform(pdist(theta.T, 'cosine'))
+        out << (dict(a_id=i,
+                     b_id=sim_i,
+                     similarity=1 - row[sim_i])
+                for i, row in enumerate(distances)
+                for sim_i in row.argsort()[:31]  # first 30 similar docs
+                if sim_i != i)
+
+    with CsvWriter(obj.directory, 'topic_similarities') as out:
+        distances = squareform(pdist(phi.T, 'cosine'))
+        out << (dict(a_id=topic_id(1, i),
+                     b_id=topic_id(1, sim_i),
+                     similarity=1 - row[sim_i])
+                for i, row in enumerate(distances)
+                for sim_i in row.argsort()[:]
+                if sim_i != i)
+
+    with CsvWriter(obj.directory, 'term_similarities') as out:
+        distances = squareform(pdist(phi, 'cosine'))
+        out << (dict(a_modality_id=1, a_id=i,
+                     b_modality_id=1, b_id=sim_i,
+                     similarity=1 - row[sim_i])
+                for i, row in enumerate(distances)
+                for sim_i in row.argsort()[:21]  # first 20 similar terms
+                if sim_i != i)
 
 
 if __name__ == '__main__':
