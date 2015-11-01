@@ -76,6 +76,25 @@ def cli(ctx, directory):
 
 @cli.command()
 @click.pass_context
+def clean(ctx):
+    """
+    Remove all the CSV files.
+    """
+    """
+    :param ctx:
+    :return:
+    """
+    file_names = ('modalities', 'terms', 'documents', 'document_terms', 'document_contents',
+                  'topics', 'document_topics', 'topic_terms', 'topic_edges', 'document_content_topics')
+
+    for fname in file_names:
+        f = ctx.obj.directory / (fname + '.csv')
+        if f.exists() and click.confirm('Remove "{}"?'.format(f.name)):
+            f.unlink()
+
+
+@cli.command()
+@click.pass_context
 def dataset_basic(ctx):
     """
     Required dataset tables.
