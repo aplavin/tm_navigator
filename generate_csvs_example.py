@@ -80,10 +80,6 @@ def clean(ctx):
     """
     Remove all the CSV files.
     """
-    """
-    :param ctx:
-    :return:
-    """
     file_names = ('modalities', 'terms', 'documents', 'document_terms', 'document_contents',
                   'topics', 'document_topics', 'topic_terms', 'topic_edges', 'document_content_topics')
 
