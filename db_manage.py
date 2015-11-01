@@ -56,28 +56,31 @@ def check_files(directory, expected_names, extension='.csv'):
     file_names = {p.name for p in directory.iterdir() if p.is_file()}
     expected_files = {t + extension for t in expected_names}
 
-    click.secho('Found files {}.'.format(
-        ', '.join('"{}"'.format(f) for f in sorted(expected_files & file_names))
-    ), fg='green')
-    click.secho('Not found files {}.'.format(
-        ', '.join('"{}"'.format(f) for f in sorted(expected_files - file_names))
-    ), fg='red')
-    click.echo('Will try to continue with the files present.')
+    if expected_files & file_names:
+        click.secho('Found files {}.'.format(
+            ', '.join('"{}"'.format(f) for f in sorted(expected_files & file_names))
+        ), fg='green')
+    if expected_files - file_names:
+        click.secho('Not found files {}.'.format(
+            ', '.join('"{}"'.format(f) for f in sorted(expected_files - file_names))
+        ), fg='red')
+        click.echo('Will try to continue with the files present.')
 
 
 def delete_data_for(session, models):
-    with click.progressbar(reversed(Base.metadata.sorted_tables), label='Deleting data', length=len(models)) as pbar:
-        for table in pbar:
+    with click.progressbar(label='Deleting data', length=len(models)) as pbar:
+        for table in reversed(Base.metadata.sorted_tables):
             matching_models = [m for m in models if m.__table__ == table]
             if not matching_models:
                 continue
             model = matching_models[0]
             session.query(model).delete()
+            pbar.update(1)
 
 
 def load_data_for(session, models, directory):
-    with click.progressbar(Base.metadata.sorted_tables, label='Loading data', length=len(models)) as pbar:
-        for table in pbar:
+    with click.progressbar(label='Loading data', length=len(models)) as pbar:
+        for table in Base.metadata.sorted_tables:
             matching_models = [m for m in models if m.__table__ == table]
             if not matching_models:
                 continue
@@ -85,6 +88,7 @@ def load_data_for(session, models, directory):
 
             file = directory / '{}.csv'.format(model.__tablename__)
             copy_from_csv(session, model, file)
+            pbar.update(1)
 
 
 @click.group()
