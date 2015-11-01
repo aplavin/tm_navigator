@@ -65,18 +65,18 @@ class CsvWriter:
 @click.group(chain=True)
 @click.option('-dir', '--directory', help='Working directory, both for input and output files.',
               type=click.Path(exists=True, file_okay=False, resolve_path=True), required=True)
-@click.pass_context
-def cli(ctx, directory):
+@click.pass_obj
+def cli(obj, directory):
     """
     Generate tables in CSV format, which can be loaded into database by db_manage.py.
     Each command generates some set of tables, see below.
     """
-    ctx.obj.directory = Path(directory)
+    obj.directory = Path(directory)
 
 
 @cli.command()
-@click.pass_context
-def clean(ctx):
+@click.pass_obj
+def clean(obj):
     """
     Remove all the CSV files.
     """
@@ -84,25 +84,25 @@ def clean(ctx):
                   'topics', 'document_topics', 'topic_terms', 'topic_edges', 'document_content_topics')
 
     for fname in file_names:
-        f = ctx.obj.directory / (fname + '.csv')
+        f = obj.directory / (fname + '.csv')
         if f.exists() and click.confirm('Remove "{}"?'.format(f.name)):
             f.unlink()
 
 
 @cli.command()
-@click.pass_context
-def dataset_basic(ctx):
+@click.pass_obj
+def dataset_basic(obj):
     """
     Required dataset tables.
     """
-    with CsvWriter(ctx.obj.directory, 'modalities') as out:
+    with CsvWriter(obj.directory, 'modalities') as out:
         out << [dict(id=1, name='words'),
                 dict(id=2, name='authors')]  # these two modalities are required
 
     with h5py.File('data/data.hdf') as h5f:
         metadata = h5f['metadata'][...]  # contains basic metadata for documents like ids, titles, authors
 
-    with CsvWriter(ctx.obj.directory, 'documents') as out:
+    with CsvWriter(obj.directory, 'documents') as out:
         out << (
             dict(id=i,
                  title=t['title'],
@@ -123,13 +123,13 @@ def dataset_basic(ctx):
                      for i, a in enumerate(authors)}
 
     with open('data/dictionary.mmro.txt') as f, \
-            CsvWriter(ctx.obj.directory, 'terms') as out:
+            CsvWriter(obj.directory, 'terms') as out:
         out << authors_terms.values()
         out << (dict(id=i, modality_id=1, text=line.strip())
                 for i, line in enumerate(f))
 
     with open('data/documents.mmro.txt') as f, \
-            CsvWriter(ctx.obj.directory, 'document_terms') as out:
+            CsvWriter(obj.directory, 'document_terms') as out:
         out << (dict(document_id=d, modality_id=2, term_id=authors_terms[a]['id'], count=1)
                 for d, a in doc_authors)
         out << (dict(document_id=d, modality_id=1, term_id=w, count=cnt)
@@ -139,8 +139,8 @@ def dataset_basic(ctx):
 
 
 @cli.command()
-@click.pass_context
-def topicmodel_basic(ctx):
+@click.pass_obj
+def topicmodel_basic(obj):
     """
     Required topic model tables.
     """
@@ -158,35 +158,35 @@ def topicmodel_basic(ctx):
     ptw = pwt * pt / pw[:, np.newaxis]
     pdt = ptd * pd / pt[:, np.newaxis]
 
-    with CsvWriter(ctx.obj.directory, 'topics') as out:
+    with CsvWriter(obj.directory, 'topics') as out:
         out << [dict(id=0, type='foreground', probability=1)]  # the zero-level topic is required
         out << (dict(id=topic_id(1, t),
                      type='foreground' if t < 50 else 'background',
                      probability=p)
                 for t, p in enumerate(pt))
 
-    with CsvWriter(ctx.obj.directory, 'topic_terms') as out:
+    with CsvWriter(obj.directory, 'topic_terms') as out:
         out << (dict(topic_id=topic_id(1, t), modality_id=1, term_id=w, prob_wt=val, prob_tw=ptw[w, t])
                 for w, t, val in zip(phi.row, phi.col, phi.data))
 
-    with CsvWriter(ctx.obj.directory, 'document_topics') as out:
+    with CsvWriter(obj.directory, 'document_topics') as out:
         out << (dict(topic_id=topic_id(1, t), document_id=d, prob_td=val, prob_dt=pdt[t, d])
                 for t, d, val in zip(theta.row, theta.col, theta.data))
 
-    with CsvWriter(ctx.obj.directory, 'topic_edges') as out:
+    with CsvWriter(obj.directory, 'topic_edges') as out:
         # all topics are assumed to be reachable by edges from the root topic #0
         out << (dict(parent_id=0, child_id=topic_id(1, t), probability=p)
                 for t, p in enumerate(pt))
 
 
 @cli.command()
-@click.pass_context
-def document_contents(ctx):
+@click.pass_obj
+def document_contents(obj):
     """
     Optional tables: document highlighting.
     """
     with open('data/documents.mmro.txt') as f, \
-            CsvWriter(ctx.obj.directory, 'document_contents') as out:
+            CsvWriter(obj.directory, 'document_contents') as out:
         id_cnt = it.count()
         out << (dict(id=next(id_cnt),  # must correspond to the ids in document_content_topics
                      document_id=d, modality_id=1, term_id=w,
@@ -196,7 +196,7 @@ def document_contents(ctx):
                 for w, s, e in (map(int, dw.split()) for dw in line.split(';')[:-1]))
 
     with open('data/ptdw.txt') as fp, \
-            CsvWriter(ctx.obj.directory, 'document_content_topics') as out:
+            CsvWriter(obj.directory, 'document_content_topics') as out:
         id_cnt = it.count()
         out << (dict(document_content_id=next(id_cnt),  # same ids as above
                      topic_id=topic_id(1, int(t)))
