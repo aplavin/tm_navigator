@@ -56,12 +56,12 @@ def check_files(directory, expected_names, extension='.csv'):
     file_names = {p.name for p in directory.iterdir() if p.is_file()}
     expected_files = {t + extension for t in expected_names}
 
-    click.echo('Found files {}'.format(
+    click.secho('Found files {}.'.format(
         ', '.join('"{}"'.format(f) for f in sorted(expected_files & file_names))
-    ))
-    click.echo('Not found files {}'.format(
+    ), fg='green')
+    click.secho('Not found files {}.'.format(
         ', '.join('"{}"'.format(f) for f in sorted(expected_files - file_names))
-    ))
+    ), fg='red')
     click.echo('Will try to continue with the files present.')
 
 
@@ -102,9 +102,10 @@ def describe():
         dses = session.query(DatasetMeta).order_by(DatasetMeta.id).all()
         for ds in dses:
             ds.activate_schemas()
-            click.echo('- Dataset #{id}: {title}, {ntm} models'.format(id=ds.id,
-                                                                       title=ds.title or 'untitled',
-                                                                       ntm=len(ds.topic_models)))
+            click.secho('- Dataset #{id}: {title}, {ntm} models'.format(id=ds.id,
+                                                                        title=ds.title or 'untitled',
+                                                                        ntm=len(ds.topic_models)),
+                        fg='blue')
             try:
                 click.echo('  Documents: {cnt}'.format(cnt=session.query(Document).count()))
                 click.echo('  Terms: ' +
@@ -119,7 +120,8 @@ def describe():
 
             for tm in ds.topic_models:
                 tm.activate_schemas()
-                click.echo('  - Topic Model #{id}: {title}'.format(id=tm.id, title=tm.title or 'untitled'))
+                click.secho('  - Topic Model #{id}: {title}'.format(id=tm.id, title=tm.title or 'untitled'),
+                            fg='blue')
                 try:
                     click.echo('    Topics: ' +
                                ', '.join('{cnt} {t} at lvl {lvl}'.format(lvl=lvl, t=t, cnt=cnt)
@@ -153,7 +155,7 @@ def add_dataset():
 @click.option('-dir', '--directory', type=dir_type, required=True)
 def load_dataset(dataset_id, title, directory):
     directory = Path(directory)
-    target_models = [Modality, Term, Document, DocumentTerm, DocumentContent]
+    target_models = models_dataset
 
     check_files(directory, [m.__tablename__ for m in target_models])
     click.confirm('Proceeding will overwrite the corresponding data in the database. Continue?',
@@ -198,8 +200,7 @@ def add_topicmodel(dataset_id):
 @click.option('-dir', '--directory', type=dir_type, required=True)
 def load_topicmodel(topicmodel_id, title, directory):
     directory = Path(directory)
-    target_models = [Topic, TopicTerm, DocumentTopic, TopicEdge, DocumentContentTopic,
-                     DocumentSimilarity, TermSimilarity, TopicSimilarity]
+    target_models = models_topic
 
     check_files(directory, [m.__tablename__ for m in target_models])
     click.confirm('Proceeding will overwrite the corresponding data in the database. Continue?',
