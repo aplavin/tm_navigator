@@ -360,10 +360,13 @@ class _:
             html_pos = cnt.end_pos
         html_new += html[html_pos:]
 
-        html = re.search(r'</header>(.*)</body>', html_new, re.DOTALL).group(1)
-        html = re.sub(r'<img class="(\w+)" src="\w+/(eqn\d+).png".*?/>',
-                      r'<span class="sprite-\2"></span>',
-                      html, flags=re.DOTALL | re.MULTILINE)
+        try:
+            html = re.search(r'</header>(.*)</body>', html_new, re.DOTALL).group(1)
+            html = re.sub(r'<img class="(\w+)" src="\w+/(eqn\d+).png".*?/>',
+                          r'<span class="sprite-\2"></span>',
+                          html, flags=re.DOTALL | re.MULTILINE)
+        except AttributeError:
+            pass
 
         return html
 
