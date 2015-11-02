@@ -100,6 +100,11 @@ dir_type = click.Path(exists=True, file_okay=False, resolve_path=True)
 
 
 @cli.command()
+def initialize():
+    Base.metadata.create_all(engine, tables=map(lambda c: c.__table__, models_public))
+
+
+@cli.command()
 def describe():
     with session_scope() as session:
         SchemaMixin.activate_public_schema(session)
