@@ -12,7 +12,7 @@ RUN ln -s /usr/lib/x86_64-linux-gnu/libhdf5_cpp.so /usr/lib/x86_64-linux-gnu/lib
 RUN pip3.5 install --no-use-wheel cython numpy scipy
 RUN pip3.5 install --global-option=build_ext --global-option="-I/usr/include/hdf5/serial" --global-option="-L/usr/lib/x86_64-linux-gnu/hdf5/serial" h5py
 
-ENV VERSION 1.1
+ENV VERSION 1.2
 RUN cd /root && hg clone https://bitbucket.org/aplavin/tm_navigator
 RUN cd /root/tm_navigator && LC_ALL=en_US.UTF-8 pip install --no-use-wheel --editable .
 
@@ -29,5 +29,8 @@ EXPOSE 22
 
 RUN mkdir /var/run/postgresql/9.4-main.pg_stat_tmp/
 RUN chown postgres /var/run/postgresql/9.4-main.pg_stat_tmp/
+RUN sed -i 's/local   all             all                                     peer/local   all             all                                     trust/' /etc/postgresql/9.4/main/pg_hba.conf
+RUN sed -i 's|host    all             all             127.0.0.1/32            md5|host    all             all             127.0.0.1/32            trust|' /etc/postgresql/9.4/main/pg_hba.conf
+RUN sed -i 's|host    all             all             ::1/128                 md5|host    all             all             ::1/128                 trust|' /etc/postgresql/9.4/main/pg_hba.conf
 
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
