@@ -9,7 +9,7 @@ import click
 sys.path.append('tm_navigator')
 from tm_navigator.models import *
 
-engine = sa.create_engine('postgresql+psycopg2://@localhost/tm_navigator_dev')
+engine = sa.create_engine('postgresql+psycopg2://postgres@localhost/tm_navigator')
 sa.orm.configure_mappers()
 Session = sa.orm.sessionmaker(bind=engine)
 
