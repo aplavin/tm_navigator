@@ -105,7 +105,7 @@ def dataset_basic(obj):
         out << [dict(id=1, name='words'),
                 dict(id=2, name='authors')]  # these two modalities are required
 
-    with h5py.File('data/data.hdf') as h5f:
+    with h5py.File(str(obj.directory / 'data.hdf')) as h5f:
         metadata = h5f['metadata'][...]  # contains basic metadata for documents like ids, titles, authors
 
     with CsvWriter(obj.directory, Document) as out:
@@ -116,7 +116,7 @@ def dataset_basic(obj):
                  slug=t['slug'],  # unique string, identifying the document - appears in short list and URLs
                  # source is displayed as-is, e.g. conference name
                  source=re.sub(r'^\d{4}-([A-Z]+)(\d+)/.+', r'\1-\2', t['filename']),
-                 html=open('data/html_sprites/%s.html' % t['filename']).read()  # the HTML content of the document
+                 # html=(obj.directory / ('html_sprites/%s.html' % t['filename'])).read_text()  # the HTML content of the document
                  )
             for i, t in enumerate(metadata)
         )
@@ -128,13 +128,13 @@ def dataset_basic(obj):
     authors_terms = {a: dict(id=i, modality_id=2, text=a)
                      for i, a in enumerate(authors)}
 
-    with open('data/dictionary.mmro.txt') as f, \
+    with (obj.directory / 'dictionary.mmro.txt').open() as f, \
             CsvWriter(obj.directory, Term) as out:
         out << authors_terms.values()
         out << (dict(id=i, modality_id=1, text=line.strip())
                 for i, line in enumerate(f))
 
-    with open('data/documents.mmro.txt') as f, \
+    with (obj.directory / 'documents.mmro.txt').open() as f, \
             CsvWriter(obj.directory, DocumentTerm) as out:
         out << (dict(document_id=d, modality_id=2, term_id=authors_terms[a]['id'], count=1)
                 for d, a in doc_authors)
@@ -152,8 +152,8 @@ def topicmodel_basic(obj):
     """
 
     # load matrices and compute all the probabilities
-    phi = coo_matrix(np.load('data/phi.npy'))
-    theta = coo_matrix(np.load('data/theta.npy'))
+    phi = coo_matrix(np.load(str(obj.directory / 'phi.npy')))
+    theta = coo_matrix(np.load(str(obj.directory / 'theta.npy')))
 
     pwt = phi.A
     ptd = theta.A
@@ -197,7 +197,7 @@ def document_contents(obj):
     """
     Optional: document highlighting.
     """
-    with open('data/documents.mmro.txt') as f, \
+    with (obj.directory / 'documents.mmro.txt').open() as f, \
             CsvWriter(obj.directory, DocumentContent) as out:
         id_cnt = it.count()
         out << (dict(id=next(id_cnt),  # must correspond to the ids in document_content_topics
@@ -207,7 +207,7 @@ def document_contents(obj):
                 for d, line in enumerate(f)
                 for w, s, e in (map(int, dw.split()) for dw in line.split(';')[:-1]))
 
-    with open('data/ptdw.txt') as fp, \
+    with (obj.directory / 'ptdw.txt').open() as fp, \
             CsvWriter(obj.directory, DocumentContentTopic) as out:
         id_cnt = it.count()
         out << (dict(document_content_id=next(id_cnt),  # same ids as above
@@ -222,8 +222,8 @@ def similarities(obj):
     """
     Optional: similarities of entities.
     """
-    phi = np.load('data/phi.npy')
-    theta = np.load('data/theta.npy')
+    phi = coo_matrix(np.load(str(obj.directory / 'phi.npy')))
+    theta = coo_matrix(np.load(str(obj.directory / 'theta.npy')))
 
     with CsvWriter(obj.directory, DocumentSimilarity) as out:
         distances = squareform(pdist(theta.T, 'cosine'))
