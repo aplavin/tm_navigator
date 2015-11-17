@@ -5,6 +5,7 @@ from flask.ext.sqlalchemy import SQLAlchemy
 from flask.ext.mako import MakoTemplates
 from flask_debugtoolbar import DebugToolbarExtension
 from flask_morepath import Morepath
+from sqlalchemy_utils import database_exists, create_database
 
 app = Flask(__name__)
 mp = Morepath(app)
@@ -12,6 +13,10 @@ app.config.from_pyfile('config.cfg')
 db = SQLAlchemy(app)
 mako = MakoTemplates(app)
 toolbar = DebugToolbarExtension(app)
+
+if not database_exists(db.engine.url):
+    create_database(db.engine.url)
+Base.metadata.create_all(db.engine, tables=map(lambda c: c.__table__, models_public))
 
 
 @app.context_processor

@@ -1,7 +1,6 @@
 #!/usr/bin/env python3.5
 import sqlalchemy as sa
 import sqlalchemy.exc
-from sqlalchemy_utils import database_exists, create_database
 import sys
 from contextlib import contextmanager
 from pathlib import Path
@@ -98,13 +97,6 @@ def cli():
 
 
 dir_type = click.Path(exists=True, file_okay=False, resolve_path=True)
-
-
-@cli.command()
-def initialize():
-    if not database_exists(engine.url):
-        create_database(engine.url)
-    Base.metadata.create_all(engine, tables=map(lambda c: c.__table__, models_public))
 
 
 @cli.command()
