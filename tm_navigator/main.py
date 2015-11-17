@@ -14,10 +14,6 @@ db = SQLAlchemy(app)
 mako = MakoTemplates(app)
 toolbar = DebugToolbarExtension(app)
 
-if not database_exists(db.engine.url):
-    create_database(db.engine.url)
-Base.metadata.create_all(db.engine, tables=map(lambda c: c.__table__, models_public))
-
 
 @app.context_processor
 def override_url_for():
@@ -38,7 +34,9 @@ def inject_models():
 
 from routes import *
 
-app = mp.app
-
 if __name__ == '__main__':
+    if not database_exists(db.engine.url):
+        create_database(db.engine.url)
+    Base.metadata.create_all(db.engine, tables=map(lambda c: c.__table__, models_public))
+
     app.run(use_reloader=True, port=5000)
