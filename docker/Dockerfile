@@ -1,36 +1,47 @@
-FROM aplavin/baseimage:0.9.17
+FROM debian:testing
 MAINTAINER Alexander Plavin (alexander@plav.in)
-CMD ["/sbin/my_init"]
 
-RUN apt-get update && apt-get upgrade -y && apt-get install -y nano mc
-RUN apt-get install --no-install-recommends -y \
-    postgresql postgresql-contrib libpq-dev python3.5 python3.5-dev mercurial build-essential
-RUN curl https://bootstrap.pypa.io/get-pip.py | python3.5
+ENV DEBIAN_FRONTEND noninteractive
+RUN apt-get update \
+    && apt-get install -y nano mc build-essential curl \
+    && apt-get clean
+RUN curl -L https://github.com/just-containers/s6-overlay/releases/download/v1.16.0.0/s6-overlay-amd64.tar.gz | tar xz -C /
+ENTRYPOINT ["/init"]
 
-RUN apt-get install -y libopenblas-dev gfortran libhdf5-dev
-RUN ln -s /usr/lib/x86_64-linux-gnu/libhdf5_cpp.so /usr/lib/x86_64-linux-gnu/libhdf5.so
-RUN pip3.5 install --no-use-wheel cython numpy scipy
-RUN pip3.5 install --global-option=build_ext --global-option="-I/usr/include/hdf5/serial" --global-option="-L/usr/lib/x86_64-linux-gnu/hdf5/serial" h5py
-
-ENV VERSION 1.2
-RUN cd /root && hg clone https://bitbucket.org/aplavin/tm_navigator
-RUN cd /root/tm_navigator && LC_ALL=en_US.UTF-8 pip install --no-use-wheel --editable .
-
-RUN mkdir /etc/service/postgresql
-COPY postgresql.sh /etc/service/postgresql/run
-RUN mkdir /etc/service/tm_navigator
-COPY tm_navigator.sh /etc/service/tm_navigator/run
-
-RUN rm -f /etc/service/sshd/down
+RUN apt-get install --no-install-recommends -y openssh-server \
+    && apt-get clean
+RUN mkdir /var/run/sshd
 RUN echo 'root:tmnavartmdev' | chpasswd
-RUN sed -i 's/#PermitRootLogin yes/PermitRootLogin yes/' /etc/ssh/sshd_config && \
-    sed -i 's/#PasswordAuthentication no/PasswordAuthentication yes/' /etc/ssh/sshd_config
+RUN sed -i 's/PermitRootLogin without-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+RUN mkdir /etc/services.d/sshd \
+    && echo '#!/bin/sh' > /etc/services.d/sshd/run \
+    && echo 'exec /usr/sbin/sshd -D 2>&1' >> /etc/services.d/sshd/run \
+    && chmod +x /etc/services.d/sshd/run
 EXPOSE 22
 
-RUN mkdir /var/run/postgresql/9.4-main.pg_stat_tmp/
-RUN chown postgres /var/run/postgresql/9.4-main.pg_stat_tmp/
-RUN sed -i 's/local   all             all                                     peer/local   all             all                                     trust/' /etc/postgresql/9.4/main/pg_hba.conf
-RUN sed -i 's|host    all             all             127.0.0.1/32            md5|host    all             all             127.0.0.1/32            trust|' /etc/postgresql/9.4/main/pg_hba.conf
-RUN sed -i 's|host    all             all             ::1/128                 md5|host    all             all             ::1/128                 trust|' /etc/postgresql/9.4/main/pg_hba.conf
+RUN apt-get install --no-install-recommends -y postgresql postgresql-contrib libpq-dev \
+    && apt-get clean
+RUN mkdir /var/run/postgresql/9.4-main.pg_stat_tmp/ && chown postgres /var/run/postgresql/9.4-main.pg_stat_tmp/
+RUN sed -i 's|local   all             all                                     peer|local   all             all                                     trust|' /etc/postgresql/9.4/main/pg_hba.conf \
+    && sed -i 's|host    all             all             127.0.0.1/32            md5|host    all             all             127.0.0.1/32            trust|' /etc/postgresql/9.4/main/pg_hba.conf \
+    && sed -i 's|host    all             all             ::1/128                 md5|host    all             all             ::1/128                 trust|' /etc/postgresql/9.4/main/pg_hba.conf
+RUN mkdir /etc/services.d/postgresql \
+    && echo '#!/bin/sh' > /etc/services.d/postgresql/run \
+    && echo 'exec su -c "/usr/lib/postgresql/9.4/bin/postmaster -D /var/lib/postgresql/9.4/main -c config_file=/etc/postgresql/9.4/main/postgresql.conf" postgres 2>&1' >> /etc/services.d/postgresql/run \
+    && chmod +x /etc/services.d/postgresql/run
 
-RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN apt-get install --no-install-recommends -y python3.5 python3.5-dev mercurial
+RUN curl https://bootstrap.pypa.io/get-pip.py | python3.5
+
+ENV VERSION bum
+ENV LC_ALL C.UTF-8
+ENV LANG C.UTF-8
+RUN cd /root && hg clone https://bitbucket.org/aplavin/tm_navigator
+WORKDIR /root/tm_navigator
+RUN pip install --editable .
+RUN mkdir /etc/services.d/tm_navigator \
+    && echo '#!/bin/sh' > /etc/services.d/tm_navigator/run \
+    && echo 'cd /root/tm_navigator/tm_navigator/' >> /etc/services.d/tm_navigator/run \
+    && echo 'exec ./main.py 2>&1' >> /etc/services.d/tm_navigator/run \
+    && chmod +x /etc/services.d/tm_navigator/run
