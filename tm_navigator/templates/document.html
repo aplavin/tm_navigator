@@ -117,8 +117,8 @@
       </h4>
 
       <ul class="nav nav-pills">
-          % for t in sorted(s.model.topics, key=lambda t: (-t.topic.level, t.topic.type), reverse=True):
-              <li data-color="${ t.topic.id }" data-color-def data-color-neutral="${ int(t.topic.type != 'foreground') }">
+          % for t in sorted(s.model.topics, key=lambda t: (t.topic.level, t.topic.is_background)):
+              <li data-color="${ t.topic.id }" data-color-def data-color-neutral="${ int(t.topic.is_background) }">
                   <a style="border: 1px solid grey" href="${ url_for(t.topic) }" title="P(t | d) = ${ t.prob_td }">
                       ${ t.topic.text } <!-- <span class="badge">{{ p }}</span> -->
                   </a>

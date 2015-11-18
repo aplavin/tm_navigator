@@ -41,12 +41,13 @@ class ATopicEdge(Base, AssessmentMixin):
 class ADocumentSimilarity(Base, AssessmentMixin):
     a_id = sa.Column(sa.Integer, nullable=False)
     b_id = sa.Column(sa.Integer, nullable=False)
+    similarity_type = sa.Column(sa.Text, nullable=False)
     value = sa.Column(sa.Integer, nullable=False)
 
     __table_args__ = (
-        sa.UniqueConstraint('username', a_id, b_id),
-        sa.ForeignKeyConstraint([a_id, b_id],
-                                [DocumentSimilarity.a_id, DocumentSimilarity.b_id]),
+        sa.UniqueConstraint('username', a_id, b_id, similarity_type),
+        sa.ForeignKeyConstraint([a_id, b_id, similarity_type],
+                                [DocumentSimilarity.a_id, DocumentSimilarity.b_id, DocumentSimilarity.similarity_type]),
     )
 
     src = sa.orm.relationship(DocumentSimilarity, backref='assessments')

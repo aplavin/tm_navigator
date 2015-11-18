@@ -7,6 +7,7 @@ from models.dataset import *
 class DocumentSimilarity(Base):
     a_id = sa.Column(sa.Integer, sa.ForeignKey(Document.id), primary_key=True)
     b_id = sa.Column(sa.Integer, sa.ForeignKey(Document.id), primary_key=True)
+    similarity_type = sa.Column(sa.Text, primary_key=True)
     similarity = sa.Column(sa.Float, nullable=False)
 
     a = sa.orm.relationship(Document, lazy='joined',
@@ -20,6 +21,7 @@ class TermSimilarity(Base):
     a_id = sa.Column(sa.Integer, primary_key=True)
     b_modality_id = sa.Column(sa.Integer, primary_key=True)
     b_id = sa.Column(sa.Integer, primary_key=True)
+    similarity_type = sa.Column(sa.Text, primary_key=True)
     similarity = sa.Column(sa.Float, nullable=False)
 
     a = sa.orm.relationship(Term, lazy='joined',
@@ -35,42 +37,25 @@ class TermSimilarity(Base):
 
 class Topic(Base):
     id = sa.Column(sa.Integer, primary_key=True)
+    level = sa.Column(sa.Integer, nullable=False)
+    id_in_level = sa.Column(sa.Integer, nullable=False)
     name = sa.Column(sa.Text, unique=True)
-    type = sa.Column(sa.Enum('foreground', 'background', name='fgbg_enum'), nullable=False)
+    is_background = sa.Column(sa.Boolean, nullable=False)
     probability = sa.Column(sa.Float, nullable=False)
-
-    @sa.ext.hybrid.hybrid_property
-    def level(self):
-        return int(self.id / 1000)
-
-    @level.expression
-    def level(self):
-        return self.id / 1000
-
-    @level.setter
-    def level(self, level):
-        if self.id is None:
-            self.id = 0
-        self.id = (self.id % 1000) + 1000 * level
-
-    @sa.ext.hybrid.hybrid_property
-    def id_in_level(self):
-        return self.id % 1000
-
-    @id_in_level.setter
-    def id_in_level(self, id):
-        if self.id is None:
-            self.id = 0
-        self.id = (self.id / 1000) * 1000 + id
 
     @property
     def text(self):
         return '%s-%s' % (self.level, self.name or '%02d' % self.id_in_level)
 
+    __table_args__ = (
+        sa.UniqueConstraint(level, id_in_level),
+    )
+
 
 class TopicSimilarity(Base):
     a_id = sa.Column(sa.Integer, sa.ForeignKey(Topic.id), primary_key=True)
     b_id = sa.Column(sa.Integer, sa.ForeignKey(Topic.id), primary_key=True)
+    similarity_type = sa.Column(sa.Text, primary_key=True)
     similarity = sa.Column(sa.Float, nullable=False)
 
     a = sa.orm.relationship(Topic, lazy='joined',

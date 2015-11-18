@@ -2,7 +2,7 @@
   <%def name="show_topic_tree(topic)">
     % if topic is not None:
       <li class="list-group-item"
-          style="border-width: 2px; border-color: ${ ('rgba(92, 184, 92, %s)' % (topic.level / 3)) if (topic.level > 0 and topic.type == 'foreground') else 'rgba(0, 0, 0, %s)' % (topic.level / 6 + 0.1) }">
+          style="border-width: 2px; border-color: ${ ('rgba(92, 184, 92, %s)' % (topic.level / 3)) if (topic.level > 0 and not topic.is_background) else 'rgba(0, 0, 0, %s)' % (topic.level / 6 + 0.1) }">
         <h4 class="list-group-item-heading">
           <a href="${ url_for(topic) }">
             Topic ${ topic.text }
