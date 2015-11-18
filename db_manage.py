@@ -128,9 +128,9 @@ def describe():
                             fg='blue')
                 try:
                     click.echo('    Topics: ' +
-                               ', '.join('{cnt} {t} at lvl {lvl}'.format(lvl=lvl, t=t, cnt=cnt)
-                                         for lvl, t, cnt in session.query(Topic.level, Topic.type, sa.func.count())
-                                         .group_by(Topic.level, Topic.type).order_by(Topic.level, Topic.type)))
+                               ', '.join('{cnt} {t} at lvl {lvl}'.format(lvl=lvl, t='background' if bck else '', cnt=cnt)
+                                         for lvl, bck, cnt in session.query(Topic.level, Topic.is_background, sa.func.count())
+                                         .group_by(Topic.level, Topic.is_background).order_by(Topic.level, Topic.is_background)))
                 except sa.exc.ProgrammingError:
                     click.echo('    Error - can\'t find data')
                     session.rollback()
