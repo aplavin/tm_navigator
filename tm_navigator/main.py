@@ -34,6 +34,9 @@ def inject_models():
 
 from routes import *
 
+# for some reason this is necessary for all routes to be available
+app = mp.app
+
 if __name__ == '__main__':
     if not database_exists(db.engine.url):
         create_database(db.engine.url)
