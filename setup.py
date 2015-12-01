@@ -9,6 +9,7 @@ setup(
         'watchdog',
         'flask-sqlalchemy',
         'flask-mako',
+        'flask-morepath',
         'flask-debugtoolbar',
         'flask-debugtoolbar-lineprofilerpanel',
         'pygments',
