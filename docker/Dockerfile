@@ -37,7 +37,7 @@ RUN curl https://bootstrap.pypa.io/get-pip.py | python3.5
 ENV VERSION bum
 ENV LC_ALL C.UTF-8
 ENV LANG C.UTF-8
-RUN cd /root && hg clone https://bitbucket.org/aplavin/tm_navigator
+RUN cd /root && git clone https://github.com/omtcyf0/tm_navigator
 WORKDIR /root/tm_navigator
 RUN pip install --editable .
 RUN mkdir /etc/services.d/tm_navigator \
