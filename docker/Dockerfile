@@ -1,9 +1,9 @@
 FROM debian:testing
-MAINTAINER Alexander Plavin (alexander@plav.in)
+MAINTAINER Kirill Bobyrev (kbobyrev@hotmail.com)
 
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update \
-    && apt-get install -y nano mc build-essential curl \
+    && apt-get install -y nano mc build-essential curl git vim \
     && apt-get clean
 RUN curl -L https://github.com/just-containers/s6-overlay/releases/download/v1.16.0.0/s6-overlay-amd64.tar.gz | tar xz -C /
 ENTRYPOINT ["/init"]
@@ -33,6 +33,9 @@ RUN mkdir /etc/services.d/postgresql \
 
 RUN apt-get install --no-install-recommends -y python3.5 python3.5-dev mercurial
 RUN curl https://bootstrap.pypa.io/get-pip.py | python3.5
+
+# set virmc
+RUN curl -o ~/.vimrc https://raw.githubusercontent.com/omtcyf0/dotfiles/master/.vimrc
 
 ENV VERSION bum
 ENV LC_ALL C.UTF-8
