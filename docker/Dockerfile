@@ -47,5 +47,6 @@ RUN mkdir /etc/services.d/tm_navigator \
     && echo '#!/bin/sh' > /etc/services.d/tm_navigator/run \
     && echo 'cd /root/tm_navigator/' >> /etc/services.d/tm_navigator/run \
     && echo 'git pull' >> /etc/services.d/tm_navigator/run \
-    && echo 'exec tm_navigator/main.py 2>&1' >> /etc/services.d/tm_navigator/run \
+    && echo 'cd tm_navigator' >> /etc/services.d/tm_navigator/run \
+    && echo 'exec main.py 2>&1' >> /etc/services.d/tm_navigator/run \
     && chmod +x /etc/services.d/tm_navigator/run
