@@ -1,4 +1,4 @@
-FROM debian:testing
+FROM debian:latest
 MAINTAINER Kirill Bobyrev (kbobyrev@hotmail.com)
 
 ENV DEBIAN_FRONTEND noninteractive
@@ -31,8 +31,7 @@ RUN mkdir /etc/services.d/postgresql \
     && echo 'exec su -c "/usr/lib/postgresql/9.4/bin/postmaster -D /var/lib/postgresql/9.4/main -c config_file=/etc/postgresql/9.4/main/postgresql.conf" postgres 2>&1' >> /etc/services.d/postgresql/run \
     && chmod +x /etc/services.d/postgresql/run
 
-RUN apt-get install --no-install-recommends -y python3.5 python3.5-dev mercurial
-RUN curl https://bootstrap.pypa.io/get-pip.py | python3.5
+RUN apt-get install -y python3 python3-dev python3-pip
 
 # set virmc
 RUN curl -o ~/.vimrc https://raw.githubusercontent.com/omtcyf0/dotfiles/master/.vimrc
@@ -40,9 +39,17 @@ RUN curl -o ~/.vimrc https://raw.githubusercontent.com/omtcyf0/dotfiles/master/.
 ENV VERSION bum
 ENV LC_ALL C.UTF-8
 ENV LANG C.UTF-8
+
 RUN cd /root && git clone https://github.com/omtcyf0/tm_navigator
+
+# Build BigARTM
+RUN cd /root && git clone https://github.com/bigartm/bigartm
+# install BigARTM dependencies
+RUN apt-get install -y python3-numpy python3-scipy python3-pandas python3-sklearn python3-setuptools
+
+
 WORKDIR /root/tm_navigator
-RUN pip install --editable .
+RUN pip3 install --editable .
 RUN mkdir /etc/services.d/tm_navigator \
     && echo '#!/bin/sh' > /etc/services.d/tm_navigator/run \
     && echo 'cd /root/tm_navigator/' >> /etc/services.d/tm_navigator/run \
