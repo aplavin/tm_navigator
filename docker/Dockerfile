@@ -1,4 +1,4 @@
-FROM debian:latest
+FROM debian:stable
 MAINTAINER Kirill Bobyrev (kbobyrev@hotmail.com)
 
 ENV DEBIAN_FRONTEND noninteractive
@@ -40,13 +40,19 @@ ENV VERSION bum
 ENV LC_ALL C.UTF-8
 ENV LANG C.UTF-8
 
-RUN cd /root && git clone https://github.com/omtcyf0/tm_navigator
-
 # Build BigARTM
-RUN cd /root && git clone https://github.com/bigartm/bigartm
 # install BigARTM dependencies
-RUN apt-get install -y python3-numpy python3-scipy python3-pandas python3-sklearn python3-setuptools
+RUN apt-get install -y python3-numpy python3-scipy python3-pandas make cmake libboost-all-dev
+RUN apt-get install -y python python-dev python-setuptools
+RUN pip3 install scikit-learn setuptools
+RUN cd /root \
+    && git clone https://github.com/bigartm/bigartm \
+    && cd bigartm && mkdir build \
+    && cd build \
+    && cmake .. \
+    && make
 
+RUN cd /root && git clone https://github.com/omtcyf0/tm_navigator
 
 WORKDIR /root/tm_navigator
 RUN pip3 install --editable .
