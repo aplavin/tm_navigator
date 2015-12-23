@@ -40,18 +40,6 @@ ENV VERSION bum
 ENV LC_ALL C.UTF-8
 ENV LANG C.UTF-8
 
-# Build BigARTM
-# install BigARTM dependencies
-RUN apt-get install -y python3-numpy python3-scipy python3-pandas make cmake libboost-all-dev
-RUN apt-get install -y python python-dev python-setuptools
-RUN pip3 install scikit-learn setuptools
-RUN cd /root \
-    && git clone https://github.com/bigartm/bigartm \
-    && cd bigartm && mkdir build \
-    && cd build \
-    && cmake .. \
-    && make
-
 RUN cd /root && git clone https://github.com/omtcyf0/tm_navigator
 
 WORKDIR /root/tm_navigator
@@ -61,5 +49,5 @@ RUN mkdir /etc/services.d/tm_navigator \
     && echo 'cd /root/tm_navigator/' >> /etc/services.d/tm_navigator/run \
     && echo 'git pull' >> /etc/services.d/tm_navigator/run \
     && echo 'cd tm_navigator' >> /etc/services.d/tm_navigator/run \
-    && echo 'exec main.py 2>&1' >> /etc/services.d/tm_navigator/run \
+    && echo 'python3 main.py' >> /etc/services.d/tm_navigator/run \
     && chmod +x /etc/services.d/tm_navigator/run
