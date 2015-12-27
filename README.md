@@ -82,6 +82,31 @@ You'll get the IP address the container is available from:
 
 `sudo docker exec -i -t {CONTAINER_NAME} bash` or `sudo docker exec -i -t {CONTAINER_ID} bash`
 
+### Loading sample model and accessing it
+
+To load a simple MMRO sample model do `./load_mmro_dataset_and_model.py` inside the container.
+
+Now the model is loaded into the tm_navigator.
+
+You'll see something like this on the front page:
+
+```
+Dataset #1, Simplest MMRO dataset
+
+1 topic models for this dataset:
+
+    Topic model #1, Simplest model
+
+    Built for dataset #1 (Simplest MMRO dataset)
+    Available at domains 1.{CONTAINER_IP}:5000
+```
+
+In order to access `1.{CONTAINER_IP}` you need to add the following line to `/etc/hosts`:
+
+`{CONTAINER_IP} 1.{CONTAINER_IP}`
+
+Now you can access the built model on `1.{CONTAINER_IP}:5000`!
+
 ### The end
 
-Now you're all set! You can access the running Flask app via the {IP_ADDRESS}:5000, where {IP_ADDRESS} is the one you got previosly. and you can work using vim inside the container. Don't forget to push your changes before the container shutdown! It won't save the changes you made if you don't push them.
+Now you're all set! You can access the running Flask app via the `{IP_ADDRESS}:5000`, where `{IP_ADDRESS}` is the one you got previosly. and you can work using vim inside the container. Don't forget to push your changes before the container shutdown! It won't save the changes you made if you don't push them.
