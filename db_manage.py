@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 import sqlalchemy as sa
 import sqlalchemy.exc
 import sys
