@@ -13,7 +13,6 @@
             ${ mp.get_view(ADocumentTopic(src=topic.documents[0], child_type='topic')) }
           % endif
         </h4>
-
         <p class="list-group-item-text">
           <div class="nofloat">
             % if isinstance(parent_obj, Document):
@@ -32,7 +31,6 @@
               <div class="progress-bar progress-bar-default" style="width: ${ probability * 100 }%"></div>
             </div>
           </div>
-
           <%macros:tagcloud items="${ topic.terms }" limit="${ -1 }" additional_class='' args="w">
             % if w.term == parent_obj:
               <mark>${ mp.get_view(w, view='tagcloud_term') }</mark>
@@ -84,19 +82,14 @@
     <div class="panel-body">
       <div class="bs-callout bs-callout-${ macros.colcl('docs') }">
         <h4>Documents:</h4>
-
         <div id="plot-documents" style="height:250px;"></div>
-
         <%macros:tagcloud items="${ s.model.documents }" limit="${ 200 }" additional_class="collapsed text-center" args="d">
           ${ mp.get_view(d, view='tagcloud_document') }
         </%macros:tagcloud>
       </div>
-
       <div class="bs-callout bs-callout-${ macros.colcl('words') }">
         <h4>Words:</h4>
-
         <div id="plot-words" style="height:250px;"></div>
-
         <%macros:tagcloud items="${s.model.terms}" limit="${ 200 }" additional_class="collapsed text-center" args="w">
           ${ mp.get_view(w, view='tagcloud_term') }
 

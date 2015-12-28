@@ -1,6 +1,6 @@
 <%def name="view_tagcloud_document()">
   % if isinstance(s.model, DocumentTopic):
-    <a href="${ url_for(s.model.document) }" data-size="${ s.model.prob_td }" data-use-opacity="true"
+    <a href="${ url_for(s.model.document) }" data-use-opacity="true"
        data-placement="top" data-toggle="tooltip" data-html="true"
        title="
       ${ s.model.document.title }<br/><br/>
@@ -8,7 +8,7 @@
       ${ 'P(t | d) = %f' % s.model.prob_td }
       ">${ s.model.document.slug }</a>
   % elif isinstance(s.model, DocumentTerm):
-    <a href="${ url_for(s.model.document) }" data-size="${ s.model.count }" data-use-opacity="true"
+    <a href="${ url_for(s.model.document) }" data-use-opacity="true"
        data-placement="top" data-toggle="tooltip" data-html="true"
        title="
       ${ s.model.document.title }<br/><br/>
@@ -20,12 +20,10 @@
 
 <%def name="view_tagcloud_term()">
   % if isinstance(s.model, DocumentTerm):
-    <a href="${ url_for(s.model.term) }" title="N_wd = ${ s.model.count }" data-size="${ s.model.count }"
-             data-use-size="true">${ s.model.term.text }</a>
+    <a href="${ url_for(s.model.term) }" title="N_wd = ${ s.model.count }">${ s.model.term.text }</a>
   % elif isinstance(s.model, TopicTerm):
     <a href="${ url_for(s.model.term) }"
-       title="P(w | t) = ${ s.model.prob_wt }"
-       data-size="${ s.model.prob_wt }" data-use-size="true">
+       title="P(w | t) = ${ s.model.prob_wt }">
       ${ s.model.term.text }
     </a>
   % endif
@@ -34,10 +32,10 @@
 <%def name="view_tagcloud_topic()">
   % if isinstance(s.model, DocumentTopic):
     <a href="${ url_for(s.model.topic) }" title="P(t | d) = ${ s.model.prob_td }"
-       data-size="${ s.model.prob_td }" data-use-size="true">${ s.model.topic.text }</a>
+       >${ s.model.topic.text }</a>
   % elif isinstance(s.model, TopicTerm):
     <a href="${ url_for(s.model.topic) }" title="P(w | t) = ${ s.model.prob_wt }"
-       data-size="${ s.model.prob_wt }" data-use-size="true">${ s.model.topic.text }</a>
+       >${ s.model.topic.text }</a>
   % endif
 </%def>
 
