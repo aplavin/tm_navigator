@@ -2,7 +2,7 @@ FROM debian:stable
 MAINTAINER Kirill Bobyrev (kbobyrev@hotmail.com)
 
 ENV DEBIAN_FRONTEND noninteractive
-RUN apt-get update \
+RUN apt-get update && apt-get upgrade \
     && apt-get install -y nano mc build-essential curl git vim wget \
     && apt-get clean
 RUN curl -L https://github.com/just-containers/s6-overlay/releases/download/v1.16.0.0/s6-overlay-amd64.tar.gz | tar xz -C /

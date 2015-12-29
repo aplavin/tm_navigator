@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 import flask
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
