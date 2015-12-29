@@ -79,25 +79,25 @@
       "pull-right") }
     </div>
 
-    <div class="panel-body">
-      <div class="bs-callout bs-callout-${ macros.colcl('docs') }">
+    <div class="panel-body row">
+      <div class="bs-callout col-xs-6 bs-callout-${ macros.colcl('docs') }">
         <h4>Documents:</h4>
         <div id="plot-documents" style="height:250px;"></div>
-        <%macros:tagcloud items="${ s.model.documents }" limit="${ 200 }" additional_class="collapsed text-center" args="d">
+        <%macros:listgroup items="${ s.model.documents }" limit="${ 200 }" additional_class="collapsed text-center" args="d">
           ${ mp.get_view(d, view='tagcloud_document') }
-        </%macros:tagcloud>
+        </%macros:listgroup>
       </div>
-      <div class="bs-callout bs-callout-${ macros.colcl('words') }">
+      <div class="bs-callout col-xs-6 bs-callout-${ macros.colcl('words') }">
         <h4>Words:</h4>
         <div id="plot-words" style="height:250px;"></div>
         <%macros:tagcloud items="${s.model.terms}" limit="${ 200 }" additional_class="collapsed text-center" args="w">
-          ${ mp.get_view(w, view='tagcloud_term') }
-
           ${ macros.assess_yesno(
           ATopicTerm(src=w, child_type='term'),
           "",
           "'%s' fits well in this topic" % w.term.text,
           "'%s' doesn't belong here" % w.term.text) }
+
+          ${ mp.get_view(w, view='tagcloud_term') }
         </%macros:tagcloud>
       </div>
     </div>

@@ -16,6 +16,24 @@
   </ul>
 </%def>
 
+<%def name="listgroup(items, limit=None, emptystr=None, additional_class='')">
+  <ul class="list-group-item">
+    % for it in (items[:limit] if limit is not None and limit != -1 else items):
+      <li>${ caller.body(it) }</li>
+    % endfor
+
+    % if not items:
+      <li>${ emptystr or '' }</li>
+    % endif
+
+    % if limit == -1:
+      <li>&hellip;</li>
+    % elif limit is not None and len(items) > limit:
+      <li>&hellip;&nbsp;${ len(items) - limit }&nbsp;more&nbsp;&hellip;</li>
+    % endif
+  </ul>
+</%def>
+
 <%def name="assess_yesno(model, question, yes_text, no_text, additional_classes='')">
   <small class="text-muted assess-yesno ${ additional_classes }" data-url="${ url_for(model) }">
     <span>${ question }</span>
