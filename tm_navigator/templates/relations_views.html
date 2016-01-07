@@ -29,6 +29,17 @@
   % endif
 </%def>
 
+<%def name="view_grouplist_term()">
+  % if isinstance(s.model, DocumentTerm):
+    <a href="${ url_for(s.model.term) }" title="N_wd = ${ s.model.count }">${ s.model.term.text }</a>
+  % elif isinstance(s.model, TopicTerm):
+    <a href="${ url_for(s.model.term) }"
+       title="P(w | t) = ${ s.model.prob_wt }">
+      ${ s.model.term.text }
+    </a>
+  % endif
+</%def>
+
 <%def name="view_tagcloud_topic()">
   % if isinstance(s.model, DocumentTopic):
     <a href="${ url_for(s.model.topic) }" title="P(t | d) = ${ s.model.prob_td }"

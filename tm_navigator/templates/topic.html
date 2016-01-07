@@ -79,27 +79,43 @@
       "pull-right") }
     </div>
 
-    <div class="panel-body row">
-      <div class="bs-callout col-xs-6 bs-callout-${ macros.colcl('docs') }">
-        <h4>Documents:</h4>
-        <div id="plot-documents" style="height:250px;"></div>
-        <%macros:listgroup items="${ s.model.documents }" limit="${ 200 }" additional_class="collapsed text-center" args="d">
-          ${ mp.get_view(d, view='tagcloud_document') }
-        </%macros:listgroup>
-      </div>
-      <div class="bs-callout col-xs-6 bs-callout-${ macros.colcl('words') }">
-        <h4>Words:</h4>
-        <div id="plot-words" style="height:250px;"></div>
-        <%macros:tagcloud items="${s.model.terms}" limit="${ 200 }" additional_class="collapsed text-center" args="w">
-          ${ macros.assess_yesno(
-          ATopicTerm(src=w, child_type='term'),
-          "",
-          "'%s' fits well in this topic" % w.term.text,
-          "'%s' doesn't belong here" % w.term.text) }
+    <div class="bs-callout col-xs-3 bs-callout-${ macros.colcl('words') }">
+      <h4>Words [sorted by P(w | t)]:</h4>
+      <div class="row">
+      <%macros:listgroup items="${s.model.terms}" limit="${ 200 }" additional_class="collapsedt-center" args="w">
+          ${ w.prob_wt }
 
-          ${ mp.get_view(w, view='tagcloud_term') }
-        </%macros:tagcloud>
+        ${ macros.assess_yesno(
+        ATopicTerm(src=w, child_type='term'),
+        "",
+        "'%s' fits well in this topic" % w.term.text,
+        "'%s' doesn't belong here" % w.term.text) }
+
+        ${ mp.get_view(w, view='tagcloud_term') }
+      </%macros:listgroup>
       </div>
+    </div>
+    <div class="bs-callout col-xs-3 bs-callout-${ macros.colcl('words') }">
+      <h4>Words [sorted by P(t | w)]:</h4>
+      <div class="row">
+      <%macros:listgroup items="${s.model.terms}" limit="${ 200 }" additional_class="collapsedt-center" args="w">
+          ${ w.prob_wt }
+
+        ${ macros.assess_yesno(
+        ATopicTerm(src=w, child_type='term'),
+        "",
+        "'%s' fits well in this topic" % w.term.text,
+        "'%s' doesn't belong here" % w.term.text) }
+
+        ${ mp.get_view(w, view='tagcloud_term') }
+      </%macros:listgroup>
+      </div>
+    </div>
+    <div class="bs-callout col-xs-6 bs-callout-${ macros.colcl('docs') }">
+      <h4>Documents:</h4>
+      <%macros:listgroup items="${ s.model.documents }" limit="${ 200 }" additional_class="collapsed text-center" args="d">
+        ${ mp.get_view(d, view='tagcloud_document') }
+      </%macros:listgroup>
     </div>
   </div>
 

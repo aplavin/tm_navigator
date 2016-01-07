@@ -17,19 +17,21 @@
 </%def>
 
 <%def name="listgroup(items, limit=None, emptystr=None, additional_class='')">
-  <ul class="list-group-item">
+  <ul class="list-group">
     % for it in (items[:limit] if limit is not None and limit != -1 else items):
-      <li>${ caller.body(it) }</li>
+      <li class="list-group-item">
+        ${ caller.body(it) }
+      </li>
     % endfor
 
     % if not items:
-      <li>${ emptystr or '' }</li>
+      <li class="list-group-item">${ emptystr or '' }</li>
     % endif
 
     % if limit == -1:
-      <li>&hellip;</li>
+      <li class="list-group-item">&hellip;</li>
     % elif limit is not None and len(items) > limit:
-      <li>&hellip;&nbsp;${ len(items) - limit }&nbsp;more&nbsp;&hellip;</li>
+      <li class="list-group-item">&hellip;&nbsp;${ len(items) - limit }&nbsp;more&nbsp;&hellip;</li>
     % endif
   </ul>
 </%def>
