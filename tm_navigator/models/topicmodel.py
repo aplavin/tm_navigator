@@ -42,6 +42,7 @@ class Topic(Base):
     name = sa.Column(sa.Text, unique=True)
     is_background = sa.Column(sa.Boolean, nullable=False)
     probability = sa.Column(sa.Float, nullable=False)
+    summary = sa.Column(sa.Text)
 
     @property
     def text(self):
@@ -113,6 +114,8 @@ class DocumentContentTopic(Base):
 
     document_content = sa.orm.relationship(DocumentContent, backref=sa.orm.backref('topics'))
     topic = sa.orm.relationship(Topic)
+
+
 
 
 models_topic = (DocumentSimilarity, TermSimilarity, TopicSimilarity,

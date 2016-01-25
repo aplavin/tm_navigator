@@ -226,5 +226,15 @@ def load_topicmodel(topicmodel_id, title, directory):
         load_data_for(session, models, directory)
 
 
+@cli.command()
+@click.option('-m', '--topicmodel-id', type=int, required=True)
+def dump_assessments(topicmodel_id):
+    with session_scope() as session:
+        SchemaMixin.activate_public_schema(session)
+        tm = session.query(TopicModelMeta).filter_by(id=topicmodel_id).one()
+        tm.activate_schemas()
+
+        assessment = session.query(ATopic).all()
+
 if __name__ == '__main__':
     cli()
