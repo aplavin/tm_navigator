@@ -79,6 +79,13 @@
       "pull-right") }
     </div>
 
+    <div class="">
+      <h4>Summary</h4>
+      % for summary in s.model.summaries
+        abcd
+      % endfor
+    </div>
+
     <div class="bs-callout col-xs-4 bs-callout-${ macros.colcl('words') }">
       <h4>Words [sorted by P(w | t)]:</h4>
       <table class="table">

@@ -2,6 +2,7 @@ import sqlalchemy as sa
 import sqlalchemy.ext.hybrid
 from sqlalchemy_utils import aggregated
 from models.dataset import *
+from sqlalchemy.dialects import postgresql as pg_dialect
 
 
 class DocumentSimilarity(Base):
@@ -42,7 +43,7 @@ class Topic(Base):
     name = sa.Column(sa.Text, unique=True)
     is_background = sa.Column(sa.Boolean, nullable=False)
     probability = sa.Column(sa.Float, nullable=False)
-    summary = sa.Column(sa.Text)
+    summaries = sa.Column(pg_dialect.ARRAY(item_type=sa.Text))
 
     @property
     def text(self):
