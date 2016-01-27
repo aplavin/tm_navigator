@@ -236,5 +236,8 @@ def dump_assessments(topicmodel_id):
 
         assessment = session.query(ATopic).all()
 
+        cols = [[item.topic_id, item.value] for item in assessment]
+        return cols
+
 if __name__ == '__main__':
     cli()
