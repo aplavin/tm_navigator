@@ -48,6 +48,17 @@
   </small>
 </%def>
 
+<%def name="assess_topic(model, question, additional_classes='')">
+  <small class="text-muted assess-topic ${ additional_classes }" data-url="${ url_for(model) }">
+    <span>${ question }</span>
+    % for i in range(5):
+      <button type="button" class="btn btn-link btn-xs" title="${ i + 1}">
+        <span class="glyphicon">${ i + 1 }</span>
+      </button>
+    % endfor
+  </small>
+</%def>
+
 <%def name="colcl(key)">\
 ${ {
 'topics': 'info',

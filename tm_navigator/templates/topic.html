@@ -71,20 +71,20 @@
         Topic ${ s.model.text }
       </h3>
       P(t) = ${ '%.3f' % s.model.probability }
-      ${ macros.assess_yesno(
+      ${ macros.assess_topic(
       ATopic(src=s.model),
-      "Is this a good topic overall?",
-      "Yes",
-      "No",
+      "Please rate this topic",
       "pull-right") }
     </div>
 
-    <div class="bs-callout bs-callout-${ macros.colcl('summaries') }">
-      <h4>Summaries</h4>
-      <%macros:listgroup items="${ s.model.summaries }" limit="${ 20 }" additional_class="collapsed text-center" args="m">
-        ${ mp.get_view(m) }
-      </%macros:listgroup>
-    </div>
+    % if s.model.summaries is not None:
+      <div class="bs-callout bs-callout-${ macros.colcl('summaries') }">
+        <h4>Summaries</h4>
+        <%macros:listgroup items="${ s.model.summaries }" limit="${ 20 }" additional_class="collapsed text-center" args="m">
+          ${ mp.get_view(m) }
+        </%macros:listgroup>
+      </div>
+    % endif
 
     <div class="bs-callout col-xs-4 bs-callout-${ macros.colcl('words') }">
       <h4>Words [sorted by P(w | t)]:</h4>
