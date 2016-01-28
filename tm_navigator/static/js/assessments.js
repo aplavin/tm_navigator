@@ -39,7 +39,7 @@ function yesno_handler(flag) {
 
 function assess_handler(value) {
     function click_handler() {
-        var block = $(this).parent('.assess-yesno');
+        var block = $(this).parent('.assess-topic');
         var url = block.data('url');
 
         var question = $(this).siblings('span').eq(0).text();

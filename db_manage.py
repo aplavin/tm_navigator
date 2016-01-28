@@ -5,6 +5,7 @@ import sys
 from contextlib import contextmanager
 from pathlib import Path
 import click
+import csv
 
 sys.path.append('tm_navigator')
 from tm_navigator.models import *
@@ -234,10 +235,18 @@ def dump_assessments(topicmodel_id):
         tm = session.query(TopicModelMeta).filter_by(id=topicmodel_id).one()
         tm.activate_schemas()
 
-        assessment = session.query(ATopic).all()
+        assessments = session.query(ATopic).all()
+        topic_count = session.query(Topic).count() - 1
 
-        cols = [[item.topic_id, item.value] for item in assessment]
-        print(cols)
+        grades = [None for i in range(topic_count)]
+        for assessment in assessments:
+            grades[assessment.topic_id - 1] = assessment.value
+        with open('topic_assessments.csv', 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(['topic_id', 'value'])
+            for idx, grade in enumerate(grades):
+                writer.writerow([idx + 1, grade])
 
+    
 if __name__ == '__main__':
     cli()
