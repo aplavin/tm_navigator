@@ -76,24 +76,24 @@ def check_files(directory, expected_names, extension='.csv', cli=True):
 
 
 def delete_data_for(session, models, cli=True):
-    def delete_data():
+    def delete_data(iter_func=lambda: None):
         for table in reversed(Base.metadata.sorted_tables):
             matching_models = [m for m in models if m.__table__ == table]
             if not matching_models:
                 continue
             model = matching_models[0]
             session.query(model).delete()
+            iter_func()
 
     if cli:
         with click.progressbar(label='Deleting data', length=len(models)) as pbar:
-            delete_data()
-            pbar.update(1)
+            delete_data(lambda: pbar.update(1))
     else:
         delete_data()
 
 
 def load_data_for(session, models, directory, cli=True):
-    def load_data():
+    def load_data(iter_func=lambda: None):
         for table in Base.metadata.sorted_tables:
             matching_models = [m for m in models if m.__table__ == table]
             if not matching_models:
@@ -102,11 +102,12 @@ def load_data_for(session, models, directory, cli=True):
 
             file = directory / '{}.csv'.format(model.__tablename__)
             copy_from_csv(session, model, file)
+            iter_func()
 
     if cli:
         with click.progressbar(label='Loading data', length=len(models)) as pbar:
-            load_data()
-            pbar.update(1)
+            load_data(lambda: pbar.update(1))
+            
     else:
         load_data()
 
