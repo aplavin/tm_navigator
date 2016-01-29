@@ -63,7 +63,7 @@ def check_files(directory, expected_names, extension='.csv', cli=True):
         if cli:
             click.secho(s, fg='green')
         else:
-            print s
+            print(s)
     if expected_files - file_names:
         s = 'Not found files {}.'.format(
             ', '.join('"{}"'.format(f) for f in sorted(expected_files - file_names)))
@@ -71,8 +71,8 @@ def check_files(directory, expected_names, extension='.csv', cli=True):
             click.secho(s, fg='red')
             click.echo('Will try to continue with the files present.')
         else:
-            print s
-            print 'Will try to continue with the files present.'
+            print(s)
+            print('Will try to continue with the files present.')
 
 
 def delete_data_for(session, models, cli=True):
@@ -203,7 +203,7 @@ def load_dataset_(dataset_id, title, directory, cli=False):
 @click.option('-t', '--title', type=str)
 @click.option('-dir', '--directory', type=dir_type, required=True)
 def load_dataset(dataset_id, title, directory):
-    _load_dataset(dataset_id, title, directory, cli=True)
+    load_dataset_(dataset_id, title, directory, cli=True)
 
 def add_topicmodel_(dataset_id):
     with session_scope() as session:
