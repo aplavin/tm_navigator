@@ -53,34 +53,47 @@ def copy_from_csv(session, model, csv_file):
     update_aggregates(session, model)
 
 
-def check_files(directory, expected_names, extension='.csv'):
+def check_files(directory, expected_names, extension='.csv', cli=True):
     file_names = {p.name for p in directory.iterdir() if p.is_file()}
     expected_files = {t + extension for t in expected_names}
 
     if expected_files & file_names:
-        click.secho('Found files {}.'.format(
-            ', '.join('"{}"'.format(f) for f in sorted(expected_files & file_names))
-        ), fg='green')
+        s = 'Found files {}.'.format(
+            ', '.join('"{}"'.format(f) for f in sorted(expected_files & file_names)))
+        if cli:
+            click.secho(s, fg='green')
+        else:
+            print s
     if expected_files - file_names:
-        click.secho('Not found files {}.'.format(
-            ', '.join('"{}"'.format(f) for f in sorted(expected_files - file_names))
-        ), fg='red')
-        click.echo('Will try to continue with the files present.')
+        s = 'Not found files {}.'.format(
+            ', '.join('"{}"'.format(f) for f in sorted(expected_files - file_names)))
+        if cli:
+            click.secho(s, fg='red')
+            click.echo('Will try to continue with the files present.')
+        else:
+            print s
+            print 'Will try to continue with the files present.'
 
 
-def delete_data_for(session, models):
-    with click.progressbar(label='Deleting data', length=len(models)) as pbar:
+def delete_data_for(session, models, cli=True):
+    def delete_data():
         for table in reversed(Base.metadata.sorted_tables):
             matching_models = [m for m in models if m.__table__ == table]
             if not matching_models:
                 continue
             model = matching_models[0]
             session.query(model).delete()
+
+    if cli:
+        with click.progressbar(label='Deleting data', length=len(models)) as pbar:
+            delete_data()
             pbar.update(1)
+    else:
+        delete_data()
 
 
-def load_data_for(session, models, directory):
-    with click.progressbar(label='Loading data', length=len(models)) as pbar:
+def load_data_for(session, models, directory, cli=True):
+    def load_data():
         for table in Base.metadata.sorted_tables:
             matching_models = [m for m in models if m.__table__ == table]
             if not matching_models:
@@ -89,7 +102,13 @@ def load_data_for(session, models, directory):
 
             file = directory / '{}.csv'.format(model.__tablename__)
             copy_from_csv(session, model, file)
+
+    if cli:
+        with click.progressbar(label='Loading data', length=len(models)) as pbar:
+            load_data()
             pbar.update(1)
+    else:
+        load_data()
 
 
 @click.group()
@@ -138,8 +157,7 @@ def describe():
                 click.echo()
 
 
-@cli.command()
-def add_dataset():
+def add_dataset_():
     with session_scope() as session:
         SchemaMixin.activate_public_schema(session)
 
@@ -150,21 +168,21 @@ def add_dataset():
         ds.activate_schemas()
         Base.metadata.create_all(engine,
                                  tables=map(lambda c: c.__table__, models_dataset))
-
-        click.echo('Added Dataset #{id}'.format(id=ds.id))
-
+        return ds.id
 
 @cli.command()
-@click.option('-d', '--dataset-id', type=int, required=True)
-@click.option('-t', '--title', type=str)
-@click.option('-dir', '--directory', type=dir_type, required=True)
-def load_dataset(dataset_id, title, directory):
+def add_dataset():
+    dataset_id = add_dataset_()
+    click.echo('Added Dataset #{id}'.format(id=dataset_id))
+
+def load_dataset_(dataset_id, title, directory, cli=False):
     directory = Path(directory)
     target_models = models_dataset
 
-    check_files(directory, [m.__tablename__ for m in target_models])
-    click.confirm('Proceeding will overwrite the corresponding data in the database. Continue?',
-                  abort=True, default=True)
+    check_files(directory, [m.__tablename__ for m in target_models], cli=cli)
+    if cli:
+        click.confirm('Proceeding will overwrite the corresponding data in the database. Continue?',
+                      abort=True, default=True)
 
     models = [m
               for m in target_models
@@ -177,13 +195,17 @@ def load_dataset(dataset_id, title, directory):
 
         if title is not None:
             ds.title = title
-        delete_data_for(session, models)
-        load_data_for(session, models, directory)
-
+        delete_data_for(session, models, cli)
+        load_data_for(session, models, directory, cli)
 
 @cli.command()
 @click.option('-d', '--dataset-id', type=int, required=True)
-def add_topicmodel(dataset_id):
+@click.option('-t', '--title', type=str)
+@click.option('-dir', '--directory', type=dir_type, required=True)
+def load_dataset(dataset_id, title, directory):
+    _load_dataset(dataset_id, title, directory, cli=True)
+
+def add_topicmodel_(dataset_id):
     with session_scope() as session:
         SchemaMixin.activate_public_schema(session)
 
@@ -197,20 +219,22 @@ def add_topicmodel(dataset_id):
         Base.metadata.create_all(engine,
                                  tables=map(lambda c: c.__table__, models_topic + models_assessment))
 
-        click.echo('Added Topic Model #{id} for Dataset #{did}'.format(id=tm.id, did=ds.id))
-
+        return tm.id
 
 @cli.command()
-@click.option('-m', '--topicmodel-id', type=int, required=True)
-@click.option('-t', '--title', type=str)
-@click.option('-dir', '--directory', type=dir_type, required=True)
-def load_topicmodel(topicmodel_id, title, directory):
+@click.option('-d', '--dataset-id', type=int, required=True)
+def add_topicmodel(dataset_id):
+    topicmodel_id = add_topicmodel_(dataset_id)
+    click.echo('Added Topic Model #{id} for Dataset #{did}'.format(id=topicmodel_id, did=dataset_id))
+
+def load_topicmodel_(topicmodel_id, title, directory, cli=False):
     directory = Path(directory)
     target_models = models_topic
 
-    check_files(directory, [m.__tablename__ for m in target_models])
-    click.confirm('Proceeding will overwrite the corresponding data in the database. Continue?',
-                  abort=True, default=True)
+    check_files(directory, [m.__tablename__ for m in target_models], cli=cli)
+    if cli:
+        click.confirm('Proceeding will overwrite the corresponding data in the database. Continue?',
+                      abort=True, default=True)
 
     models = [m
               for m in target_models
@@ -223,13 +247,17 @@ def load_topicmodel(topicmodel_id, title, directory):
 
         if title is not None:
             tm.title = title
-        delete_data_for(session, models)
-        load_data_for(session, models, directory)
-
+        delete_data_for(session, models, cli)
+        load_data_for(session, models, directory, cli)
 
 @cli.command()
 @click.option('-m', '--topicmodel-id', type=int, required=True)
-def dump_assessments(topicmodel_id):
+@click.option('-t', '--title', type=str)
+@click.option('-dir', '--directory', type=dir_type, required=True)
+def load_topicmodel(topicmodel_id, title, directory):
+    load_topicmodel_(topicmodel_id, title, directory, cli=True)
+
+def dump_assessments_(topicmodel_id):
     with session_scope() as session:
         SchemaMixin.activate_public_schema(session)
         tm = session.query(TopicModelMeta).filter_by(id=topicmodel_id).one()
@@ -247,6 +275,10 @@ def dump_assessments(topicmodel_id):
             for idx, grade in enumerate(grades):
                 writer.writerow([idx + 1, grade])
 
+@cli.command()
+@click.option('-m', '--topicmodel-id', type=int, required=True)
+def dump_assessments(topicmodel_id):
+    dump_assessments_(topicmodel_id)
     
 if __name__ == '__main__':
     cli()
