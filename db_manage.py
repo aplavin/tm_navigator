@@ -268,14 +268,14 @@ def dump_assessments_(topicmodel_id, directory):
         assessments = session.query(ATopic).all()
         topic_count = session.query(Topic).count() - 1
 
-        grades = [None for i in range(topic_count)]
+        grades = {}
         for assessment in assessments:
-            grades[assessment.topic_id - 1] = assessment.value
+            grades[assessment.topic_id] = assessment.value
         with open(directory.joinpath('topic_assessments.csv'), 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(['topic_id', 'value'])
-            for idx, grade in enumerate(grades):
-                writer.writerow([idx + 1, grade])
+            for idx, grade in grades.items():
+                writer.writerow([idx, grade])
 
 @cli.command()
 @click.option('-m', '--topicmodel-id', type=int, required=True)
