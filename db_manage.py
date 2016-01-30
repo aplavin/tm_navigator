@@ -258,7 +258,8 @@ def load_topicmodel_(topicmodel_id, title, directory, cli=False):
 def load_topicmodel(topicmodel_id, title, directory):
     load_topicmodel_(topicmodel_id, title, directory, cli=True)
 
-def dump_assessments_(topicmodel_id):
+def dump_assessments_(topicmodel_id, directory):
+    directory = Path(directory)
     with session_scope() as session:
         SchemaMixin.activate_public_schema(session)
         tm = session.query(TopicModelMeta).filter_by(id=topicmodel_id).one()
@@ -270,7 +271,7 @@ def dump_assessments_(topicmodel_id):
         grades = [None for i in range(topic_count)]
         for assessment in assessments:
             grades[assessment.topic_id - 1] = assessment.value
-        with open('topic_assessments.csv', 'w', newline='') as csvfile:
+        with open(directory.joinpath('topic_assessments.csv'), 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(['topic_id', 'value'])
             for idx, grade in enumerate(grades):
@@ -278,8 +279,9 @@ def dump_assessments_(topicmodel_id):
 
 @cli.command()
 @click.option('-m', '--topicmodel-id', type=int, required=True)
-def dump_assessments(topicmodel_id):
-    dump_assessments_(topicmodel_id)
+@click.option('-dir', '--directory', type=dir_type, required=True)
+def dump_assessments(topicmodel_id, directory):
+    dump_assessments_(topicmodel_id, directory)
     
 if __name__ == '__main__':
     cli()
