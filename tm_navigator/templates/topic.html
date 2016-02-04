@@ -117,7 +117,7 @@
           <th>P(t | w)</th>
           <th>Word</th>
         </tr>
-      % for w in sorted(s.model.terms, key=lambda x: x.prob_wt, reverse=True):
+      % for w in sorted(s.model.terms, key=lambda x: x.prob_tw, reverse=True):
         <tr>
           <td>
             ${ w.prob_tw }
