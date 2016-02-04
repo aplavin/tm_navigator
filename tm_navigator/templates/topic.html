@@ -135,8 +135,8 @@
       </table>
     </div>
     <div class="bs-callout col-xs-4 bs-callout-${ macros.colcl('docs') }">
-      <h4>Documents:</h4>
-      <%macros:listgroup items="${ s.model.documents }" limit="${ 200 }" additional_class="collapsed text-center" args="d">
+      <h4>Documents [corted by P(t | d)]:</h4>
+      <%macros:listgroup items="${ s.model.documents }" limit="${ len(s.model.terms) }" additional_class="collapsed text-center" args="d">
         ${ mp.get_view(d, view='tagcloud_document') }
       </%macros:listgroup>
     </div>
