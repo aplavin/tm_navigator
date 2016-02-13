@@ -1,5 +1,5 @@
 FROM debian:stable
-MAINTAINER Kirill Bobyrev (kbobyrev@hotmail.com)
+MAINTAINER Alexander Plavin (alexander@plav.in)
 
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update \
