@@ -6,6 +6,7 @@ from contextlib import contextmanager
 from pathlib import Path
 import click
 import csv
+import os
 
 sys.path.append('tm_navigator')
 from tm_navigator.models import *
@@ -259,7 +260,7 @@ def load_topicmodel(topicmodel_id, title, directory):
     load_topicmodel_(topicmodel_id, title, directory, cli=True)
 
 def dump_assessments_(topicmodel_id, directory):
-    directory = Path(directory)
+    directory = os.path.abspath(directory)
     with session_scope() as session:
         SchemaMixin.activate_public_schema(session)
         tm = session.query(TopicModelMeta).filter_by(id=topicmodel_id).one()
@@ -271,7 +272,7 @@ def dump_assessments_(topicmodel_id, directory):
         grades = {}
         for assessment in assessments:
             grades[assessment.topic_id] = assessment.value
-        with open(directory.joinpath('topic_assessments.csv'), 'w', newline='') as csvfile:
+        with open(os.path.join(directory, 'topic_assessments.csv'), 'w', newline='') as csvfile:
             writer = csv.writer(csvfile)
             writer.writerow(['topic_id', 'value'])
             for idx, grade in grades.items():
