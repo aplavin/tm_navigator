@@ -109,4 +109,9 @@ Now you can access the built model on `1.{CONTAINER_IP}:5000`!
 
 ### The end
 
-Now you're all set! You can access the running Flask app via the `{IP_ADDRESS}:5000`, where `{IP_ADDRESS}` is the one you got previosly. and you can work using vim inside the container. Don't forget to push your changes before the container shutdown! It won't save the changes you made if you don't push them.
+Now you're all set! You can access the running Flask app via the `{IP_ADDRESS}:5000`, where `{IP_ADDRESS}` is the one you got previosly. and you can work using vim inside the container.
+
+### Important notes
+
+* Don't forget to push your changes before the container shutdown! It won't save the changes you made if you don't push them.
+* Whenever you change your network settings (e.g. after chaning `/etc/hosts` and rebooting) you should run `sudo systemctl restart docker` to prevent any Docker-related issues with container running. It basically won't work correctly if you don't do so.
