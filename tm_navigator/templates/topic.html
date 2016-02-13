@@ -80,7 +80,7 @@
     % if s.model.summaries is not None:
       <div class="bs-callout bs-callout-${ macros.colcl('summaries') }">
         <h4>Summaries</h4>
-        <%macros:listgroup items="${ s.model.summaries }" limit="${ 20 }" additional_class="collapsed text-center" args="m">
+        <%macros:listgroup items="${ s.model.summaries.split(';') }" limit="${ 20 }" additional_class="collapsed text-center" args="m">
           ${ mp.get_view(m) }
         </%macros:listgroup>
       </div>
