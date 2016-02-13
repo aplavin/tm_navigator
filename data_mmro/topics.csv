@@ -1,17 +1,17 @@
 is_background,id_in_level,id,probability,level,summaries
-False,0,0,1,0,{abcd}
-False,0,1,0.0594722,1,{abcd}
-False,1,2,0.0582107,1,{abcd}
-False,2,3,0.0592132,1,{abcd}
-False,3,4,0.0611496,1,{abcd}
-False,4,5,0.0758405,1,{abcd}
-False,5,6,0.059208,1,{abcd}
-False,6,7,0.0609452,1,{abcd}
-False,7,8,0.0941984,1,{abcd}
-False,8,9,0.0664306,1,{abcd}
-False,9,10,0.0667267,1,{abcd}
-False,10,11,0.0581045,1,{abcd}
-False,11,12,0.0619163,1,{abcd}
-False,12,13,0.0895049,1,{abcd}
-False,13,14,0.0612893,1,{abcd}
-False,14,15,0.06779,1,{abcd}
+False,0,0,1,0,"abcd;efg"
+False,0,1,0.0594722,1,"some meaningful summary;another one;and one more"
+False,1,2,0.0582107,1,"some meaningful summary;another one;and one more"
+False,2,3,0.0592132,1,"some meaningful summary;another one;and one more"
+False,3,4,0.0611496,1,"some meaningful summary;another one;and one more"
+False,4,5,0.0758405,1,"some meaningful summary;another one;and one more"
+False,5,6,0.059208,1,"some meaningful summary;another one;and one more"
+False,6,7,0.0609452,1,"some meaningful summary;another one;and one more"
+False,7,8,0.0941984,1,"some meaningful summary;another one;and one more"
+False,8,9,0.0664306,1,"some meaningful summary;another one;and one more"
+False,9,10,0.0667267,1,"some meaningful summary;another one;and one more"
+False,10,11,0.0581045,1,"some meaningful summary;another one;and one more"
+False,11,12,0.0619163,1,"some meaningful summary;another one;and one more"
+False,12,13,0.0895049,1,"some meaningful summary;another one;and one more"
+False,13,14,0.0612893,1,"some meaningful summary;another one;and one more"
+False,14,15,0.06779,1,"some meaningful summary;another one;and one more"

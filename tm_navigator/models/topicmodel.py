@@ -43,7 +43,8 @@ class Topic(Base):
     name = sa.Column(sa.Text, unique=True)
     is_background = sa.Column(sa.Boolean, nullable=False)
     probability = sa.Column(sa.Float, nullable=False)
-    summaries = sa.Column(pg_dialect.ARRAY(item_type=sa.Text))
+    summaries = sa.Column(sa.Text)
+    needs_assessment = sa.Column(sa.Boolean)
 
     @property
     def text(self):
