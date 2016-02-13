@@ -13,7 +13,6 @@
             ${ mp.get_view(ADocumentTopic(src=topic.documents[0], child_type='topic')) }
           % endif
         </h4>
-
         <p class="list-group-item-text">
           <div class="nofloat">
             % if isinstance(parent_obj, Document):
@@ -32,7 +31,6 @@
               <div class="progress-bar progress-bar-default" style="width: ${ probability * 100 }%"></div>
             </div>
           </div>
-
           <%macros:tagcloud items="${ topic.terms }" limit="${ -1 }" additional_class='' args="w">
             % if w.term == parent_obj:
               <mark>${ mp.get_view(w, view='tagcloud_term') }</mark>
@@ -73,40 +71,74 @@
         Topic ${ s.model.text }
       </h3>
       P(t) = ${ '%.3f' % s.model.probability }
-      ${ macros.assess_yesno(
+      ${ macros.assess_topic(
       ATopic(src=s.model),
-      "Is this a good topic overall?",
-      "Yes",
-      "No",
+      "Please rate this topic",
       "pull-right") }
     </div>
 
-    <div class="panel-body">
-      <div class="bs-callout bs-callout-${ macros.colcl('docs') }">
-        <h4>Documents:</h4>
-
-        <div id="plot-documents" style="height:250px;"></div>
-
-        <%macros:tagcloud items="${ s.model.documents }" limit="${ 200 }" additional_class="collapsed text-center" args="d">
-          ${ mp.get_view(d, view='tagcloud_document') }
+    % if s.model.summaries is not None:
+      <div class="bs-callout bs-callout-${ macros.colcl('summaries') }">
+        <h4>Summaries</h4>
+        <%macros:tagcloud items="${ s.model.summaries.split(';') }" limit="${ 20 }" additional_class="collapsed text-center" args="m">
+          ${ mp.get_view(m) }
         </%macros:tagcloud>
       </div>
+    % endif
 
-      <div class="bs-callout bs-callout-${ macros.colcl('words') }">
-        <h4>Words:</h4>
-
-        <div id="plot-words" style="height:250px;"></div>
-
-        <%macros:tagcloud items="${s.model.terms}" limit="${ 200 }" additional_class="collapsed text-center" args="w">
-          ${ mp.get_view(w, view='tagcloud_term') }
-
-          ${ macros.assess_yesno(
-          ATopicTerm(src=w, child_type='term'),
-          "",
-          "'%s' fits well in this topic" % w.term.text,
-          "'%s' doesn't belong here" % w.term.text) }
-        </%macros:tagcloud>
-      </div>
+    <div class="bs-callout col-xs-4 bs-callout-${ macros.colcl('words') }">
+      <h4>Words [sorted by P(w | t)]:</h4>
+      <table class="table">
+        <tr>
+          <th>P(w | t)</th>
+          <th>Word</th>
+        </tr>
+      % for w in sorted(s.model.terms, key=lambda x: x.prob_wt, reverse=True):
+        <tr>
+          <td>
+            ${ w.prob_wt }
+          </td>
+          <td>
+            ${ macros.assess_yesno(
+            ATopicTerm(src=w, child_type='term'),
+            "",
+            "'%s' fits well in this topic" % w.term.text,
+            "'%s' doesn't belong here" % w.term.text) }
+            ${ mp.get_view(w, view='tagcloud_term') }
+          </td>
+        </tr>
+      % endfor
+      </table>
+    </div>
+    <div class="bs-callout col-xs-4 bs-callout-${ macros.colcl('words') }">
+      <h4>Words [sorted by P(t | w)]:</h4>
+      <table class="table">
+        <tr>
+          <th>P(t | w)</th>
+          <th>Word</th>
+        </tr>
+      % for w in sorted(s.model.terms, key=lambda x: x.prob_tw, reverse=True):
+        <tr>
+          <td>
+            ${ w.prob_tw }
+          </td>
+          <td>
+            ${ macros.assess_yesno(
+            ATopicTerm(src=w, child_type='term'),
+            "",
+            "'%s' fits well in this topic" % w.term.text,
+            "'%s' doesn't belong here" % w.term.text) }
+            ${ mp.get_view(w, view='tagcloud_term') }
+          </td>
+        </tr>
+      % endfor
+      </table>
+    </div>
+    <div class="bs-callout col-xs-4 bs-callout-${ macros.colcl('docs') }">
+      <h4>Documents [corted by P(t | d)]:</h4>
+      <%macros:listgroup items="${ s.model.documents }" limit="${ len(s.model.terms) }" additional_class="collapsed text-center" args="d">
+        ${ mp.get_view(d, view='tagcloud_document') }
+      </%macros:listgroup>
     </div>
   </div>
 

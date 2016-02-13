@@ -1,48 +1,117 @@
-# Topic Model Visualization
+# tm_navigator workflow
 
-## Dependencies
+This is how I set up the tm_navigator to work.
 
-* Python
-* Pandoc for TeX to HTML conversion: http://johnmacfarlane.net/pandoc/installing.html
-* Packages (can be installed with `pip install <name>`):
-    * General numeric data processing: numpy, scipy, h5py
-    * My ARTM implementation: py_artm
-    * Web interface: Flask, Flask-Classy, Flask-Assets, python-slugify
-    * Web interface debugging (currently they are required for normal use too): Flask-DebugToolbar, Flask-DebugToolbar-LineProfilerPanel
-    * Search: whoosh
-    * Other: ipy-progressbar, pymorphy2, recordtype
+### Clone tm_navigator
 
-## Components
+`git clone https://github.com/omtcyf0/tm_navigator`
 
-### Collection preprocessing
+### `cd` to the directory with Dockerfile
 
-All the scripts described in this section are located in `collection-processing` directory. They are written in Python and most probably have to be slightly changed to process other collections (currently only MMRO IOI collection has been confirmed to work). Command-line arguments for a script are shown when called with `-h` argument.
+`cd tm_navigator/docker`
 
-The source collection is assumed to consist of TeX or HTML documents. TeX collections have to be converted to HTML with `tex_to_html.py`. By default it converts all mathematical formulae to images, but as this stage is very time-consuming it can be disabled (see the script options).
+### Build Docker image
 
-The next stage of preprocessing is lemmatization, morphological normalization and building the N_wd matrix. It is done with `process.py` script with `--nwd-only` option. The matrix will be saved to the specified HDF5 file in two formats: dense as `n_wd` and sparse (in coordinate format) as `n_wd_coo`.
+`sudo docker build -t {IMAGE_NAME} .`
 
-After the N_wd matrix is built, a topic model should be fit to get P_wt and P_td matrices. For an very simplistic example of doing this with my `py-artm` package, see or call `fit_model.py`. However, a topic model can be fit using any instrument or tool you like, the only requirement is to save `p_wt` and `p_td` float matrices to the same HDF5 file.
+### Print info about your Docker images
 
-After fitting a topic model, the remaining probabilities and quantities are to be computed. For this call the `process.py` script again, but without `--nwd-only` option this time.
+`sudo docker images`
 
-Now the only thing that is left is the search indices. They are build with `build_index.py` script in one pass.
+You should see something like this:
 
-For other components only the HTML collection folder, output HDF5 file and search index directory are required.
+```
+REPOSITORY             TAG                 IMAGE ID            CREATED             VIRTUAL SIZE
+{IMAGE_NAME}           latest              {IMAGE_ID}          47 hours ago        684 MB
+debian                 stable              45a21bba71ea        3 weeks ago         125.1 MB
+```
 
-### Web interface
+### Run the Docker image
 
-The web interface is located in the `web` directory and should require less changes (if any) to word with other collections.
+`sudo docker run {IMAGE_NAME}` or `sudo docker {IMAGE_ID}`
 
-Assuming that collection preprocessing is done, copy/move or symlink the outputs into the following places:
+You will see something like this:
 
-* HTML collection folder to `web/static/docsdata`
-* HDF5 data file to `data.hdf`
-* search index folder to `whoosh_ix`
+```
+[s6-init] making user provided files available at /var/run/s6/etc...exited 0.
+[s6-init] ensuring user provided files have correct perms...exited 0.
+[fix-attrs.d] applying ownership & permissions fixes...
+[fix-attrs.d] done.
+[cont-init.d] executing container initialization scripts...
+[cont-init.d] done.
+[services.d] starting services
+[services.d] done.
+2015-12-27 10:03:03 UTC [159-1] LOG:  database system was shut down at 2015-12-25 10:31:34 UTC
+2015-12-27 10:03:03 UTC [159-2] LOG:  MultiXact member wraparound protections are now enabled
+2015-12-27 10:03:03 UTC [139-1] LOG:  database system is ready to accept connections
+2015-12-27 10:03:03 UTC [163-1] LOG:  autovacuum launcher started
+From https://github.com/omtcyf0/tm_navigator
+   d1be1b2..d1a23e8  master     -> origin/master
+Updating d1be1b2..d1a23e8
+Fast-forward
+ tm_navigator/templates/relations_views.html | 11 ++++++-----
+ 1 file changed, 6 insertions(+), 5 deletions(-)
+ * Running on http://0.0.0.0:5000/ (Press CTRL+C to quit)
+ * Restarting with inotify reloader
+ * Debugger is active!
+ * Debugger pin code: 783-096-669
+```
 
-Having done this, run `web/app.py` script, which starts the web server at `http://localhost:5000` by default. This url will have the fully working visualization now.
+### Print info about your Docker containers
 
+`sudo docker ps`
 
-### Tests
+You should see something like this:
 
-Currently the tests are located in a single file: `tests.py`. They check mostly the data consistency after the preprocessing.
+```
+CONTAINER ID        IMAGE                         COMMAND             CREATED             STATUS              PORTS               NAMES
+{CONTAINER_ID}      {IMAGE_NAME}:latest           "/init"             17 seconds ago      Up 16 seconds       22/tcp              {CONTAINER_NAME}
+```
+
+### Get information about the container IP adress
+
+`sudo docker inspect {CONTAINER ID} | grep "IPAddress"` or ``sudo docker inspect {CONTAINER_NAME} | grep "IPAddress"`
+
+You'll get the IP address the container is available from:
+
+```
+        "IPAddress": "172.17.0.2",
+```
+
+### Get an access to the shell inside the container
+
+`sudo docker exec -i -t {CONTAINER_NAME} bash` or `sudo docker exec -i -t {CONTAINER_ID} bash`
+
+### Loading sample model and accessing it
+
+To load a simple MMRO sample model do `./load_mmro_dataset_and_model.py` inside the container.
+
+Now the model is loaded into the tm_navigator.
+
+You'll see something like this on the front page:
+
+```
+Dataset #1, Simplest MMRO dataset
+
+1 topic models for this dataset:
+
+    Topic model #1, Simplest model
+
+    Built for dataset #1 (Simplest MMRO dataset)
+    Available at domains 1.{CONTAINER_IP}:5000
+```
+
+In order to access `1.{CONTAINER_IP}` you need to add the following line to `/etc/hosts`:
+
+`{CONTAINER_IP} 1.{CONTAINER_IP}`
+
+Now you can access the built model on `1.{CONTAINER_IP}:5000`!
+
+### The end
+
+Now you're all set! You can access the running Flask app via the `{IP_ADDRESS}:5000`, where `{IP_ADDRESS}` is the one you got previosly. and you can work using vim inside the container.
+
+### Important notes
+
+* Don't forget to push your changes before the container shutdown! It won't save the changes you made if you don't push them.
+* Whenever you change your network settings (e.g. after chaning `/etc/hosts` and rebooting) you should run `sudo systemctl restart docker` to prevent any Docker-related issues with container running. It basically won't work correctly if you don't do so.

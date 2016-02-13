@@ -2,6 +2,7 @@ import sqlalchemy as sa
 import sqlalchemy.ext.hybrid
 from sqlalchemy_utils import aggregated
 from models.dataset import *
+from sqlalchemy.dialects import postgresql as pg_dialect
 
 
 class DocumentSimilarity(Base):
@@ -42,6 +43,8 @@ class Topic(Base):
     name = sa.Column(sa.Text, unique=True)
     is_background = sa.Column(sa.Boolean, nullable=False)
     probability = sa.Column(sa.Float, nullable=False)
+    summaries = sa.Column(sa.Text)
+    needs_assessment = sa.Column(sa.Boolean)
 
     @property
     def text(self):
@@ -113,6 +116,8 @@ class DocumentContentTopic(Base):
 
     document_content = sa.orm.relationship(DocumentContent, backref=sa.orm.backref('topics'))
     topic = sa.orm.relationship(Topic)
+
+
 
 
 models_topic = (DocumentSimilarity, TermSimilarity, TopicSimilarity,

@@ -1,7 +1,7 @@
 import traceback
 import re
 from main import mp, db
-from flask import request, session, redirect
+from flask import request, session, redirect, make_response
 from models import *
 import sqlalchemy as sa
 import sqlalchemy_searchable as searchable
@@ -455,14 +455,12 @@ class _:
         return cls(assessment)
 
     def to_url(self):
-        return {
-            'ass_cls': self.model.__class__.__name__,
-            **{local.name: getattr(self.model.src, remote.name)
-               for local, remote in self.model.__class__.src.property.local_remote_pairs},
-            **{k: v
-               for k, v in self.model.__dict__.items()
-               if not k.startswith('_') and k != 'src'},
-        }
+        d = {'ass_cls': self.model.__class__.__name__}
+        d.update({local.name: getattr(self.model.src, remote.name) 
+            for local, remote in self.model.__class__.src.property.local_remote_pairs})
+        d.update({k: v for k, v in self.model.__dict__.items()
+            if not k.startswith('_') and k != 'src'})
+        return d
 
     def __call__(self):
         res = repr(self.model)

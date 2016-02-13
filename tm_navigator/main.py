@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 import flask
 from flask import Flask
 from flask.ext.sqlalchemy import SQLAlchemy
@@ -42,4 +42,4 @@ if __name__ == '__main__':
         create_database(db.engine.url)
     Base.metadata.create_all(db.engine, tables=map(lambda c: c.__table__, models_public))
 
-    app.run(use_reloader=True, port=5000)
+    app.run(host='0.0.0.0', use_reloader=True, port=5000)

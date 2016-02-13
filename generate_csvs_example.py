@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 from collections import Counter
 from recordclass import recordclass
 from pathlib import Path

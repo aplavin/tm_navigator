@@ -1,9 +1,9 @@
-FROM debian:testing
+FROM debian:stable
 MAINTAINER Alexander Plavin (alexander@plav.in)
 
 ENV DEBIAN_FRONTEND noninteractive
 RUN apt-get update \
-    && apt-get install -y nano mc build-essential curl \
+    && apt-get install -y nano mc build-essential curl git vim wget \
     && apt-get clean
 RUN curl -L https://github.com/just-containers/s6-overlay/releases/download/v1.16.0.0/s6-overlay-amd64.tar.gz | tar xz -C /
 ENTRYPOINT ["/init"]
@@ -31,17 +31,23 @@ RUN mkdir /etc/services.d/postgresql \
     && echo 'exec su -c "/usr/lib/postgresql/9.4/bin/postmaster -D /var/lib/postgresql/9.4/main -c config_file=/etc/postgresql/9.4/main/postgresql.conf" postgres 2>&1' >> /etc/services.d/postgresql/run \
     && chmod +x /etc/services.d/postgresql/run
 
-RUN apt-get install --no-install-recommends -y python3.5 python3.5-dev mercurial
-RUN curl https://bootstrap.pypa.io/get-pip.py | python3.5
+RUN apt-get install -y python3 python3-dev python3-pip
+
+# set virmc
+RUN curl -o ~/.vimrc https://raw.githubusercontent.com/omtcyf0/dotfiles/master/.vimrc
 
 ENV VERSION bum
 ENV LC_ALL C.UTF-8
 ENV LANG C.UTF-8
-RUN cd /root && hg clone https://bitbucket.org/aplavin/tm_navigator
+
+RUN cd /root && git clone https://github.com/omtcyf0/tm_navigator
+
 WORKDIR /root/tm_navigator
-RUN pip install --editable .
+RUN pip3 install --editable .
 RUN mkdir /etc/services.d/tm_navigator \
     && echo '#!/bin/sh' > /etc/services.d/tm_navigator/run \
-    && echo 'cd /root/tm_navigator/tm_navigator/' >> /etc/services.d/tm_navigator/run \
-    && echo 'exec ./main.py 2>&1' >> /etc/services.d/tm_navigator/run \
+    && echo 'cd /root/tm_navigator/' >> /etc/services.d/tm_navigator/run \
+    && echo 'git pull' >> /etc/services.d/tm_navigator/run \
+    && echo 'cd tm_navigator' >> /etc/services.d/tm_navigator/run \
+    && echo 'python3 main.py' >> /etc/services.d/tm_navigator/run \
     && chmod +x /etc/services.d/tm_navigator/run
