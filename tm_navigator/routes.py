@@ -6,6 +6,15 @@ from models import *
 import sqlalchemy as sa
 import sqlalchemy_searchable as searchable
 from cached_property import cached_property
+from werkzeug import secure_filename
+import os
+from main import app
+import tarfile
+
+import sys
+sys.path.append('tm_navigator')
+import db_manage
+sys.path.append(__file__)
 
 
 def add_modality_relationships(model, target, rel_name, rel_expr, order_by=None):
@@ -572,3 +581,31 @@ if not mp.app.debug:
         @property
         def technical_info(self):
             return traceback.format_exc()
+
+@mp.route('/upload_data/', methods=['GET', 'POST'])
+def upload_file():
+    if request.method == 'POST':
+        file = request.files['file']
+        if file:
+            filename = secure_filename(file.filename)
+            path = '../uploaded_data'
+            file.save(os.path.join(path, filename))
+            name = os.path.join(path, filename)
+
+            # Now add the dataset and all that
+            file = tarfile.open(name=name)
+            file.extractall(path=path)
+            foldername = os.path.join(path, filename.replace('.tar.gz', ''))
+            dataset_idx = db_manage.add_dataset_()
+            db_manage.load_dataset_(dataset_idx, filename.replace('.tar.gz', '', foldername))
+            topicmodel_idx = db_manage.add_topicmodel_(dataset_idx)
+            db_manage.load_topicmodel_(topicmodel_idx, 'Topic Model', foldername)
+    return '''
+    <!doctype html>
+    <title>Upload new Dataset and Topic Model</title>
+    <h1>Upload new Dataset and Topic Model</h1>
+    <form action="" method=post enctype=multipart/form-data>
+    <p><input type=file name=file>
+    <input type=submit value=Upload>
+    </form>
+    '''
