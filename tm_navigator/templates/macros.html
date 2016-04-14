@@ -19,7 +19,7 @@
 <%def name="listgroup(items, limit=None, emptystr=None, additional_class='')">
   <ul class="list-group">
     % for it in (items[:limit] if limit is not None and limit != -1 else items):
-      <li class="list-group-item">
+      <li class="list-group-item" style="word-wrap: break-word;">
         ${ caller.body(it) }
       </li>
     % endfor

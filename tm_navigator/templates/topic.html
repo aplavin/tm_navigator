@@ -65,6 +65,15 @@
 <%block name="title">Topic ${ s.model.text }</%block>
 
 <%def name="overview()">
+  <% assessed = False %>
+  % for a in s.model.assessments:
+    % if a.topic_id == s.model.id:
+      <%
+        assessed = True
+      %>
+    % endif
+  % endfor
+
   <div class="panel panel-default">
     <div class="panel-heading">
       <h3 class="panel-title">
@@ -75,6 +84,12 @@
       ATopic(src=s.model),
       "Please rate this topic",
       "pull-right") }
+      % if assessed:
+        <div class="center-block">
+          <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+          Assessed
+        </div>
+      %endif
     </div>
 
     % if s.model.summaries is not None:
